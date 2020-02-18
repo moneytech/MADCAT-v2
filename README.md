@@ -14,7 +14,7 @@ heiko.folkerts [at] bsi.bund.de or github [at] thevoid.email
          __--     __--▀█ ██  █▀▀█████▄▄▄▄▄▄███████  ██ █▀--__      --__
      __--     __--    __▀▀█  █  ██  ██▀▀██▀▀██  ██  █▀▀__    --__      --__
          __--     __--     ▀███ ██  ██  ██  ██ ████▀     --__    --__
- hfo   --     __--             ▀▀▀▀▀██▄▄██▄▄██▀▀▀▀           --__    --
+      --      __--             ▀▀▀▀▀██▄▄██▄▄██▀▀▀▀           --__    -- hfo
          __ --                                                   --__
 
 In recent years, mass attacks on Internet users have steadily increased. Again and again new methods and patterns of attack come to light. One example was a major incident that affected 900,000 connections in Germany in 2016. However, many of these attempted attacks remain undetected or are not reported, because they do not lead to a correspondingly large impairment. Therefore, it is necessary to collect data on attacks and attempted attacks on the Internet. A well-known and widespread means of detecting such attempted attacks are honeypots. In addition, it is also possible to collect data on the longer-term, temporal development of mass attacks and thus make better forecasts of future developments.
