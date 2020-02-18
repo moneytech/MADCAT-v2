@@ -1,35 +1,5 @@
 #!/usr/bin/python
-################################################################################
-#This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
-#
-#    MADCAT is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    MADCAT is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with MADCAT.  If not, see <http://www.gnu.org/licenses/>.
-#
-#    Diese Datei ist Teil von MADCAT, dem Mass Attack Detection Acceptance Tool.
-#
-#    MADCAT ist Freie Software: Sie können es unter den Bedingungen
-#    der GNU General Public License, wie von der Free Software Foundation,
-#    Version 3 der Lizenz oder (nach Ihrer Wahl) jeder neueren
-#    veröffentlichten Version, weiter verteilen und/oder modifizieren.
-#
-#    MADCAT wird in der Hoffnung, dass es nützlich sein wird, aber
-#    OHNE JEDE GEWÄHRLEISTUNG, bereitgestellt; sogar ohne die implizite
-#    Gewährleistung der MARKTFÄHIGKEIT oder EIGNUNG FÜR EINEN BESTIMMTEN ZWECK.
-#    Siehe die GNU General Public License für weitere Details.
-#
-#    Sie sollten eine Kopie der GNU General Public License zusammen mit diesem
-#    Programm erhalten haben. Wenn nicht, siehe <https://www.gnu.org/licenses/>.
-################################################################################
+#coding=utf8
 ## MADCAT - Mass Attack Detecion Connection Acceptance Tool
  # TCP Connection- and SYN-JSON data postprocessor for TCP/IP Portmonitor
  #
@@ -43,7 +13,8 @@ import time
 import threading
 import json
 
-VERSION = "MADCAT - Mass Attack Detecion Connection Acceptance Tool\n TCP Connection and SYN JSON-data postprocessor\n v1.0 for TCP/IP Portmonitor v1.1.2\nHeiko Folkerts, BSI 2018-2019\n"
+VERSION = "MADCAT - Mass Attack Detecion Connection Acceptance Tool\n TCP Connection and SYN JSON-data postprocessor\n v1.1 for TCP/IP Portmonitor v1.1.4\nHeiko Folkerts, BSI 2018-2020\n"
+MASCOTT = "                             ▄▄▄               ▄▄▄▄▄▄\n                 ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀\n                    ▀▄▄▄▓█▓██   █▓█▌         █▓   ▓████████▀\n                       ▀███▓▓(o)██▓▌       ▐█▓█(o)█▓█████▀\n                         ▀▀██▓█▓▓█         ████▓███▀▀\n                  ▄            ▀▀▀▀                          ▄\n                ▀▀█                                         ▐██▌\n                  ██▄     ____------▐██████▌------___     ▄▄██\n                 __█ █▄▄--   ___------▀▓▓▀-----___   --▄▄█ █▀__\n             __--   ▀█  ██▄▄▄▄    __--▄▓▓▄--__   ▄▄▄▄██  ██▀   --__\n         __--     __--▀█ ██  █▀▀█████▄▄▄▄▄▄███████  ██ █▀--__      --__\n     __--     __--    __▀▀█  █  ██h ██▀▀██▀▀██  ██  █▀▀__    --__      --__\n         __--     __--     ▀███ ██  ██  ██  ██ ████▀     --__    --__\n hfo   --     __--             ▀▀▀▀▀██▄▄██▄▄██▀▀▀▀           --__    --\n         __ --                                                   --__"
 
 #Time before a SYN is seen as part of a SYN-Scan, if connection can not be found in con_dict.
 # Standard timeout is 63 seconds in Linux. For long connections 2*63=126sec. Seems more than reasonable.
@@ -295,6 +266,7 @@ def main(argv):
     global GLOBAL_SHUTDOWN
     logtime = time.strftime("%Y-%m-%dT%H:%M:%S",time.localtime(time.time())) + str(time.time()-int(time.time()))[1:8]
 
+    eprint(MASCOTT) #print mascott
     eprint(VERSION) #print version string
     eprint("================= Configuration [" + str(os.getpid()) + "] : =================")
     eprint("Time after which a SYN not yet matched with a connection is interpreted as SYN-SCAN:\n %.1fsec " % DEF_SYN_TIMEOUT )

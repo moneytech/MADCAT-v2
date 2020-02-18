@@ -1,34 +1,3 @@
-/*******************************************************************************
-This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
-
-    MADCAT is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    MADCAT is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with MADCAT.  If not, see <http://www.gnu.org/licenses/>.
-
-    Diese Datei ist Teil von MADCAT, dem Mass Attack Detection Acceptance Tool.
-
-    MADCAT ist Freie Software: Sie können es unter den Bedingungen
-    der GNU General Public License, wie von der Free Software Foundation,
-    Version 3 der Lizenz oder (nach Ihrer Wahl) jeder neueren
-    veröffentlichten Version, weiter verteilen und/oder modifizieren.
-
-    MADCAT wird in der Hoffnung, dass es nützlich sein wird, aber
-    OHNE JEDE GEWÄHRLEISTUNG, bereitgestellt; sogar ohne die implizite
-    Gewährleistung der MARKTFÄHIGKEIT oder EIGNUNG FÜR EINEN BESTIMMTEN ZWECK.
-    Siehe die GNU General Public License für weitere Details.
-
-    Sie sollten eine Kopie der GNU General Public License zusammen mit diesem
-    Programm erhalten haben. Wenn nicht, siehe <https://www.gnu.org/licenses/>.
-*******************************************************************************/
 /* MADCAT - Mass Attack Detecion Connection Acceptance Tool
  * TCP-IP port monitor.
  *
@@ -82,10 +51,10 @@ int main(int argc, char *argv[])
         // 5 or 6 or not.
         if (argc < 7 || argc > 8)
         {
-                fprintf(stderr, "%s\nSYNTAX:\n    %s interface hostaddress listening_port connection_timeout user path_to_save_tcp-streams [max_file_size]\n\
+                fprintf(stderr, "%s%s\nSYNTAX:\n    %s interface hostaddress listening_port connection_timeout user path_to_save_tcp-streams [max_file_size]\n\
     Path to directory MUST end with a trailing slash, e.g.  \"/path/to/my/dir/\"\n\
     The last paramteter, max_file_size, is the maximum size of saved streams,\n\
-      but the last TCP Datagramm exceeding this size will be saved anyway.\n", VERSION, argv[0]);
+      but the last TCP Datagramm exceeding this size will be saved anyway.\n", MASCOTT, VERSION, argv[0]);
                 fprintf(stderr,"\nExample Netfilter Rule to work properly:\n\
     iptables -t nat -A PREROUTING -i enp0s8 -p tcp --dport 1:65534 -j DNAT --to 192.168.8.42:65535\n\
       Listening Port is 65535 and hostaddress is 192.168.8.42 in this example.\n\n\
@@ -114,7 +83,7 @@ Opens two named pipes (FiFo) containing live JSON output:\n\
                 return -2;
         }
 
-        fprintf(stderr, "%s\n%s [PID %d] Starting on interface %s with hostaddress %s on port %d, timeout is %lfs...\n", VERSION, start_time, getpid(), interface, hostaddr, port, timeout);
+        fprintf(stderr, "%s%s\n%s [PID %d] Starting on interface %s with hostaddress %s on port %d, timeout is %lfs...\n", MASCOTT, VERSION, start_time, getpid(), interface, hostaddr, port, timeout);
 
         //Variabels for PCAP sniffing
 
