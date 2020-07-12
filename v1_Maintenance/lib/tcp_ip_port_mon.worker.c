@@ -36,6 +36,9 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
  * Heiko Folkerts, BSI 2018-2019
 */
 
+#include "tcp_ip_port_mon.worker.h"
+#include "tcp_ip_port_mon.helper.h"
+
 //Listner thread
 
 long int do_stuff(char* dst_addr, int dst_port, char* src_addr, int src_port, double timeout, char* data_path, int max_file_size, int s,\

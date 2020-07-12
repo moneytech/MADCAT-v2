@@ -35,7 +35,8 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
  *
  * Heiko Folkerts, BSI 2018-2019
 */
-
+#include "icmp_mon.parser.h"
+#include "icmp_mon.helper.h"
 
 //Helper function to parse IP Options. Returns tainted status, puts option data in hex string.
 bool parse_ipopt(int opt_cpclno, const char* opt_name, \

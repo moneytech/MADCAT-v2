@@ -36,6 +36,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
  * Heiko Folkerts, BSI 2018-2019
 */
 
+#include "icmp_mon.helper.h"
 
 //Functions
 

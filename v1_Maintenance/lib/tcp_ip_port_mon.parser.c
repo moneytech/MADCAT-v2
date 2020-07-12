@@ -36,6 +36,9 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
  * Heiko Folkerts, BSI 2018-2019
 */
 
+#include "tcp_ip_port_mon.helper.h"
+#include "tcp_ip_port_mon.parser.h"
+
 //TCP and IP header parsers
 
 //Helper function to parse IP Options. Returns tainted status, puts option data in hex string.

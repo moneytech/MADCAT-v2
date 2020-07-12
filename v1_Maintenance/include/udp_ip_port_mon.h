@@ -24,13 +24,15 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
     Programm erhalten haben. Wenn nicht, siehe <https://www.gnu.org/licenses/>.
 *******************************************************************************/
 /* MADCAT - Mass Attack Detecion Connection Acceptance Tool
- * ICMP monitor.
+ * UDP port monitor.
  *
  * Netfilter should be configured to block outgoing ICMP Destination unreachable (Port unreachable) packets, e.g.:
  *      iptables -I OUTPUT -p icmp --icmp-type destination-unreachable -j DROP
  *
  * Heiko Folkerts, BSI 2018-2019
 */
+#ifndef UDP_IP_PORT_MON_H
+#define UDP_IP_PORT_MON_H
 
 #include <errno.h>
 #include <stdio.h>
@@ -45,20 +47,19 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include <linux/netfilter_ipv4.h>
 #include <unistd.h>
 #include <fcntl.h>
+//#define	__USE_MISC //make struct_tm.h, included from time.h, provide "long int tm_gmtoff" and  "const char *tm_zone"
 #include <sys/time.h>
 #include <time.h>
 #include <pwd.h>
 #include <netinet/ip.h>
 #include <netinet/udp.h>
-#include <netinet/tcp.h>
 #include <stdbool.h>
 #include <sys/file.h>
 #include <openssl/sha.h>
 
-#define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nICMP Monitor v1.1.4\nHeiko Folkerts, BSI 2018-2020\n"
+#define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nUDP-IP Port Monitor v1.1.3\nHeiko Folkerts, BSI 2018-2020\n"
 #define MASCOTT "                             ▄▄▄               ▄▄▄▄▄▄\n                 ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀\n                    ▀▄▄▄▓█▓██   █▓█▌         █▓   ▓████████▀\n                       ▀███▓▓(o)██▓▌       ▐█▓█(o)█▓█████▀\n                         ▀▀██▓█▓▓█         ████▓███▀▀\n                  ▄            ▀▀▀▀                          ▄\n                ▀▀█                                         ▐██▌\n                  ██▄     ____------▐██████▌------___     ▄▄██\n                 __█ █▄▄--   ___------▀▓▓▀-----___   --▄▄█ █▀__\n             __--   ▀█  ██▄▄▄▄    __--▄▓▓▄--__   ▄▄▄▄██  ██▀   --__\n         __--     __--▀█ ██  █▀▀█████▄▄▄▄▄▄███████  ██ █▀--__      --__\n     __--     __--    __▀▀█  █  ██  ██▀▀██▀▀██  ██  █▀▀__    --__      --__\n         __--     __--     ▀███ ██  ██  ██  ██ ████▀     --__    --__\n hfo   --     __--             ▀▀▀▀▀██▄▄██▄▄██▀▀▀▀           --__    --\n         __ --                                                   --__\n"
 #define PATH_LEN 256
-#define ICMP_HEADER_LEN 8
 #define UDP_HEADER_LEN 8
 #define IP_OR_TCP_HEADER_MINLEN 20 // Minimum Length of an IP-Header or a TCP-Header is 20 Bytes
 #define DEFAULT_BUFSIZE 9000 //Ethernet jumbo frame limit
@@ -76,7 +77,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
                 retval;                                                                     \
         })
 
-/* IP options and ICMP types/codes as defined in Wireshark*/
+/* IP options as definde in Wireshark*/
 //Original names cause redifinition warnings, so prefix "MY" has been added
 #define MY_IPOPT_COPY              0x80
 
@@ -114,129 +115,23 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #define MY_IPOPT_QS        (25|MY_IPOPT_CONTROL)                  /* RFC 4782 */
 #define MY_IPOPT_EXP       (30|MY_IPOPT_CONTROL) /* RFC 4727 */
 
-/* ICMP TYPE definitions */
-#define MY_ICMP_ECHOREPLY     0
-#define MY_ICMP_UNREACH       3
-#define MY_ICMP_SOURCEQUENCH  4
-#define MY_ICMP_REDIRECT      5
-#define MY_ICMP_ALTHOST       6
-#define MY_ICMP_ECHO          8
-#define MY_ICMP_RTRADVERT     9
-#define MY_ICMP_RTRSOLICIT   10
-#define MY_ICMP_TIMXCEED     11
-#define MY_ICMP_PARAMPROB    12
-#define MY_ICMP_TSTAMP       13
-#define MY_ICMP_TSTAMPREPLY  14
-#define MY_ICMP_IREQ         15
-#define MY_ICMP_IREQREPLY    16
-#define MY_ICMP_MASKREQ      17
-#define MY_ICMP_MASKREPLY    18
-#define MY_ICMP_PHOTURIS     40
-#define MY_ICMP_EXTECHO      42
-#define MY_ICMP_EXTECHOREPLY 43
-
-/* ICMP UNREACHABLE CODES*/
-#define MY_ICMP_NET_UNREACH         0	/* Network Unreachable */
-#define MY_ICMP_HOST_UNREACH        1	/* Host Unreachable */
-#define MY_ICMP_PROT_UNREACH        2	/* Protocol Unreachable */
-#define MY_ICMP_PORT_UNREACH        3	/* Port Unreachable */
-#define MY_ICMP_FRAG_NEEDED         4	/* Fragmentation Needed/DF set */
-#define MY_ICMP_SR_FAILED           5	/* Source Route failed */
-#define MY_ICMP_NET_UNKNOWN         6
-#define MY_ICMP_HOST_UNKNOWN        7
-#define MY_ICMP_HOST_ISOLATED       8
-#define MY_ICMP_NET_ANO             9
-#define MY_ICMP_HOST_ANO           10
-#define MY_ICMP_NET_UNR_TOS        11
-#define MY_ICMP_HOST_UNR_TOS       12
-#define MY_ICMP_PKT_FILTERED       13	/* Packet filtered */
-#define MY_ICMP_PREC_VIOLATION     14	/* Precedence violation */
-#define MY_ICMP_PREC_CUTOFF        15	/* Precedence cut off */
-
-#define MY_ICMP_MIP_EXTENSION_PAD	 0
-#define MY_ICMP_MIP_MOB_AGENT_ADV	16
-#define MY_ICMP_MIP_PREFIX_LENGTHS	19
-#define MY_ICMP_MIP_CHALLENGE	24
-
-/*
- *  TCP option as defined in wireshark
- */
-//To raise self-esteem, the prefix "MY" has also been added here.
-#define MY_TCPOPT_NOP              1       /* Padding */
-#define MY_TCPOPT_EOL              0       /* End of options */
-#define MY_TCPOPT_MSS              2       /* Segment size negotiating */
-#define MY_TCPOPT_WINDOW           3       /* Window scaling */
-#define MY_TCPOPT_SACK_PERM        4       /* SACK Permitted */
-//#define MY_TCPOPT_SACK             5       /* SACK Block */ //not yet implemented, thread as "tainted"
-#define MY_TCPOPT_ECHO             6
-#define MY_TCPOPT_ECHOREPLY        7
-#define MY_TCPOPT_TIMESTAMP        8       /* Better RTT estimations/PAWS */
-#define MY_TCPOPT_CC               11
-#define MY_TCPOPT_CCNEW            12
-#define MY_TCPOPT_CCECHO           13
-#define MY_TCPOPT_MD5              19      /* RFC2385 */
-#define MY_TCPOPT_SCPS             20      /* SCPS Capabilities */
-#define MY_TCPOPT_SNACK            21      /* SCPS SNACK */
-#define MY_TCPOPT_RECBOUND         22      /* SCPS Record Boundary */
-#define MY_TCPOPT_CORREXP          23      /* SCPS Corruption Experienced */
-#define MY_TCPOPT_QS               27      /* RFC4782 Quick-Start Response */
-#define MY_TCPOPT_USER_TO          28      /* RFC5482 User Timeout Option */
-//#define MY_TCPOPT_MPTCP            30      /* RFC6824 Multipath TCP */ //not yet implemented, thread as "tainted"
-//#define MY_TCPOPT_TFO              34      /* RFC7413 TCP Fast Open Cookie */ //not yet implemented, thread as "tainted"
-//#define MY_TCPOPT_EXP_FD           0xfd    /* Experimental, reserved */ //not yet implemented, thread as "tainted"
-//#define MY_TCPOPT_EXP_FE           0xfe    /* Experimental, reserved */ //not yet implemented, thread as "tainted"
-/* Non IANA registered option numbers */
-//#define MY_TCPOPT_RVBD_PROBE       76      /* Riverbed probe option */ //not yet implemented, thread as "tainted"
-//#define MY_TCPOPT_RVBD_TRPY        78      /* Riverbed transparency option */ //not yet implemented, thread as "tainted"
-
-/*
- *     TCP option lengths as defined in wireshark
- */
-#define MY_TCPOLEN_NOP            1
-#define MY_TCPOLEN_EOL            1
-#define MY_TCPOLEN_MSS            4
-#define MY_TCPOLEN_WINDOW         3
-#define MY_TCPOLEN_SACK_PERM      2
-//#define MY_TCPOLEN_SACK_MIN       2 //not yet implemented, thread as "tainted"
-#define MY_TCPOLEN_ECHO           6
-#define MY_TCPOLEN_ECHOREPLY      6
-#define MY_TCPOLEN_TIMESTAMP     10
-#define MY_TCPOLEN_CC             6
-#define MY_TCPOLEN_CCNEW          6
-#define MY_TCPOLEN_CCECHO         6
-#define MY_TCPOLEN_MD5           18
-#define MY_TCPOLEN_SCPS           4
-#define MY_TCPOLEN_SNACK          6
-#define MY_TCPOLEN_RECBOUND       2
-#define MY_TCPOLEN_CORREXP        2
-#define MY_TCPOLEN_QS             8
-#define MY_TCPOLEN_USER_TO        4
-//#define MY_TCPOLEN_MPTCP_MIN      3 //not yet implemented, thread as "tainted"
-//#define MY_TCPOLEN_TFO_MIN        2 //not yet implemented, thread as "tainted"
-//#define MY_TCPOLEN_EXP_MIN        2 //not yet implemented, thread as "tainted"
-/* Non IANA registered option numbers */
-//#define MY_TCPOLEN_RVBD_PROBE_MIN 3 //not yet implemented, thread as "tainted"
-//#define MY_TCPOLEN_RVBD_TRPY_MIN 16 //not yet implemented, thread as "tainted"
-
 //Global Variables and definitions
-long int JSON_BUF_SIZE = 65536; //TODO: Seriously think about necessary Buffer-Size for JSON Output
-char* global_json = 0; //JSON Output defined global, to make all information visibel to functions for concatination and output.
-char* json_ptr = 0; //Pointer to actuall JSON output End, to concatinate strings with sprintf().
+long int JSON_BUF_SIZE; //TODO: Seriously think about necessary Buffer-Size for JSON Output
+char* global_json;  //JSON Output defined global, to make all information visibel to functions for concatination and output.
+char* json_ptr; //Pointer to actuall JSON output End, to concatinate strings with sprintf().
 
-struct ipv4icmp_t {
-    uint8_t  ver;
+struct ipv4udp_t {
+    uint8_t  type;
     uint8_t  ihl;
     uint8_t  proto;
     uint32_t src_ip;
     char*    src_ip_str;
     uint32_t dst_ip;
     char*    dst_ip_str;
-    void*    icmp_hdr; //Begin of the 8Byte ICMP header
-    uint8_t  type;
-    uint8_t  code;
-    uint16_t icmp_check;
-    void*    data; //Begin of ICMP data (the stuff after the 8Byte header)
-    unsigned long int data_len;
+    uint16_t src_port;
+    uint16_t dst_port;
+    void*    data;
+    int      data_len;
 };
 
 struct user_t{
@@ -245,30 +140,4 @@ struct user_t{
     gid_t   gid;        /* group ID */
 };
 
-//Helper Functions:
-/*
-void get_user_ids(struct user_t* user) //adapted example code from manpage getpwnam(3)
-void time_str(char* buf, int buf_size)
-void print_hex(FILE* output, const unsigned char* buffer, int buffsize)
-char *print_hex_string(const unsigned char* buffer, unsigned int buffsize) //Do not forget to free!
-char *inttoa(uint32_t i_addr) //inet_ntoa e.g. converts 127.1.1.1 to 127.0.0.1. This is bad e.g. for testing.
-*/
-#include <icmp_mon.helper.c>
-
-//Header Parser:
-/*
-bool parse_ipopt(int opt_cpclno, const char* opt_name, \
-                 unsigned char** opt_ptr_ptr, const unsigned char* beginofoptions_addr, const unsigned char* endofoptions_addr)
-int analyze_ip_header(const unsigned char* packet, struct pcap_pkthdr header)
-bool parse_tcpopt_w_length(int opt_kind, int opt_len, const char* opt_name, \
-                           unsigned char** opt_ptr_ptr, const unsigned char* beginofoptions_addr, const unsigned char* endofoptions_addr)
-int analyze_udp_header(const unsigned char* packet, int recv_len)
-*/
-#include <icmp_mon.parser.c>
-
-//Connection worker:
-/*
-int do_stuff(unsigned char* buffer, int recv_len, char* hostaddress , char* data_path)
-*/
-#include <icmp_mon.worker.c>
-
+#endif

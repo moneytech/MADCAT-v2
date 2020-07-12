@@ -37,7 +37,10 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 */
 
 //Header includes, defintions and globals
-#include <tcp_ip_port_mon.h>
+#include "tcp_ip_port_mon.h"
+#include "tcp_ip_port_mon.helper.h"
+#include "tcp_ip_port_mon.parser.h"
+#include "tcp_ip_port_mon.worker.h"
 
 //Main
 

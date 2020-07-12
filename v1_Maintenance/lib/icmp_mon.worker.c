@@ -35,6 +35,10 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
  * Heiko Folkerts, BSI 2018-2019
 */
 
+#include "icmp_mon.worker.h"
+#include "icmp_mon.helper.h"
+#include "icmp_mon.parser.h"
+
 int do_stuff(unsigned char* buffer, int recv_len, char* hostaddress , char* data_path)
 {
         struct ipv4icmp_t ipv4icmp; //struct to save IP-Header contents of intrest

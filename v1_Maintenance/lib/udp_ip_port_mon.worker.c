@@ -38,6 +38,11 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
  * Heiko Folkerts, BSI 2018-2019
 */
 
+
+#include "udp_ip_port_mon.worker.h"
+#include "udp_ip_port_mon.helper.h"
+
+
 int do_stuff(unsigned char* buffer, int recv_len, char* hostaddress , char* data_path)
 {
         struct ipv4udp_t ipv4udp; //struct to save IP-Header contents of intrest

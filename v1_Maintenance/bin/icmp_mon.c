@@ -32,10 +32,12 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 */
 
 //Header includes, defintions and globals
-#include <icmp_mon.h>
+#include "icmp_mon.h"
+#include "icmp_mon.helper.h"
+#include "icmp_mon.parser.h"
+#include "icmp_mon.worker.h"
 
 //Main
-
 int main(int argc, char *argv[])
 {
        //char* global_json = 0; //JSON Output defined global, to make all information visibel to functions for concatination and output.

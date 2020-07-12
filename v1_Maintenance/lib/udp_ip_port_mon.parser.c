@@ -38,6 +38,9 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
  * Heiko Folkerts, BSI 2018-2019
 */
 
+#include "udp_ip_port_mon.parser.h"
+#include "udp_ip_port_mon.helper.h"
+
 //Helper function to parse IP Options. Returns tainted status, puts option data in hex string.
 bool parse_ipopt(int opt_cpclno, const char* opt_name, \
                  unsigned char** opt_ptr_ptr, const unsigned char* beginofoptions_addr, const unsigned char* endofoptions_addr)

@@ -29,14 +29,16 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
     Sie sollten eine Kopie der GNU General Public License zusammen mit diesem
     Programm erhalten haben. Wenn nicht, siehe <https://www.gnu.org/licenses/>.
 *******************************************************************************/
-/* MADCAT -Mass Attack Detecion Connection Acceptance Tool
- * UDP port monitor.
+/* MADCAT - Mass Attack Detecion Connection Acceptance Tool
+ * TCP-IP port monitor.
  *
- * Netfilter should be configured to block outgoing ICMP Destination unreachable (Port unreachable) packets, e.g.:
- *      iptables -I OUTPUT -p icmp --icmp-type destination-unreachable -j DROP
  *
  * Heiko Folkerts, BSI 2018-2019
 */
+
+#include "tcp_ip_port_mon.helper.h"
+
+//Helper functions
 
 void get_user_ids(struct user_t* user) //adapted example code from manpage getpwnam(3)
 {
@@ -64,6 +66,36 @@ void get_user_ids(struct user_t* user) //adapted example code from manpage getpw
     return;
 }
 
+void time_str(char* unix_buf, int unix_size, char* readable_buf, int readable_size)
+{
+        struct timeval tv;
+        char tmbuf[readable_size];
+        char tmzone[6]; //e.g. "+0100\0" is max. 6 chars
+
+        gettimeofday(&tv, NULL); //fetch struct timeval with actuall time and convert it to string...
+        strftime(tmbuf, readable_size, "%Y-%m-%dT%H:%M:%S", localtime(&tv.tv_sec)); //Target format: "2018-08-17T05:51:53.835934", therefore...
+        strftime(tmzone, 6, "%z", localtime(&tv.tv_sec)); //...get timezone...
+        //...and finally print time and ms to string, append timezone and ensure it is null terminated.
+        if (readable_buf != NULL)
+        {
+            snprintf(readable_buf, readable_size, "%s.%06ld%s", tmbuf, tv.tv_usec, tmzone); readable_buf[readable_size-1] = 0; //Human readable string
+        }
+        if (unix_buf != NULL)
+        {
+            snprintf(unix_buf, unix_size, "%ld.%ld", tv.tv_sec, tv.tv_usec); unix_buf[unix_size-1] = 0; //Unix time incl. usec
+        }
+        return;
+}
+
+/*
+void time_str_unix_us(char* buf, int buf_size)
+{
+        struct timeval tv;
+        gettimeofday(&tv, NULL); //fetch struct timeval with actuall time and convert it to string
+        return;
+}
+*/
+
 void print_hex(FILE* output, const unsigned char* buffer, int buffsize)
 {   
     int i, offset = 16; //The offset of the offset is 16. X-D
@@ -83,7 +115,7 @@ void print_hex(FILE* output, const unsigned char* buffer, int buffsize)
 }
 
 char *print_hex_string(const unsigned char* buffer, unsigned int buffsize) //Do not forget to free!
-{   
+{
     char* output = malloc(2*buffsize+1); //output has to be min. 2*buffsize + 1 for 2 characters per byte and null-termination.
     if(buffsize<=0) {output[0] = 0; return output;}; //return proper empty string
     int i = 0;
@@ -177,30 +209,108 @@ unsigned char* hex_dump(const void *addr, int len, const bool json)
     return output;
 }
 
-void time_str(char* buf, int buf_size)
-{
-        struct timeval tv;
-        //struct tm nowtm;
-        char tmbuf[buf_size];
-        char tmzone[6]; //e.g. "+0100\0" is max. 6 chars
-
-        //CHECK(mktime(&nowtm), != -1);
-        //printf("\n\ntm_gmtoff: %ld, tm_isdst: %d\n\n", (nowtm.tm_gmtoff / 60), nowtm.tm_isdst);
-
-        gettimeofday(&tv, NULL); //fetch struct timeval with actuall time and convert it to string
-        strftime(tmbuf, buf_size, "%Y-%m-%dT%H:%M:%S", localtime(&tv.tv_sec)); //Target format: "2018-08-17T05:51:53.835934 + 0200", therefore...
-        strftime(tmzone, 6, "%z", localtime(&tv.tv_sec)); //...get timezone...
-        //...and finally print time and ms to string, append timezone and ensure it is null terminated.
-        snprintf(buf, buf_size, "%s.%06ld%s", tmbuf, tv.tv_usec, tmzone); buf[buf_size-1] = 0;
-        return;
-}
-
-//convert IP(v4)-Addresses from network byte order to string
-char *inttoa(uint32_t i_addr)
+char *inttoa(uint32_t i_addr) //inet_ntoa e.g. converts 127.1.1.1 to 127.0.0.1. This is bad e.g. for testing.
 {
     char str_addr[16] = "";
     //convert IP(v4)-Addresses from network byte order to string
     snprintf(str_addr, 16, "%u.%u.%u.%u", i_addr & 0x000000ff, (i_addr & 0x0000ff00) >> 8, (i_addr & 0x00ff0000) >> 16, (i_addr & 0xff000000) >> 24);
     return strndup(str_addr,16); //strndup ensures \0 termination. Do not forget to free()!
+}
+
+int init_pcap(char* dev, pcap_t **handle)
+{
+    char errbuf[PCAP_ERRBUF_SIZE];// Error string 
+    struct bpf_program fp;    // The compiled filter 
+    char filter_exp[] = PCAP_FILTER; //The filter expression 
+    bpf_u_int32 mask;    // Our netmask 
+    bpf_u_int32 net;    // Our IP 
+    
+    // Find the properties for the device 
+    if (pcap_lookupnet(dev, &net, &mask, errbuf) == -1)
+        return -1;
+    // Open the session in non-promiscuous mode 
+    *handle = pcap_open_live(dev, BUFSIZ, 0, 100, errbuf);
+    if (handle == NULL)
+        return -2;
+    // Compile and apply the filter 
+    if (pcap_compile(*handle, &fp, filter_exp, 0, net) == -1)
+        return -3;
+    if (pcap_setfilter(*handle, &fp) == -1)
+        return -4;
+
+    return 0;
+}
+
+void drop_root_privs(struct user_t user, const char* entity) // if process is running as root, drop privileges
+{
+    if (getuid() == 0) {
+        fprintf(stderr, "%s droping priviliges to user %s...", entity, user.name);
+        get_user_ids(&user); //Get traget user UDI + GID
+        CHECK(setgid(user.gid), == 0); // Drop GID first for security reasons!
+        CHECK(setuid(user.uid), == 0);
+        if (getuid() == 0 || getgid() == 0) //Test if uid/gid is still 0
+            fprintf(stderr, "...nothing to drop. WARNING: Running as root!\n");
+        else
+            fprintf(stderr,"SUCCESS. UID: %d\n", getuid());
+        fflush(stderr);
+    }
+    return;
+}
+
+//Handler
+
+//Signal Handler for parent watchdog
+void sig_handler_parent(int signo)
+{
+    char stop_time[64] = ""; //Human readable stop time (actual time zone)
+    time_str(NULL, 0, stop_time, sizeof(stop_time)); //Get Human readable string only
+    fprintf(stderr, "\n%s [PID %d] Received Signal %s, shutting down...\n", stop_time, getpid(), strsignal(signo));
+    sleep(1); //Let childs exit first
+    //Unlink and close semaphores
+    sem_close(hdrsem);
+    sem_unlink ("hdrsem");
+    sem_close(consem);
+    sem_unlink ("consem");
+    // Free JSON-Buffer
+    free(global_json);
+    //Family drama: Kill childs
+    kill(pcap_pid, SIGTERM);
+    kill(accept_pid, SIGTERM);
+    //exit parent process
+    exit(signo);
+    return;
+}
+
+//Signal Handler for Listner Parent to prevent childs becoming Zombies
+void sig_handler_sigchld(int sig)
+{
+    pid_t pid;
+    int status;
+
+    #if DEBUG >= 2
+        fprintf(stderr, "*** DEBUG [PID %d] Entering  sig_handler_sigchld(%d).\n", getpid(), sig);
+    #endif
+    pid = wait(&status);
+    #if DEBUG >= 2
+        fprintf(stderr, "*** DEBUG [PID %d] Child with PID %d exited with status %d.\n", getpid(), pid, status);
+    #endif
+
+    do { //Search for other Childs
+        pid = waitpid(-1, &status, WNOHANG);
+        #if DEBUG >= 2
+            if (pid > 0 ) fprintf(stderr, "*** DEBUG [PID %d] Zombie child with PID %d exited with status %d.\n", getpid(), pid, status);
+        #endif
+    } while ( pid > 0 );
+    return;
+}
+
+//Signal Handler for childs
+void sig_handler_child(int signo)
+{
+    #if DEBUG >= 2
+        fprintf(stderr, "*** DEBUG [PID %d] Parent died, aborting.\n", getpid());
+    #endif
+    abort();
+    return;
 }
 

@@ -36,6 +36,9 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
  * Heiko Folkerts, BSI 2018-2019
 */
 
+#ifndef TCP_IP_PORT_MON_H
+#define TCP_IP_PORT_MON_H
+
 //Global includes, defines, definitons
 
 #include <errno.h>
@@ -195,12 +198,13 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
         })
 
 // Global Variables and Definitions
-char hostaddr[INET6_ADDRSTRLEN] = ""; //Hostaddress to bind to. Globally defined to make it visible to functions for filtering.
-long int JSON_BUF_SIZE = 65536; //TODO: Seriously think about necessary Buffer-Size for JSON Output
-char* global_json = 0; //JSON Output defined global, to make all information visibel to functions for concatination and output.
-char* json_ptr = 0; //Pointer to actuall JSON output End, to concatinate strings with sprintf().
-int pcap_pid = 0; //PID of the Child doing the PCAP-Sniffing. Globally defined, cause it's used in CHECK-Makro.
-int accept_pid = 0; //PID of the Child doing the TCP Connection handling. Globally defined, cause it's used in CHECK-Makro.
+char hostaddr[INET6_ADDRSTRLEN]; //Hostaddress to bind to. Globally defined to make it visible to functions for filtering.
+//Global Variables and definitions
+long int JSON_BUF_SIZE; //TODO: Seriously think about necessary Buffer-Size for JSON Output
+char* global_json;  //JSON Output defined global, to make all information visibel to functions for concatination and output.
+char* json_ptr; //Pointer to actuall JSON output End, to concatinate strings with sprintf().
+int pcap_pid; //PID of the Child doing the PCAP-Sniffing. Globally defined, cause it's used in CHECK-Makro.
+int accept_pid; //PID of the Child doing the TCP Connection handling. Globally defined, cause it's used in CHECK-Makro.
 //semaphores for output globally defined for easy access inside functions
 sem_t *hdrsem; //Semaphore for named pipe containing TCP/IP data
 sem_t *consem; //Semaphore for named pipe containing connection data
@@ -220,33 +224,4 @@ struct con_status_t{    //Connection status
     long int data_bytes;//received bytes
 };
 
-
-//Helper Functions:
-/*
-void get_user_ids(struct user_t* user) //adapted example code from manpage getpwnam(3)
-void time_str(char* buf, int buf_size)
-void print_hex(FILE* output, const unsigned char* buffer, int buffsize)
-char *print_hex_string(const unsigned char* buffer, unsigned int buffsize) //Do not forget to free!
-char *inttoa(uint32_t i_addr) //inet_ntoa e.g. converts 127.1.1.1 to 127.0.0.1. This is bad e.g. for testing.
-int init_pcap(char* dev, pcap_t **handle)
-*/
-#include <tcp_ip_port_mon.helper.c>
-
-//IP and TCP Header Parser:
-/*
-bool parse_ipopt(int opt_cpclno, const char* opt_name, \
-                 unsigned char** opt_ptr_ptr, const unsigned char* beginofoptions_addr, const unsigned char* endofoptions_addr)
-int analyze_ip_header(const unsigned char* packet, struct pcap_pkthdr header)
-bool parse_tcpopt_w_length(int opt_kind, int opt_len, const char* opt_name, \
-                           unsigned char** opt_ptr_ptr, const unsigned char* beginofoptions_addr, const unsigned char* endofoptions_addr)
-int analyze_tcp_header(const unsigned char* packet, struct pcap_pkthdr header)
-*/
-#include <tcp_ip_port_mon.parser.c>
-
-//Connection worker:
-/*
-long int do_stuff(char* dst_addr, int dst_port, char* src_addr, int src_port, double timeout, char* data_path, int max_file_size, int s,\
-                  char* start_time, char* start_time_unix, FILE* confifo)
-*/
-#include <tcp_ip_port_mon.worker.c>
-
+#endif
