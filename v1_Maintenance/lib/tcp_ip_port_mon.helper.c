@@ -33,12 +33,38 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
  * TCP-IP port monitor.
  *
  *
- * Heiko Folkerts, BSI 2018-2019
+ * Heiko Folkerts, BSI 2018-2020
 */
 
 #include "tcp_ip_port_mon.helper.h"
 
 //Helper functions
+void print_help(char* progname) //print help message
+{
+    fprintf(stderr, "SYNTAX:\n    %s path_to_config_file\n\
+        Sample content of a config file:\n\n\
+            \tinterface = \"lo\"\n\
+            \thostaddress = \"127.1.1.1\"\n\
+            \tlistening_port = \"65535\"\n\
+            \tconnection_timeout = \"10\"\n\
+            \tuser = \"hf\"\n\
+            \tpath_to_save_tcp_streams = \"./tpm/\" --Must end with trailing \"/\", will be handled as prefix otherwise\n\
+            \t--max_file_size = \"1024\" --optional\n\
+        ", progname);
+
+    fprintf(stderr, "\nLEGACY SYNTAX (pre v1.1.5):\n    %s interface hostaddress listening_port connection_timeout user path_to_save_tcp-streams [max_file_size]\n\
+        Path to directory MUST end with a trailing slash, e.g.  \"/path/to/my/dir/\"\n\
+        The last paramteter, max_file_size, is the maximum size of saved streams,\n\
+        but the last TCP Datagramm exceeding this size will be saved anyway.\n", progname);
+
+    fprintf(stderr,"\nExample Netfilter Rule to work properly:\n\
+        iptables -t nat -A PREROUTING -i enp0s8 -p tcp --dport 1:65534 -j DNAT --to 192.168.8.42:65535\n\
+        Listening Port is 65535 and hostaddress is 192.168.8.42 in this example.\n\n\
+    Must be run as root, but the priviliges will be droped to \"user\".\n\n\
+    Opens two named pipes (FiFo) containing live JSON output:\n\
+        \"%s\" for stream connection data, \"%s\" for header data.\n", CONNECT_FIFO, HEADER_FIFO);
+    return;
+}
 
 void get_user_ids(struct user_t* user) //adapted example code from manpage getpwnam(3)
 {
@@ -49,8 +75,8 @@ void get_user_ids(struct user_t* user) //adapted example code from manpage getpw
     int s;
 
     bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
-    if (bufsize == -1)          /* Value was indeterminate */
-        bufsize = 16384;        /* Should be more than enough */
+    if (bufsize == -1)          // Value was indeterminate
+        bufsize = 16384;        // Should be more than enough
 
     buf = CHECK(malloc(bufsize), != 0);
     if (buf == NULL) {
@@ -209,6 +235,45 @@ unsigned char* hex_dump(const void *addr, int len, const bool json)
     return output;
 }
 
+char* json_do(bool init_or_reset, const char* format, ...)
+{
+
+    static json_struct json; //static to hold data in json_struct after return from function
+    static bool first_run = true;
+    signed int numchars = 0; //number of chars to write
+    va_list valst; //variable argument list
+    va_start (valst, format);
+    
+    if (init_or_reset) //should the json_struct be initialized or reseted?
+    {
+        if (!first_run)
+        {
+            free(json.str);
+            first_run = false;
+        }
+        CHECK(json.str = malloc(1), != 0);
+        *json.str = 0;  //add trailing \0 (empty string)                
+    }
+    
+    //get number of chars to write
+    va_start (valst, format);
+    numchars = vsnprintf(NULL, 0, format, valst);
+    va_end(valst);
+   
+    //if an empty string has been provided as parameter, just return the pointer to actual string
+    if (numchars == 0) return json.str;
+
+    //allocate new memory for chars to write
+    CHECK(json.str = realloc(json.str, strlen(json.str) + numchars + 1), != 0);
+    
+    //append chars to string
+    va_start(valst, format);    
+    CHECK(vsnprintf(json.str + strlen(json.str), numchars + 1 , format, valst), != 0);
+    va_end(valst);
+
+    return json.str; //return pointer to (new) string
+}
+
 char *inttoa(uint32_t i_addr) //inet_ntoa e.g. converts 127.1.1.1 to 127.0.0.1. This is bad e.g. for testing.
 {
     char str_addr[16] = "";
@@ -216,6 +281,17 @@ char *inttoa(uint32_t i_addr) //inet_ntoa e.g. converts 127.1.1.1 to 127.0.0.1. 
     snprintf(str_addr, 16, "%u.%u.%u.%u", i_addr & 0x000000ff, (i_addr & 0x0000ff00) >> 8, (i_addr & 0x00ff0000) >> 16, (i_addr & 0xff000000) >> 24);
     return strndup(str_addr,16); //strndup ensures \0 termination. Do not forget to free()!
 }
+
+const char* get_config_opt(lua_State* L, char* name) //Returns configuration items from LUA config file
+{
+    lua_getglobal(L, name);
+    if (!lua_isstring(L, -1)) {
+        //fprintf(stderr, "%s must be a string", name);
+        return strndup("",1); //return Empty string, if configuration item was not found. DO NOT FORGET TO FREE!
+    }
+    return (const char*) lua_tostring(L, -1); //DO NOT FORGET TO FREE!
+}
+
 
 int init_pcap(char* dev, pcap_t **handle)
 {
@@ -272,7 +348,7 @@ void sig_handler_parent(int signo)
     sem_close(consem);
     sem_unlink ("consem");
     // Free JSON-Buffer
-    free(global_json);
+    free(json_do(false, ""));
     //Family drama: Kill childs
     kill(pcap_pid, SIGTERM);
     kill(accept_pid, SIGTERM);

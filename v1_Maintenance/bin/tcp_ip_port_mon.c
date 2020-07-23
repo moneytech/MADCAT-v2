@@ -46,6 +46,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 
 int main(int argc, char *argv[])
 {
+        fflush(stdout); fflush(stderr);
         //Start time
         char start_time[64] = ""; //Human readable start time (actual time zone)
         char start_time_unix[64] = ""; //Unix timestamp (UTC)
@@ -60,10 +61,8 @@ int main(int argc, char *argv[])
         sem_unlink ("hdrsem");
         sem_unlink ("consem");
 
-        //char* global_json = 0; //JSON Output defined global, to make all information visibel to functions for concatination and output.
-        global_json = malloc(JSON_BUF_SIZE);
-        memset(global_json, 0, JSON_BUF_SIZE);
-        json_ptr = global_json;
+        //Display Mascott and Version
+        fprintf(stderr, "\n%s%s\n", MASCOTT, VERSION);
 
         //Parse command line. 
         //char hostaddr[INET6_ADDRSTRLEN] = ""; Hostaddress to bind to. Globally defined to make it visible to functions for filtering.
@@ -75,43 +74,81 @@ int main(int argc, char *argv[])
         int max_file_size = -1;
         int max_conn = 0;
 
-        // Checking if number of arguments is
-        // 5 or 6 or not.
-        if (argc < 7 || argc > 8)
+        // Checking if number of arguments is one (config file) or 6 or 7 (command line).
+        if (argc != 2  && (argc < 7 || argc > 8))
         {
-                fprintf(stderr, "%s%s\nSYNTAX:\n    %s interface hostaddress listening_port connection_timeout user path_to_save_tcp-streams [max_file_size]\n\
-    Path to directory MUST end with a trailing slash, e.g.  \"/path/to/my/dir/\"\n\
-    The last paramteter, max_file_size, is the maximum size of saved streams,\n\
-      but the last TCP Datagramm exceeding this size will be saved anyway.\n", MASCOTT, VERSION, argv[0]);
-                fprintf(stderr,"\nExample Netfilter Rule to work properly:\n\
-    iptables -t nat -A PREROUTING -i enp0s8 -p tcp --dport 1:65534 -j DNAT --to 192.168.8.42:65535\n\
-      Listening Port is 65535 and hostaddress is 192.168.8.42 in this example.\n\n\
-Must be run as root, but the priviliges will be droped to \"user\".\n\n\
-Opens two named pipes (FiFo) containing live JSON output:\n\
-    \"%s\" for stream connection data, \"%s\" for header data.\n", CONNECT_FIFO, HEADER_FIFO);
+                print_help(argv[0]);
                 return -1;
         }
 
-        //copy arguments to variables
-        strncpy(interface, argv[1], sizeof(interface)); hostaddr[sizeof(interface)-1] = 0;  //copy hostaddress and ensure null termination of this string. Ugly.
-        strncpy(hostaddr, argv[2], sizeof(hostaddr)); hostaddr[sizeof(hostaddr)-1] = 0;
-        port = atoi(argv[3]); //convert string type to integer type (port)
-        timeout = (double) atof(argv[4]); //set timeout and convert to integer type.
-        strncpy(user.name, argv[5], sizeof(user.name)); user.name[sizeof(user.name)-1] = 0;
-        strncpy(data_path, argv[6], sizeof(data_path)); data_path[sizeof(data_path)-1] = 0;
-
-        if (argc == 8) //get max. file-size.
+        if (argc == 2) //read config file
         {
-            max_file_size = atoi(argv[7]);
+            lua_State *luaState = lua_open();
+            if (luaL_dofile(luaState, argv[1]) != 0) {
+                fprintf(stderr, "%s [PID %d] Error parsing config file: %s\n\tRun without command line arguments for help.\n", start_time, getpid(), lua_tostring(luaState, -1));
+                exit(1);
+            }
+
+            fprintf(stderr, "%s [PID %d] Parsing config file: %s\n", start_time, getpid(), argv[1]);
+
+            fprintf(stderr,"\tInterface: %s\n", get_config_opt(luaState, "interface"));
+            strncpy(interface, get_config_opt(luaState, "interface"), sizeof(interface)); interface[sizeof(interface)-1] = 0;  //copy interface and ensure null termination of this string. Ugly.
+
+            fprintf(stderr, "\tHostaddress: %s\n", get_config_opt(luaState, "hostaddress"));
+            strncpy(hostaddr, get_config_opt(luaState, "hostaddress"), sizeof(hostaddr)); hostaddr[sizeof(hostaddr)-1] = 0;
+
+            port = atoi(get_config_opt(luaState, "listening_port")); //convert string type to integer type (port)
+            fprintf(stderr, "\tlistening Port: %s\n", get_config_opt(luaState, "listening_port"));
+
+            timeout = (double) atof(get_config_opt(luaState, "connection_timeout")); //set timeout and convert to integer type.
+            fprintf(stderr, "\ttimeout: %s\n", get_config_opt(luaState, "connection_timeout"));
+
+            strncpy(user.name, get_config_opt(luaState, "user"), sizeof(user.name)); user.name[sizeof(user.name)-1] = 0;
+            fprintf(stderr, "\tuser: %s\n", get_config_opt(luaState, "user"));
+            
+            strncpy(data_path, get_config_opt(luaState, "path_to_save_tcp_streams"), sizeof(data_path)); data_path[sizeof(data_path)-1] = 0;
+            fprintf(stderr, "\tpath_to_save_tcp_streams: %s\n", get_config_opt(luaState, "path_to_save_tcp_streams"));
+
+            //check if mandatory string parameters are present, bufsize is NOT mandatory, the rest are numbers and are handled otherwise
+            if(strlen(interface) == 0 || strlen(hostaddr) == 0 || strlen(user.name) == 0 || strlen(data_path) == 0)
+            {
+                fprintf(stderr, "%s [PID %d] Error in config file: %s\n", start_time, getpid(), argv[1]);
+                print_help(argv[0]);
+                return -1;
+            }
+
+            if(get_config_opt(luaState, "max_file_size") != 0) //if optional parameter is given, set it.
+            {
+                max_file_size = atoi(get_config_opt(luaState, "max_file_size"));
+                fprintf(stderr, "\tmax_file_size: %s\n", get_config_opt(luaState, "max_file_size"));
+            }
+
+            lua_close(luaState);
+        } 
+        else //copy legacy command line arguments to variables
+        {
+            strncpy(interface, argv[1], sizeof(interface)); hostaddr[sizeof(interface)-1] = 0;  //copy hostaddress and ensure null termination of this string. Ugly.
+            strncpy(hostaddr, argv[2], sizeof(hostaddr)); hostaddr[sizeof(hostaddr)-1] = 0;
+            port = atoi(argv[3]); //convert string type to integer type (port)
+            timeout = (double) atof(argv[4]); //set timeout and convert to integer type.
+            strncpy(user.name, argv[5], sizeof(user.name)); user.name[sizeof(user.name)-1] = 0;
+            strncpy(data_path, argv[6], sizeof(data_path)); data_path[sizeof(data_path)-1] = 0;
+
+            if (argc == 8) //get max. file-size.
+            {
+                max_file_size = atoi(argv[7]);
+            }
+
         }
 
         if(port < 1 || port > 65535) //Range checks
         {
-                fprintf(stderr, "Port %d out of range.\n", port);
+                fprintf(stderr, "%s [PID %d] Port %d out of range.\n", start_time, getpid(), port);
                 return -2;
         }
 
-        fprintf(stderr, "%s%s\n%s [PID %d] Starting on interface %s with hostaddress %s on port %d, timeout is %lfs...\n", MASCOTT, VERSION, start_time, getpid(), interface, hostaddr, port, timeout);
+        fprintf(stderr, "%s [PID %d] Starting on interface %s with hostaddress %s on port %d, timeout is %lfs, data path is %s\n", \
+                start_time, getpid(), interface, hostaddr, port, timeout, data_path);
 
         //Variabels for PCAP sniffing
 
@@ -155,23 +192,21 @@ Opens two named pipes (FiFo) containing live JSON output:\n\
                 if (packet == 0) {continue;}
                 //Preserve actuall start time of Connection attempt.
                 time_str(start_time_unix, sizeof(start_time_unix), start_time, sizeof(start_time));
-                //Begin new global JSON output and...
-                json_ptr = global_json;
-                memset(json_ptr, 0, JSON_BUF_SIZE);
-                //open JSON object
-                json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), "{\"timestamp\": \"%s\"", start_time); 
+                //Begin new global JSON output and open JSON object
+                json_do(true, "{\"timestamp\": \"%s\"", start_time);
                 //Analyze Headers and discard malformed packets
                 if(analyze_ip_header(packet, header) < 0) {continue;}
                 data_bytes = analyze_tcp_header(packet, header);
                 if(data_bytes < 0) {continue;}
                 //JSON Ouput and close JSON object
-                json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), "}, \"data_bytes\": %d, \"unixtime\": %s}", data_bytes, start_time_unix);
+                json_do(false, "}, \"data_bytes\": %d, \"unixtime\": %s}", data_bytes, start_time_unix);
                 sem_wait(hdrsem); //Acquire lock for output
-                fprintf(hdrfifo,"%s\n", global_json); //print json output for further analysis
+                fprintf(hdrfifo,"%s\n", json_do(false, "")); //print json output for further analysis
                 sem_post(hdrsem); //release lock
-                fprintf(stdout,"{\"HEADER\": %s}\n", global_json); //print json output for logging
+                fprintf(stdout,"{\"HEADER\": %s}\n", json_do(false, "")); //print json output for logging
                 fflush(hdrfifo);
                 fflush(stdout);
+                free(json_do(0,""));
             }
         }
 
@@ -253,7 +288,7 @@ Opens two named pipes (FiFo) containing live JSON output:\n\
 	                        #if DEBUG >= 2
 	                            fprintf(stderr, "*** DEBUG [PID %d] Accept-Child openfd closed, returning.\n", getpid());
 	                        #endif
-                            free(global_json);
+                            free(json_do(false, ""));
                             exit(0); //kill child process
                     }
                     close(openfd); //Close connection
@@ -276,14 +311,14 @@ Opens two named pipes (FiFo) containing live JSON output:\n\
                 if ( waitpid(pcap_pid, &stat_pcap, WNOHANG) ) {
                     gettimeofday(&begin , NULL);
                     time_str(NULL, 0, start_time, sizeof(start_time)); //Get Human readable string only, reuse start_time var.
-                    fprintf(stderr, "%s [PID %d] Sniffer (PID %d) crashed", start_time, getpid(), accept_pid);
+                    fprintf(stderr, "%s [PID %d] Sniffer (PID %d) crashed. ARE YOU ROOT?", start_time, getpid(), accept_pid);
                     sig_handler_parent(SIGTERM);
                     break;
                 }
                 if ( waitpid(accept_pid, &stat_accept, WNOHANG) ) {
                     gettimeofday(&begin , NULL);
                     time_str(NULL, 0, start_time, sizeof(start_time)); //Get Human readable string only, reuser start_time var. 
-                    fprintf(stderr, "%s [PID %d] Listner (PID %d) crashed", start_time, getpid(), accept_pid);
+                    fprintf(stderr, "%s [PID %d] Listner (PID %d) crashed. ARE YOU ROOT?", start_time, getpid(), accept_pid);
                     sig_handler_parent(SIGTERM);
                     break;
                 }
@@ -293,4 +328,3 @@ Opens two named pipes (FiFo) containing live JSON output:\n\
 
         return 0;
 }
-

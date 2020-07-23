@@ -62,6 +62,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <stdbool.h>
+#include <stdarg.h>
 #include <sys/file.h>
 #include <sys/types.h> 
 #include <sys/shm.h>
@@ -69,9 +70,10 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include <sys/wait.h>
 #include <sys/prctl.h>
 #include <openssl/sha.h>
+#include <lua5.1/lauxlib.h>
+#include <lua5.1/lualib.h>
 
-
-#define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nTCP-IP Port Monitor v1.1.4\nHeiko Folkerts, BSI 2018-2020\n" //Version string
+#define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nTCP-IP Port Monitor v1.2\nHeiko Folkerts, BSI 2018-2020\n" //Version string
 #define MASCOTT "                             ▄▄▄               ▄▄▄▄▄▄\n                 ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀\n                    ▀▄▄▄▓█▓██   █▓█▌         █▓   ▓████████▀\n                       ▀███▓▓(o)██▓▌       ▐█▓█(o)█▓█████▀\n                         ▀▀██▓█▓▓█         ████▓███▀▀\n                  ▄            ▀▀▀▀                          ▄\n                ▀▀█                                         ▐██▌\n                  ██▄     ____------▐██████▌------___     ▄▄██\n                 __█ █▄▄--   ___------▀▓▓▀-----___   --▄▄█ █▀__\n             __--   ▀█  ██▄▄▄▄    __--▄▓▓▄--__   ▄▄▄▄██  ██▀   --__\n         __--     __--▀█ ██  █▀▀█████▄▄▄▄▄▄███████  ██ █▀--__      --__\n     __--     __--    __▀▀█  █  ██  ██▀▀██▀▀██  ██  █▀▀__    --__      --__\n         __--     __--     ▀███ ██  ██  ██  ██ ████▀     --__    --__\n hfo   --     __--             ▀▀▀▀▀██▄▄██▄▄██▀▀▀▀           --__    --\n         __ --                                                   --__\n"
 #define DEBUG 0
 #define CHUNK_SIZE 512 //Chunks for receiving
@@ -200,9 +202,9 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 // Global Variables and Definitions
 char hostaddr[INET6_ADDRSTRLEN]; //Hostaddress to bind to. Globally defined to make it visible to functions for filtering.
 //Global Variables and definitions
-long int JSON_BUF_SIZE; //TODO: Seriously think about necessary Buffer-Size for JSON Output
-char* global_json;  //JSON Output defined global, to make all information visibel to functions for concatination and output.
-char* json_ptr; //Pointer to actuall JSON output End, to concatinate strings with sprintf().
+//long int JSON_BUF_SIZE; //TODO: Seriously think about necessary Buffer-Size for JSON Output
+//char* global_json;  //JSON Output defined global, to make all information visibel to functions for concatination and output.
+//char* json_ptr; //Pointer to actuall JSON output End, to concatinate strings with sprintf().
 int pcap_pid; //PID of the Child doing the PCAP-Sniffing. Globally defined, cause it's used in CHECK-Makro.
 int accept_pid; //PID of the Child doing the TCP Connection handling. Globally defined, cause it's used in CHECK-Makro.
 //semaphores for output globally defined for easy access inside functions
@@ -223,5 +225,10 @@ struct con_status_t{    //Connection status
     char reason[16];    //Reason is either "timeout\0", "size exceeded\0" or "n/a\0". Usefull states like "FIN send\0" and "FIN recv\0" are not detectable.
     long int data_bytes;//received bytes
 };
+
+//struct holding json for output
+typedef struct {
+        char* str;
+} json_struct;
 
 #endif

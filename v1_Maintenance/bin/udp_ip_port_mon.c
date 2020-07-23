@@ -43,10 +43,6 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 
 int main(int argc, char *argv[])
 {
-       //char* global_json = 0; //JSON Output defined global, to make all information visibel to functions for concatination and output.
-        global_json = malloc(JSON_BUF_SIZE);
-        memset(global_json, 0, JSON_BUF_SIZE);
-        json_ptr = global_json;
         //get start time
         struct timeval begin;
         char start_time[64] = "";
@@ -59,29 +55,70 @@ int main(int argc, char *argv[])
         struct user_t user;
         int bufsize = DEFAULT_BUFSIZE;
 
+        CHECK(signal(SIGINT, sig_handler), != SIG_ERR); //register handler for SIGINT
+        CHECK(signal(SIGTERM, sig_handler), != SIG_ERR); //register handler for SIGTERM
+
+        //Display Mascott and Version
+        fprintf(stderr, "\n%s%s\n", MASCOTT, VERSION);
+
         // Checking if number of argument is
         // 4 or 5 or not.(PROG addr port conntimeout)
-        if (argc < 4 || argc > 5)
+        if (argc != 2  && (argc < 4 || argc > 5))
         {
-                fprintf(stderr, "%s%s\nSyntax: %s hostaddress path_to_save_udp-data user [buffer_size]\n\tBuffer Size defaults to %d Bytes.\n \
-\tPath to directory MUST end with a trailing slash, e.g.  \"/path/to/my/dir/\"\n\n \
-Netfilter should be configured to block outgoing ICMP Destination unreachable (Port unreachable) packets, e.g.\n \
-\tiptables -I OUTPUT -p icmp --icmp-type destination-unreachable -j DROP\n\n \
-\tMust be run as root, but the priviliges will be droped to user after the socket has been opened.\n", MASCOTT, VERSION, argv[0], DEFAULT_BUFSIZE);
+                print_help(argv[0]);
                 return -1;
         }
-      
-        strncpy(hostaddr, argv[1], sizeof(hostaddr)); hostaddr[sizeof(hostaddr)-1] = 0; //copy hostaddress and ensure null termination of this string. Ugly, I know.
 
-        //copy path for stream data and ensure null termination of this string. Ugly, again...
-        strncpy(data_path, argv[2], sizeof(data_path)); data_path[sizeof(data_path)-1] = 0;
-
-        //copy user string and ensure null termination of this string. Ugly, again...
-        strncpy(user.name, argv[3], sizeof(user.name)); user.name[sizeof(user.name)-1] = 0;
-
-        if (argc == 5) //set bufsize if given and convert to integer type.
+        if (argc == 2) //read config file
         {
-                bufsize = atoi(argv[4]);
+            lua_State *luaState = lua_open();
+            if (luaL_dofile(luaState, argv[1]) != 0) {
+                fprintf(stderr, "%s [PID %d] Error parsing config file: %s\n\tRun without command line arguments for help.\n", start_time, getpid(), lua_tostring(luaState, -1));
+                exit(1);
+            }
+
+            fprintf(stderr, "%s Parsing config file: %s\n", start_time, argv[1]);
+
+            fprintf(stderr, "\tHostaddress: %s\n", get_config_opt(luaState, "hostaddress"));
+            strncpy(hostaddr, get_config_opt(luaState, "hostaddress"), sizeof(hostaddr)); hostaddr[sizeof(hostaddr)-1] = 0;
+
+            strncpy(user.name, get_config_opt(luaState, "user"), sizeof(user.name)); user.name[sizeof(user.name)-1] = 0;
+            fprintf(stderr, "\tuser: %s\n", get_config_opt(luaState, "user"));
+            
+            strncpy(data_path, get_config_opt(luaState, "path_to_save_udp_data"), sizeof(data_path)); data_path[sizeof(data_path)-1] = 0;
+            fprintf(stderr, "\tpath_to_save_udp_data: %s\n", get_config_opt(luaState, "path_to_save_udp_data"));
+
+             //check if mandatory string parameters are present, bufsize is NOT mandatory, the rest are numbers and are handled otherwise
+            if(strlen(hostaddr) == 0 || strlen(user.name) == 0 || strlen(data_path) == 0)
+            {
+                fprintf(stderr, "%s [PID %d] Error in config file: %s\n", start_time, getpid(), argv[1]);
+                print_help(argv[0]);
+                return -1;
+            }
+
+            if(get_config_opt(luaState, "bufsize") != 0) //if optional parameter is given, set it.
+            {
+                bufsize = atoi(get_config_opt(luaState, "bufsize")); //convert string type to integer type (bufsize)
+                fprintf(stderr, "\tbufsize: %s\n", get_config_opt(luaState, "bufsize"));
+            }
+
+            lua_close(luaState);
+        }
+        else //copy legacy command line arguments to variables
+        {
+            strncpy(hostaddr, argv[1], sizeof(hostaddr)); hostaddr[sizeof(hostaddr)-1] = 0; //copy hostaddress and ensure null termination of this string. Ugly, I know.
+
+            //copy path for stream data and ensure null termination of this string. Ugly, again...
+            strncpy(data_path, argv[2], sizeof(data_path)); data_path[sizeof(data_path)-1] = 0;
+
+            //copy user string and ensure null termination of this string. Ugly, again...
+            strncpy(user.name, argv[3], sizeof(user.name)); user.name[sizeof(user.name)-1] = 0;
+
+            if (argc == 5) //set bufsize if given and convert to integer type.
+            {
+                    bufsize = atoi(argv[4]);
+            }
+
         }
 
         if(bufsize < 0) //Range checks
@@ -90,7 +127,7 @@ Netfilter should be configured to block outgoing ICMP Destination unreachable (P
                 return -2;
         }
 
-        fprintf(stderr, "%s%s\n%s Starting with hostaddress %s, bufsize is %d Byte...\n",MASCOTT, VERSION, start_time, hostaddr, bufsize);
+        fprintf(stderr, "%s Starting with hostaddress %s, bufsize is %d Byte...\n", start_time, hostaddr, bufsize);
 
         //Variables
         struct sockaddr_in addr; //Hostaddress
@@ -119,26 +156,26 @@ Netfilter should be configured to block outgoing ICMP Destination unreachable (P
         CHECK(inet_aton(hostaddr, &addr.sin_addr), != 0); //set and check listening address
 
         //Main loop
-        buffer = CHECK(malloc(bufsize + 1), != 0 ); //allocate buffer
+        saved_buffer(buffer = CHECK(malloc(bufsize + 1), != 0 )); //allocate buffer and saves his address to be freed by signal handler
         while (1) {
                 memset(buffer ,0 , bufsize + 1); //zeroize buffer
                 int recv_len = CHECK(recvfrom(listenfd, buffer, bufsize , 0, (struct sockaddr *) &trgaddr, &trgaddr_len), != -1); //Accept Incoming data
 
-                json_ptr = global_json; //Begin new global JSON output and...
-                JSON_BUF_SIZE = JSON_BUF_SIZE_BASELINE;
-                json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), "{\"origin\": \"MADCAT\", "); //...open new JSON
+                //Begin new global JSON output and open new JSON
+                json_do(1, "{\"origin\": \"MADCAT\", ");
                 //parse buffer, log, fetch datagram, do stuff...
                 long int data_bytes = do_stuff(buffer, recv_len, hostaddr ,data_path);
                 if(data_bytes >= 0) //if nothing went wrong...                         
                 {
                     //Analyse IP & TCP Headers and concat to global JSON
-                    json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), ", \"bytes_toserver\": %ld}", data_bytes);
+                    json_do(0, ", \"bytes_toserver\": %ld}", data_bytes);
                     analyze_ip_header(buffer, recv_len);
                     analyze_udp_header(buffer, recv_len);
-                    json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), "}\n"); //close JSON object
-                    fprintf(stdout,"%s\n", global_json); //print json output for logging and further analysis
+                    json_do(0, "}\n"); //close JSON object
+                    fprintf(stdout,"%s\n", json_do(0,"")); //print json output for logging and further analysis
                     fflush(stdout);
                 }
+                free(json_do(0,""));
         }
 
         return 0;

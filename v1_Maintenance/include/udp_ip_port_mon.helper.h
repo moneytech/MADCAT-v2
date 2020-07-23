@@ -39,11 +39,16 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include "udp_ip_port_mon.h"
 
 //Helper Functions:
+void print_help(char* progname); //print help message
+const char* get_config_opt(lua_State* L, char* name); //Returns configuration items from LUA config file
 void get_user_ids(struct user_t* user); //adapted example code from manpage getpwnam(3)
 void print_hex(FILE* output, const unsigned char* buffer, int buffsize);
 char *print_hex_string(const unsigned char* buffer, unsigned int buffsize); //Do not forget to free!
 unsigned char* hex_dump(const void *addr, int len, const bool json);
+char* json_do(bool init_or_reset, const char* format, ...); //Reset or initialize new JSON if first arguement is true and append formated string.
 void time_str(char* buf, int buf_size);
 char *inttoa(uint32_t i_addr); //inet_ntoa e.g. converts 127.1.1.1 to 127.0.0.1. This is bad e.g. for testing.
+void* saved_buffer(void * buffer); //saves and returns address of main buffer to be freed by signal handler
+void sig_handler(int signo); //Signal Handler for gracefull shutdown
 
 #endif

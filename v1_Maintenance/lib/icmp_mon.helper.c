@@ -40,6 +40,22 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 
 //Functions
 
+void print_help(char* progname) //print help message
+{
+    fprintf(stderr, "SYNTAX:\n    %s path_to_config_file\n\
+        Sample content of a config file:\n\n\
+            \thostaddress = \"127.1.1.1\"\n\
+            \tuser = \"hf\"\n\
+            \tpath_to_save_icmp_data = \"./ipm/\" --Must end with trailing \"/\", will be handled as prefix otherwise\n\
+            \t--bufsize = \"1024\" --optional\n\
+        ", progname);
+
+    fprintf(stderr, "\nLEGACY SYNTAX (pre v1.1.5)t: %s hostaddress path_to_save_icmp-data user [buffer_size]\n\tBuffer Size defaults to %d Bytes.\n \
+\tPath to directory MUST end with a trailing slash, e.g.  \"/path/to/my/dir/\"\n\n \
+\tMust be run as root, but the priviliges will be droped to user after the socket has been opened.\n", progname, DEFAULT_BUFSIZE);
+    return;
+}
+
 void get_user_ids(struct user_t* user) //adapted example code from manpage getpwnam(3)
 {
     struct passwd pwd;
@@ -64,6 +80,16 @@ void get_user_ids(struct user_t* user) //adapted example code from manpage getpw
     user->gid = pwd.pw_gid;
     free(buf);
     return;
+}
+
+const char* get_config_opt(lua_State* L, char* name) //Returns configuration items from LUA config file
+{
+    lua_getglobal(L, name);
+    if (!lua_isstring(L, -1)) {
+        //fprintf(stderr, "%s must be a string", name);
+        return strndup("",1); //return Empty string, if configuration item was not found. DO NOT FORGET TO FREE!
+    }
+    return (const char*) lua_tostring(L, -1); //DO NOT FORGET TO FREE!
 }
 
 void print_hex(FILE* output, const unsigned char* buffer, int buffsize)
@@ -179,6 +205,45 @@ unsigned char* hex_dump(const void *addr, int len, const bool json)
     return output;
 }
 
+char* json_do(bool init_or_reset, const char* format, ...)
+{
+
+    static json_struct json; //static to hold data in json_struct after return from function
+    static bool first_run = true;
+    signed int numchars = 0; //number of chars to write
+    va_list valst; //variable argument list
+    va_start (valst, format);
+    
+    if (init_or_reset) //should the json_struct be initialized or reseted?
+    {
+        if (!first_run)
+        {
+            free(json.str);
+            first_run = false;
+        }
+        CHECK(json.str = malloc(1), != 0);
+        *json.str = 0;  //add trailing \0 (empty string)                
+    }
+    
+    //get number of chars to write
+    va_start (valst, format);
+    numchars = vsnprintf(NULL, 0, format, valst);
+    va_end(valst);
+   
+    //if an empty string has been provided as parameter, just return the pointer to actual string
+    if (numchars == 0) return json.str;
+
+    //allocate new memory for chars to write
+    CHECK(json.str = realloc(json.str, strlen(json.str) + numchars + 1), != 0);
+    
+    //append chars to string
+    va_start(valst, format);    
+    CHECK(vsnprintf(json.str + strlen(json.str), numchars + 1 , format, valst), != 0);
+    va_end(valst);
+
+    return json.str; //return pointer to (new) string
+}
+
 void time_str(char* buf, int buf_size)
 {
         struct timeval tv;
@@ -202,3 +267,23 @@ char *inttoa(uint32_t i_addr)
     return strndup(str_addr,16); //strndup ensures \0 termination. Do not forget to free()!
 }
 
+//saves and returns address of main buffer to be freed by signal handler
+void* saved_buffer(void * buffer)
+{
+    static void* saved_buffer = 0;
+    if (buffer != 0) saved_buffer = buffer;
+    return saved_buffer;
+}
+
+//Signal Handler for gracefull shutdown
+void sig_handler(int signo)
+{
+    char stop_time[64] = ""; //Human readable stop time (actual time zone)
+    time_str(stop_time, sizeof(stop_time)); //Get Human readable string only
+    fprintf(stderr, "\n%s Received Signal %s, shutting down...\n", stop_time, strsignal(signo));
+    // Free receiving buffer
+    free(saved_buffer(0));
+    //exit parent process
+    exit(signo);
+    return;
+}
