@@ -24,7 +24,7 @@
 --    Programm erhalten haben. Wenn nicht, siehe <https://www.gnu.org/licenses/>.
 --*******************************************************************************/
 --MADCAT - Mass Attack Detecion Connection Acceptance Tool
---TCP-IP Port Monitor v1.2
+--TCP-IP Port Monitor v1.1.5
 --Heiko Folkerts, BSI 2020
 --
 -- Config File
