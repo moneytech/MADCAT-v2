@@ -39,6 +39,6 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include "icmp_mon.h"
 
 //Connection worker:
-int do_stuff(unsigned char* buffer, int recv_len, char* hostaddress , char* data_path);
+int worker_icmp(unsigned char* buffer, int recv_len, char* hostaddress , char* data_path);
 
 #endif

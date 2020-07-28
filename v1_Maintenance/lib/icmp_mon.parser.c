@@ -47,7 +47,7 @@ bool parse_ipopt(int opt_cpclno, const char* opt_name, \
     if((*opt_ptr_ptr + opt_len) > endofoptions_addr) return true; //Check length, signal tainted in case of failure
     //Option data to hex string
     char* hex_string = print_hex_string(*opt_ptr_ptr + 2, opt_len - 2);  //Extract option data as hex string. Has to be freed!
-    json_do(0, "\"%s\": \"%s\", ", opt_name, hex_string); //JSON output
+    json_do(false, "\"%s\": \"%s\", ", opt_name, hex_string); //JSON output
     free(hex_string);
     *opt_ptr_ptr += opt_len; //set pointer to next option
     return false; //Option not tainted.

@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
         struct timeval begin;
         char start_time[64] = "";
         gettimeofday(&begin , NULL); //Get current time and...
-        time_str(start_time, sizeof(start_time)); //...generate string with current time
+        time_str(NULL, 0, start_time, sizeof(start_time)); //...generate string with current time
         
         //Parse command line
         char hostaddr[INET6_ADDRSTRLEN] = "";
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
         // 4 or 5 or not.(PROG addr port conntimeout)
         if (argc != 2  && (argc < 4 || argc > 5))
         {
-                print_help(argv[0]);
+                print_help_icmp(argv[0]);
                 return -1;
         }
       
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
             if(strlen(hostaddr) == 0 || strlen(user.name) == 0 || strlen(data_path) == 0)
             {
                 fprintf(stderr, "%s [PID %d] Error in config file: %s\n", start_time, getpid(), argv[1]);
-                print_help(argv[0]);
+                print_help_icmp(argv[0]);
                 return -1;
             }
 
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
 
                 json_do(1, ""); //Begin new global JSON output
                 //parse buffer, log, assemble JSON, parse IP/TCP/UDP headers, do stuff...
-                do_stuff(buffer, recv_len, hostaddr ,data_path);
+                worker_icmp(buffer, recv_len, hostaddr ,data_path);
                  //print JSON output for logging and further analysis, if JSON-Object is not empty (happens if e.g. UDP is seen by ICMP Raw Socket)
                 if(strlen(json_do(0, "")) > 2) {
                     fprintf(stdout,"%s\n", json_do(0, ""));

@@ -24,27 +24,26 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
     Programm erhalten haben. Wenn nicht, siehe <https://www.gnu.org/licenses/>.
 *******************************************************************************/
 /* MADCAT - Mass Attack Detecion Connection Acceptance Tool
- * TCP monitor library headerfile.
+ * TCP-, UDP- and ICMP monitor library headerfile.
  *
  * Netfilter should be configured to block outgoing ICMP Destination unreachable (Port unreachable) packets, e.g.:
  *      iptables -I OUTPUT -p icmp --icmp-type destination-unreachable -j DROP
  *
- * Heiko Folkerts, BSI 2018-2020
+ * Heiko Folkerts, BSI 2018-2019
 */
 
 
-#ifndef TCP_IP_PORT_MON_HELPER_H
-#define TCP_IP_PORT_MON_HELPER_H
+#ifndef MADCAT_HELPER_H
+#define MADCAT_HELPER_H
 
-#include "tcp_ip_port_mon.h"
-#include "madcat.helper.h"
-
-//Helper Functions:
-void print_help_tcp(char* progname); //print TCP help message
-int init_pcap(char* dev, pcap_t **handle);
-void drop_root_privs(struct user_t user, const char* entity);
-void sig_handler_parent(int signo);
-void sig_handler_sigchld(int sig);
-void sig_handler_child(int signo);
+//MADCAT HELPER
+void time_str(char* unix_buf, int unix_size, char* readable_buf, int readable_size);
+void get_user_ids(struct user_t* user); //adapted example code from manpage getpwnam(3)
+void print_hex(FILE* output, const unsigned char* buffer, int buffsize);
+char *print_hex_string(const unsigned char* buffer, unsigned int buffsize); //Do not forget to free!
+unsigned char* hex_dump(const void *addr, int len, const bool json);
+char *inttoa(uint32_t i_addr); //inet_ntoa e.g. converts 127.1.1.1 to 127.0.0.1. This is bad e.g. for testing.
+char* json_do(bool init_or_reset, const char* format, ...); //Reset or initialize new JSON if first arguement is true and append formated string.
+const char* get_config_opt(lua_State* L, char* name); //Returns configuration items from LUA config file
 
 #endif

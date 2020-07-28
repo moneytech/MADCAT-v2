@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
         struct timeval begin;
         char start_time[64] = "";
         gettimeofday(&begin , NULL); //Get current time and...
-        time_str(start_time, sizeof(start_time)); //...generate string with current time
+        time_str(NULL, 0, start_time, sizeof(start_time)); //...generate string with current time
         
         //Parse command line
         char hostaddr[INET6_ADDRSTRLEN] = "";
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
         // 4 or 5 or not.(PROG addr port conntimeout)
         if (argc != 2  && (argc < 4 || argc > 5))
         {
-                print_help(argv[0]);
+                print_help_udp(argv[0]);
                 return -1;
         }
 
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
             if(strlen(hostaddr) == 0 || strlen(user.name) == 0 || strlen(data_path) == 0)
             {
                 fprintf(stderr, "%s [PID %d] Error in config file: %s\n", start_time, getpid(), argv[1]);
-                print_help(argv[0]);
+                print_help_udp(argv[0]);
                 return -1;
             }
 
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
                 //Begin new global JSON output and open new JSON
                 json_do(1, "{\"origin\": \"MADCAT\", ");
                 //parse buffer, log, fetch datagram, do stuff...
-                long int data_bytes = do_stuff(buffer, recv_len, hostaddr ,data_path);
+                long int data_bytes = worker_udp(buffer, recv_len, hostaddr ,data_path);
                 if(data_bytes >= 0) //if nothing went wrong...                         
                 {
                     //Analyse IP & TCP Headers and concat to global JSON

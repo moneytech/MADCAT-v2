@@ -43,7 +43,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include "udp_ip_port_mon.helper.h"
 
 
-int do_stuff(unsigned char* buffer, int recv_len, char* hostaddress , char* data_path)
+int worker_udp(unsigned char* buffer, int recv_len, char* hostaddress , char* data_path)
 {
         struct ipv4udp_t ipv4udp; //struct to save IP-Header contents of intrest
         char* payload_hd_str = 0; //Payload as string in HexDump Format
@@ -58,7 +58,7 @@ int do_stuff(unsigned char* buffer, int recv_len, char* hostaddress , char* data
         char stop_time[64] = "";
         //beginning time
         //gettimeofday(&begin , NULL); //Get current time and...
-        time_str(start_time, sizeof(start_time)); //...generate string with current time
+        time_str(NULL, 0, start_time, sizeof(start_time)); //...generate string with current time
 
         if (recv_len < 28) //Minimum 20 Byte IP Header + 8 Byte UDP Header. Should never happen.
         {
@@ -122,7 +122,7 @@ ipv4udp.src_ip_str, ipv4udp.src_port, ipv4udp.dst_ip_str, ipv4udp.dst_port, ipv4
         }
 
         //Get current time and...
-        time_str(stop_time, sizeof(stop_time)); //...generate string with current time
+        time_str(NULL, 0, stop_time, sizeof(stop_time)); //...generate string with current time
         //Compute SHA1 of payload
         SHA1(ipv4udp.data, ipv4udp.data_len, payload_sha1);
         payload_sha1_str = print_hex_string(payload_sha1, SHA_DIGEST_LENGTH);

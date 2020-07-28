@@ -39,7 +39,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include "icmp_mon.helper.h"
 #include "icmp_mon.parser.h"
 
-int do_stuff(unsigned char* buffer, int recv_len, char* hostaddress , char* data_path)
+int worker_icmp(unsigned char* buffer, int recv_len, char* hostaddress , char* data_path)
 {
         struct ipv4icmp_t ipv4icmp; //struct to save IP-Header contents of intrest
 
@@ -60,7 +60,7 @@ int do_stuff(unsigned char* buffer, int recv_len, char* hostaddress , char* data
         int data_offset = 0; //Data after end of 8-Byte ICMP-Header + data_offset, covering the parsed and JSONized data, is going to be dumped in a file.
         //beginning time
         gettimeofday(&begin , NULL); //Get current time and...
-        time_str(start_time, sizeof(start_time)); //...generate string with current time
+        time_str(NULL, 0, start_time, sizeof(start_time)); //...generate string with current time
 
         if (recv_len < 24) //Minimum 20 Byte IP Header + 4 Byte ICMP Header. Should never happen.
         {
@@ -345,7 +345,7 @@ ntohs(*(uint16_t*) (ipv4icmp.icmp_hdr + 3*sizeof(uint16_t))));
 
         //End time
         gettimeofday(&begin , NULL); //Get current time and...
-        time_str(stop_time, sizeof(stop_time)); //...generate string with current time
+        time_str(NULL, 0, stop_time, sizeof(stop_time)); //...generate string with current time
         //Close ICMP JSON object with tainted status and "flow" part
         json_do(0, ", \
 \"tainted\": %s}, \

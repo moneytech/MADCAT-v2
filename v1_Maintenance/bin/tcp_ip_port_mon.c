@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
         // Checking if number of arguments is one (config file) or 6 or 7 (command line).
         if (argc != 2  && (argc < 7 || argc > 8))
         {
-                print_help(argv[0]);
+                print_help_tcp(argv[0]);
                 return -1;
         }
 
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
             if(strlen(interface) == 0 || strlen(hostaddr) == 0 || strlen(user.name) == 0 || strlen(data_path) == 0)
             {
                 fprintf(stderr, "%s [PID %d] Error in config file: %s\n", start_time, getpid(), argv[1]);
-                print_help(argv[0]);
+                print_help_tcp(argv[0]);
                 return -1;
             }
 
@@ -278,7 +278,7 @@ int main(int argc, char *argv[])
 	                        #if DEBUG >= 2
 	                            fprintf(stderr, "*** DEBUG [PID %d] Accept-Child entering Worker\n", getpid());
 	                        #endif
-                            long int data_bytes = do_stuff(inet_ntoa(trgaddr.sin_addr), ntohs(trgaddr.sin_port), clientaddr, ntohs(s->sin_port),\
+                            long int data_bytes = worker_tcp(inet_ntoa(trgaddr.sin_addr), ntohs(trgaddr.sin_port), clientaddr, ntohs(s->sin_port),\
                                                            timeout, data_path, max_file_size, openfd, start_time, start_time_unix, confifo);
 	                        #if DEBUG >= 2
 	                            fprintf(stderr, "*** DEBUG [PID %d] Accept-Child left Worker\n", getpid());
