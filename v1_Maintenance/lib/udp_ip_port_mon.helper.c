@@ -38,12 +38,10 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
  * Heiko Folkerts, BSI 2018-2019
 */
 
-#include "udp_ip_port_mon.helper.h"
-
 //Helper Functions
-
-#include "madcat.helper.c"
-#include "udp_ip_port_mon.icmp_mon.helper.c"
+#include "madcat.helper.h"
+#include "udp_ip_port_mon.icmp_mon.helper.h"
+#include "udp_ip_port_mon.helper.h"
 
 void print_help_udp(char* progname) //print help message
 {

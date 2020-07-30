@@ -39,7 +39,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include "tcp_ip_port_mon.helper.h"
 
 //Helper functions
-#include "madcat.helper.c"
+#include "madcat.helper.h"
 
 void print_help_tcp(char* progname) //print help message
 {

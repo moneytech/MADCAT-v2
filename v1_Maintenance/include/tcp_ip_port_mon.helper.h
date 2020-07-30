@@ -47,4 +47,7 @@ void sig_handler_parent(int signo);
 void sig_handler_sigchld(int sig);
 void sig_handler_child(int signo);
 
+char* json_do(bool init_or_reset, const char* format, ...); //Reset or initialize new JSON if first arguement is true and append formated string.
+void get_user_ids(struct user_t* user); //adapted example code from manpage getpwnam(3)
+
 #endif
