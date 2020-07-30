@@ -35,34 +35,9 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #ifndef ICMP_MON_H
 #define ICMP_MON_H
 
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <signal.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <arpa/inet.h>
-#include <linux/netfilter_ipv4.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/time.h>
-#include <time.h>
-#include <pwd.h>
-#include <netinet/ip.h>
-#include <netinet/udp.h>
-#include <netinet/tcp.h>
-#include <stdbool.h>
-#include <stdarg.h>
-#include <sys/file.h>
-#include <openssl/sha.h>
-#include <lua5.1/lauxlib.h>
-#include <lua5.1/lualib.h>
+#include "madcat.common.h"
 
 #define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nICMP Monitor v1.2\nHeiko Folkerts, BSI 2018-2020\n"
-#define MASCOTT "                             ▄▄▄               ▄▄▄▄▄▄\n                 ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀\n                    ▀▄▄▄▓█▓██   █▓█▌         █▓   ▓████████▀\n                       ▀███▓▓(o)██▓▌       ▐█▓█(o)█▓█████▀\n                         ▀▀██▓█▓▓█         ████▓███▀▀\n                  ▄            ▀▀▀▀                          ▄\n                ▀▀█                                         ▐██▌\n                  ██▄     ____------▐██████▌------___     ▄▄██\n                 __█ █▄▄--   ___------▀▓▓▀-----___   --▄▄█ █▀__\n             __--   ▀█  ██▄▄▄▄    __--▄▓▓▄--__   ▄▄▄▄██  ██▀   --__\n         __--     __--▀█ ██  █▀▀█████▄▄▄▄▄▄███████  ██ █▀--__      --__\n     __--     __--    __▀▀█  █  ██  ██▀▀██▀▀██  ██  █▀▀__    --__      --__\n         __--     __--     ▀███ ██  ██  ██  ██ ████▀     --__    --__\n hfo   --     __--             ▀▀▀▀▀██▄▄██▄▄██▀▀▀▀           --__    --\n         __ --                                                   --__\n"
 #define PATH_LEN 256
 #define ICMP_HEADER_LEN 8
 #define UDP_HEADER_LEN 8
@@ -70,6 +45,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #define DEFAULT_BUFSIZE 9000 //Ethernet jumbo frame limit
 #define ETHERNET_HEADER_LEN 14 //Length of an Ethernet Header
 
+/*
 // Macro to check if an error occured, translate it, report it to STDERR, calling shutdown callback function to exit with error and dump core.
 #define CHECK(result, check)                                                            \
         ({                                                                 \
@@ -81,6 +57,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
                 }                                                                       \
                 retval;                                                                     \
         })
+*/
 
 /* IP options and ICMP types/codes as defined in Wireshark*/
 //Original names cause redifinition warnings, so prefix "MY" has been added
@@ -239,16 +216,5 @@ struct ipv4icmp_t {
     void*    data; //Begin of ICMP data (the stuff after the 8Byte header)
     unsigned long int data_len;
 };
-
-struct user_t{
-    char name[33]; //Linux user names may be up to 32 characters long + 0-Termination.
-    uid_t   uid;        /* user ID */
-    gid_t   gid;        /* group ID */
-};
-
-//struct holding json for output
-typedef struct {
-        char* str;
-} json_struct;
 
 #endif

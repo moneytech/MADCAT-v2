@@ -34,40 +34,17 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #ifndef UDP_IP_PORT_MON_H
 #define UDP_IP_PORT_MON_H
 
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <signal.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <arpa/inet.h>
-#include <linux/netfilter_ipv4.h>
-#include <unistd.h>
-#include <fcntl.h>
-//#define	__USE_MISC //make struct_tm.h, included from time.h, provide "long int tm_gmtoff" and  "const char *tm_zone"
-#include <sys/time.h>
-#include <time.h>
-#include <pwd.h>
-#include <netinet/ip.h>
-#include <netinet/udp.h>
-#include <stdbool.h>
-#include <sys/file.h>
-#include <openssl/sha.h>
-#include <stdarg.h>
-#include <lua5.1/lauxlib.h>
-#include <lua5.1/lualib.h>
+#include "madcat.common.h"
 
 #define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nUDP-IP Port Monitor v1.2\nHeiko Folkerts, BSI 2018-2020\n"
-#define MASCOTT "                             ▄▄▄               ▄▄▄▄▄▄\n                 ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀\n                    ▀▄▄▄▓█▓██   █▓█▌         █▓   ▓████████▀\n                       ▀███▓▓(o)██▓▌       ▐█▓█(o)█▓█████▀\n                         ▀▀██▓█▓▓█         ████▓███▀▀\n                  ▄            ▀▀▀▀                          ▄\n                ▀▀█                                         ▐██▌\n                  ██▄     ____------▐██████▌------___     ▄▄██\n                 __█ █▄▄--   ___------▀▓▓▀-----___   --▄▄█ █▀__\n             __--   ▀█  ██▄▄▄▄    __--▄▓▓▄--__   ▄▄▄▄██  ██▀   --__\n         __--     __--▀█ ██  █▀▀█████▄▄▄▄▄▄███████  ██ █▀--__      --__\n     __--     __--    __▀▀█  █  ██  ██▀▀██▀▀██  ██  █▀▀__    --__      --__\n         __--     __--     ▀███ ██  ██  ██  ██ ████▀     --__    --__\n hfo   --     __--             ▀▀▀▀▀██▄▄██▄▄██▀▀▀▀           --__    --\n         __ --                                                   --__\n"
+
 #define PATH_LEN 256
 #define UDP_HEADER_LEN 8
 #define IP_OR_TCP_HEADER_MINLEN 20 // Minimum Length of an IP-Header or a TCP-Header is 20 Bytes
 #define DEFAULT_BUFSIZE 9000 //Ethernet jumbo frame limit
 #define ETHERNET_HEADER_LEN 14 //Length of an Ethernet Header
 
+/*
 // Macro to check if an error occured, translate it, report it to STDERR, calling shutdown callback function to exit with error and dump core.
 #define CHECK(result, check)                                                            \
         ({                                                                 \
@@ -79,6 +56,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
                 }                                                                       \
                 retval;                                                                     \
         })
+*/
 
 /* IP options as definde in Wireshark*/
 //Original names cause redifinition warnings, so prefix "MY" has been added
@@ -131,16 +109,5 @@ struct ipv4udp_t {
     void*    data;
     int      data_len;
 };
-
-struct user_t{
-    char name[33]; //Linux user names may be up to 32 characters long + 0-Termination.
-    uid_t   uid;        /* user ID */
-    gid_t   gid;        /* group ID */
-};
-
-//struct holding json for output
-typedef struct {
-        char* str;
-} json_struct;
 
 #endif

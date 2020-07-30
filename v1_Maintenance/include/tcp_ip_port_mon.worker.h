@@ -36,6 +36,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #ifndef TCP_IP_PORT_MON_WORKER_H
 #define TCP_IP_PORT_MON_WORKER_H
 
+#include "madcat.common.h"
 #include "tcp_ip_port_mon.h"
 
 //Connection worker:

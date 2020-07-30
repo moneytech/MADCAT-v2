@@ -36,8 +36,23 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #ifndef UDP_IP_PORT_ICMP_HELPER_H
 #define UDP_IP_PORT_ICMP_HELPER_H
 
+#define CHECK(result, check)                                                            \
+        ({                                                                 \
+                typeof(result) retval = (result);                                           \
+                if (!(retval check)) {                                                      \
+                        fprintf(stderr, "ERROR: Return value from function call '%s' is NOT %s at %s:%d.\n\tERRNO(%d): %s\n",          \
+                                        #result, #check, __FILE__, __LINE__, errno, strerror(errno)); \
+                        abort();                                                        \
+                }                                                                       \
+                retval;                                                                     \
+        })
+
+
 //UDP and ICMP HELPER
 void* saved_buffer(void * buffer); //saves and returns address of main buffer to be freed by signal handler
 void sig_handler(int signo); //Signal Handler for gracefull shutdown
+//TODO?
+char* json_do(bool init_or_reset, const char* format, ...); //Reset or initialize new JSON if first arguement is true and append formated string.
+void get_user_ids(struct user_t* user); //adapted example code from manpage getpwnam(3)
 
 #endif

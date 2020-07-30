@@ -39,6 +39,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(UNINSTALL_SCRIPT "uninstall.sh")
 set(GCC_FLAGS "-gdwarf-2" "-fno-strict-aliasing")
 
+# Common C_FLAG option
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -gdwarf-2" "--no-strict-aliasing")
+
 # Set directory for libraries and executables
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")

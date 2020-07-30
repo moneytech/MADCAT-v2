@@ -61,6 +61,7 @@ void time_str(char* unix_buf, int unix_size, char* readable_buf, int readable_si
         return;
 }
 
+/*
 void get_user_ids(struct user_t* user) //adapted example code from manpage getpwnam(3)
 {
     struct passwd pwd;
@@ -86,6 +87,7 @@ void get_user_ids(struct user_t* user) //adapted example code from manpage getpw
     free(buf);
     return;
 }
+*/
 
 void print_hex(FILE* output, const unsigned char* buffer, int buffsize)
 {   
@@ -209,6 +211,7 @@ char *inttoa(uint32_t i_addr) //inet_ntoa e.g. converts 127.1.1.1 to 127.0.0.1. 
     return strndup(str_addr,16); //strndup ensures \0 termination. Do not forget to free()!
 }
 
+/*
 char* json_do(bool init_or_reset, const char* format, ...)
 {
 
@@ -247,6 +250,7 @@ char* json_do(bool init_or_reset, const char* format, ...)
 
     return json.str; //return pointer to (new) string
 }
+*/
 
 const char* get_config_opt(lua_State* L, char* name) //Returns configuration items from LUA config file
 {
