@@ -133,13 +133,13 @@ void sig_handler_parent(int signo)
 }
 
 //Signal Handler for Listner Parent to prevent childs becoming Zombies
-void sig_handler_sigchld(int sig)
+void sig_handler_sigchld(int signo)
 {
     pid_t pid;
     int status;
 
     #if DEBUG >= 2
-        fprintf(stderr, "*** DEBUG [PID %d] Entering  sig_handler_sigchld(%d).\n", getpid(), sig);
+        fprintf(stderr, "*** DEBUG [PID %d] Entering  sig_handler_sigchld(%d).\n", getpid(), signo);
     #endif
     pid = wait(&status);
     #if DEBUG >= 2
@@ -165,3 +165,16 @@ void sig_handler_child(int signo)
     return;
 }
 
+//Signal Handler for SIGUSR1 to initiate gracefull shutdown, e.g. by CHECK-Macro
+void sig_handler_shutdown(int signo)
+{
+    #if DEBUG >= 2
+        char stop_time[64] = ""; //Human readable stop time (actual time zone)
+        time_str(NULL, 0, stop_time, sizeof(stop_time)); //Get Human readable string only
+        fprintf(stderr, "\n%s [PID %d] Received Signal %s, shutting down...\n", stop_time, getpid(), strsignal(signo));
+    #endif
+    if ( pcap_pid != 0 ) kill(pcap_pid, SIGINT);
+    if ( accept_pid != 0 ) kill(accept_pid, SIGINT);
+    abort();
+    return;
+}

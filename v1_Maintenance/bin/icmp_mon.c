@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
         struct user_t user;
         int bufsize = DEFAULT_BUFSIZE;
 
+        signal(SIGUSR1, sig_handler); //register handler as callback function used by CHECK-Macro
         CHECK(signal(SIGINT, sig_handler), != SIG_ERR); //register handler for SIGINT
         CHECK(signal(SIGTERM, sig_handler), != SIG_ERR); //register handler for SIGTERM
 

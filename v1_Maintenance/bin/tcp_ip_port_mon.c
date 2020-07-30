@@ -54,6 +54,10 @@ int main(int argc, char *argv[])
         gettimeofday(&begin , NULL);
         time_str(NULL, 0, start_time, sizeof(start_time)); //Get Human readable string only
 
+        signal(SIGUSR1, sig_handler_shutdown); //register handler as callback function used by CHECK-Macro
+        CHECK(signal(SIGINT, sig_handler_parent), != SIG_ERR); //register handler for SIGINT for parent process
+        CHECK(signal(SIGTERM, sig_handler_parent), != SIG_ERR); //register handler for SIGTERM for parent process
+
         //semaphores for output globally defined for easy access inside functions
         //sem_t *hdrsem; //Semaphore for named pipe containing TCP/IP data
         //sem_t *consem; //Semaphore for named pipe containing connection data
@@ -158,9 +162,6 @@ int main(int argc, char *argv[])
         //int pcap_pid = 0; //PID of the Child doing the PCAP-Sniffing. Globally defined, cause it's used in CHECK-Makro.
         //int accept_pid = 0; //PID of the Child doing the TCP Connection handling. Globally defined, cause it's used in CHECK-Makro.
         int parent_pid = getpid();
-
-        CHECK(signal(SIGINT, sig_handler_parent), != SIG_ERR); //register handler for SIGINT for parent process
-        CHECK(signal(SIGTERM, sig_handler_parent), != SIG_ERR); //register handler for SIGTERM for parent process
 
         //Fork in child, init pcap , drop priviliges, sniff for SYN-Packets and log them
 

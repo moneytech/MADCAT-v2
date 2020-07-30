@@ -184,17 +184,14 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 //#define MY_TCPOLEN_RVBD_TRPY_MIN 16 //not yet implemented, thread as "tainted"
 
 
-// Macro to check if an error occured, translate it, report it to STDERR, kill
-// the child process doing the PCAP-Sniffing, exit with error and dump core.
+// Macro to check if an error occured, translate it, report it to STDERR, calling shutdown callback function to exit with error and dump core.
 #define CHECK(result, check)                                                            \
         ({                                                                 \
                 typeof(result) retval = (result);                                           \
                 if (!(retval check)) {                                                      \
                         fprintf(stderr, "ERROR: Return value from function call '%s' is NOT %s at %s:%d.\n\tERRNO(%d): %s\n",          \
                                         #result, #check, __FILE__, __LINE__, errno, strerror(errno)); \
-                        if ( pcap_pid != 0 ) kill(pcap_pid, SIGINT);                                   \
-                        if ( accept_pid != 0 ) kill(accept_pid, SIGINT);                                \
-                        abort();  \
+                        kill(getpid(), SIGUSR1);                                            \
                 }                                                                       \
                 retval;                                                                     \
         })
