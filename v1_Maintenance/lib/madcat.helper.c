@@ -61,7 +61,33 @@ void time_str(char* unix_buf, int unix_size, char* readable_buf, int readable_si
         return;
 }
 
+/*
+void get_user_ids(struct user_t* user) //adapted example code from manpage getpwnam(3)
+{
+    struct passwd pwd;
+    struct passwd *result;
+    char *buf;
+    size_t bufsize;
+    int s;
 
+    bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+    if (bufsize == -1)          // Value was indeterminate
+        bufsize = 16384;        // Should be more than enough
+
+    buf = CHECK(malloc(bufsize), != 0);
+    if (buf == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+
+    s = CHECK(getpwnam_r(user->name, &pwd, buf, bufsize, &result), == 0);
+
+    user->uid = pwd.pw_uid;
+    user->gid = pwd.pw_gid;
+    free(buf);
+    return;
+}
+*/
 
 void print_hex(FILE* output, const unsigned char* buffer, int buffsize)
 {   
@@ -184,6 +210,47 @@ char *inttoa(uint32_t i_addr) //inet_ntoa e.g. converts 127.1.1.1 to 127.0.0.1. 
     snprintf(str_addr, 16, "%u.%u.%u.%u", i_addr & 0x000000ff, (i_addr & 0x0000ff00) >> 8, (i_addr & 0x00ff0000) >> 16, (i_addr & 0xff000000) >> 24);
     return strndup(str_addr,16); //strndup ensures \0 termination. Do not forget to free()!
 }
+
+/*
+char* json_do(bool init_or_reset, const char* format, ...)
+{
+
+    static json_struct json; //static to hold data in json_struct after return from function
+    static bool first_run = true;
+    signed int numchars = 0; //number of chars to write
+    va_list valst; //variable argument list
+    va_start (valst, format);
+    
+    if (init_or_reset) //should the json_struct be initialized or reseted?
+    {
+        if (!first_run)
+        {
+            free(json.str);
+            first_run = false;
+        }
+        CHECK(json.str = malloc(1), != 0);
+        *json.str = 0;  //add trailing \0 (empty string)                
+    }
+    
+    //get number of chars to write
+    va_start (valst, format);
+    numchars = vsnprintf(NULL, 0, format, valst);
+    va_end(valst);
+   
+    //if an empty string has been provided as parameter, just return the pointer to actual string
+    if (numchars == 0) return json.str;
+
+    //allocate new memory for chars to write
+    CHECK(json.str = realloc(json.str, strlen(json.str) + numchars + 1), != 0);
+    
+    //append chars to string
+    va_start(valst, format);    
+    CHECK(vsnprintf(json.str + strlen(json.str), numchars + 1 , format, valst), != 0);
+    va_end(valst);
+
+    return json.str; //return pointer to (new) string
+}
+*/
 
 const char* get_config_opt(lua_State* L, char* name) //Returns configuration items from LUA config file
 {

@@ -45,6 +45,20 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #define DEFAULT_BUFSIZE 9000 //Ethernet jumbo frame limit
 #define ETHERNET_HEADER_LEN 14 //Length of an Ethernet Header
 
+/*
+// Macro to check if an error occured, translate it, report it to STDERR, calling shutdown callback function to exit with error and dump core.
+#define CHECK(result, check)                                                            \
+        ({                                                                 \
+                typeof(result) retval = (result);                                           \
+                if (!(retval check)) {                                                      \
+                        fprintf(stderr, "ERROR: Return value from function call '%s' is NOT %s at %s:%d.\n\tERRNO(%d): %s\n",          \
+                                        #result, #check, __FILE__, __LINE__, errno, strerror(errno)); \
+                        kill(getpid(), SIGUSR1);                                            \
+                }                                                                       \
+                retval;                                                                     \
+        })
+*/
+
 /* IP options and ICMP types/codes as defined in Wireshark*/
 //Original names cause redifinition warnings, so prefix "MY" has been added
 #define MY_IPOPT_COPY              0x80

@@ -11,7 +11,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with MADCAT.  If not, see <http://www.gnu.org/licenses/>.
 #
-#    Diese Date i ist Teil von MADCAT, dem Mass Attack Detection Acceptance Tool.
+#    Diese Datei ist Teil von MADCAT, dem Mass Attack Detection Acceptance Tool.
 #    MADCAT ist Freie Software: Sie können es unter den Bedingungen
 #    der GNU General Public License, wie von der Free Software Foundation,
 #    Version 3 der Lizenz oder (nach Ihrer Wahl) jeder neueren
@@ -36,8 +36,6 @@ add_library(IcmpMonCore STATIC #SHARED #STATIC
   icmp_mon.worker.c
   udp_ip_port_mon.icmp_mon.helper.c
 )
-# wird nicht gebraucht
-#target_compile_options (IcmpMonCore PRIVATE ${GCC_FLAGS})
 
 add_library(TcpIpPortMonCore STATIC #SHARED #STATIC
   madcat.helper.c
@@ -45,8 +43,6 @@ add_library(TcpIpPortMonCore STATIC #SHARED #STATIC
   tcp_ip_port_mon.parser.c
   tcp_ip_port_mon.worker.c
 )
-# wird nicht gebraucht
-#target_compile_options (TcpIpPortMonCore PRIVATE ${GCC_FLAGS})
 
 add_library(UdpIpPortMonCore STATIC #SHARED #STATIC
   madcat.helper.c
@@ -55,8 +51,6 @@ add_library(UdpIpPortMonCore STATIC #SHARED #STATIC
   udp_ip_port_mon.worker.c
   udp_ip_port_mon.icmp_mon.helper.c
 )
-# wird nicht gebraucht
-#target_compile_options (UdpIpPortMonCore PRIVATE ${GCC_FLAGS})
 
 install(
   TARGETS

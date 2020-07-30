@@ -47,6 +47,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include "tcp_ip_port_mon.worker.h"
 
 #define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nTCP-IP Port Monitor v1.2\nHeiko Folkerts, BSI 2018-2020\n" //Version string
+
 #define DEBUG 0
 #define CHUNK_SIZE 512 //Chunks for receiving
 #define PATH_LEN 256 //Minium of maximum path lengths of Linux common file systems
@@ -156,17 +157,14 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 //#define MY_TCPOLEN_RVBD_TRPY_MIN 16 //not yet implemented, thread as "tainted"
 
 
-// Macro to check if an error occured, translate it, report it to STDERR, kill
-// the child process doing the PCAP-Sniffing, exit with error and dump core.
+// Macro to check if an error occured, translate it, report it to STDERR, calling shutdown callback function to exit with error and dump core.
 #define CHECK(result, check)                                                            \
         ({                                                                 \
                 typeof(result) retval = (result);                                           \
                 if (!(retval check)) {                                                      \
                         fprintf(stderr, "ERROR: Return value from function call '%s' is NOT %s at %s:%d.\n\tERRNO(%d): %s\n",          \
                                         #result, #check, __FILE__, __LINE__, errno, strerror(errno)); \
-                        if ( pcap_pid != 0 ) kill(pcap_pid, SIGINT);                                   \
-                        if ( accept_pid != 0 ) kill(accept_pid, SIGINT);                                \
-                        abort();  \
+                        kill(getpid(), SIGUSR1);                                            \
                 }                                                                       \
                 retval;                                                                     \
         })
@@ -191,5 +189,10 @@ struct con_status_t{    //Connection status
     char reason[16];    //Reason is either "timeout\0", "size exceeded\0" or "n/a\0". Usefull states like "FIN send\0" and "FIN recv\0" are not detectable.
     long int data_bytes;//received bytes
 };
+
+//struct holding json for output
+typedef struct {
+        char* str;
+} json_struct;
 
 #endif

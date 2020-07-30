@@ -1,0 +1,62 @@
+[
+{
+  "directory": "/home/MADCAT/v1_Maintenance/build/lib",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v1_Maintenance/include -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.helper.c.o   -c /home/MADCAT/v1_Maintenance/lib/udp_ip_port_mon.helper.c",
+  "file": "/home/MADCAT/v1_Maintenance/lib/udp_ip_port_mon.helper.c"
+},
+{
+  "directory": "/home/MADCAT/v1_Maintenance/build/lib",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v1_Maintenance/include -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.parser.c.o   -c /home/MADCAT/v1_Maintenance/lib/udp_ip_port_mon.parser.c",
+  "file": "/home/MADCAT/v1_Maintenance/lib/udp_ip_port_mon.parser.c"
+},
+{
+  "directory": "/home/MADCAT/v1_Maintenance/build/lib",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v1_Maintenance/include -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.worker.c.o   -c /home/MADCAT/v1_Maintenance/lib/udp_ip_port_mon.worker.c",
+  "file": "/home/MADCAT/v1_Maintenance/lib/udp_ip_port_mon.worker.c"
+},
+{
+  "directory": "/home/MADCAT/v1_Maintenance/build/lib",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v1_Maintenance/include -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.helper.c.o   -c /home/MADCAT/v1_Maintenance/lib/tcp_ip_port_mon.helper.c",
+  "file": "/home/MADCAT/v1_Maintenance/lib/tcp_ip_port_mon.helper.c"
+},
+{
+  "directory": "/home/MADCAT/v1_Maintenance/build/lib",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v1_Maintenance/include -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.parser.c.o   -c /home/MADCAT/v1_Maintenance/lib/tcp_ip_port_mon.parser.c",
+  "file": "/home/MADCAT/v1_Maintenance/lib/tcp_ip_port_mon.parser.c"
+},
+{
+  "directory": "/home/MADCAT/v1_Maintenance/build/lib",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v1_Maintenance/include -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.worker.c.o   -c /home/MADCAT/v1_Maintenance/lib/tcp_ip_port_mon.worker.c",
+  "file": "/home/MADCAT/v1_Maintenance/lib/tcp_ip_port_mon.worker.c"
+},
+{
+  "directory": "/home/MADCAT/v1_Maintenance/build/lib",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v1_Maintenance/include -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/IcmpMonCore.dir/icmp_mon.helper.c.o   -c /home/MADCAT/v1_Maintenance/lib/icmp_mon.helper.c",
+  "file": "/home/MADCAT/v1_Maintenance/lib/icmp_mon.helper.c"
+},
+{
+  "directory": "/home/MADCAT/v1_Maintenance/build/lib",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v1_Maintenance/include -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/IcmpMonCore.dir/icmp_mon.parser.c.o   -c /home/MADCAT/v1_Maintenance/lib/icmp_mon.parser.c",
+  "file": "/home/MADCAT/v1_Maintenance/lib/icmp_mon.parser.c"
+},
+{
+  "directory": "/home/MADCAT/v1_Maintenance/build/lib",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v1_Maintenance/include -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/IcmpMonCore.dir/icmp_mon.worker.c.o   -c /home/MADCAT/v1_Maintenance/lib/icmp_mon.worker.c",
+  "file": "/home/MADCAT/v1_Maintenance/lib/icmp_mon.worker.c"
+},
+{
+  "directory": "/home/MADCAT/v1_Maintenance/build/bin",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v1_Maintenance/include -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/udp_ip_port_mon.dir/udp_ip_port_mon.c.o   -c /home/MADCAT/v1_Maintenance/bin/udp_ip_port_mon.c",
+  "file": "/home/MADCAT/v1_Maintenance/bin/udp_ip_port_mon.c"
+},
+{
+  "directory": "/home/MADCAT/v1_Maintenance/build/bin",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v1_Maintenance/include -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/tcp_ip_port_mon.dir/tcp_ip_port_mon.c.o   -c /home/MADCAT/v1_Maintenance/bin/tcp_ip_port_mon.c",
+  "file": "/home/MADCAT/v1_Maintenance/bin/tcp_ip_port_mon.c"
+},
+{
+  "directory": "/home/MADCAT/v1_Maintenance/build/bin",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v1_Maintenance/include -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/icmp_mon.dir/icmp_mon.c.o   -c /home/MADCAT/v1_Maintenance/bin/icmp_mon.c",
+  "file": "/home/MADCAT/v1_Maintenance/bin/icmp_mon.c"
+}
+]

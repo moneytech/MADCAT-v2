@@ -1,0 +1,2 @@
+/usr/bin/ar qc libUdpIpPortMonCore.a  CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.helper.c.o CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.parser.c.o CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.worker.c.o
+/usr/bin/ranlib libUdpIpPortMonCore.a
