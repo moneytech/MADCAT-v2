@@ -55,17 +55,19 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include <netinet/udp.h>
 #include <netinet/tcp.h>
 #include <stdbool.h>
+#include <stdarg.h>
 #include <sys/file.h>
 #include <openssl/sha.h>
+#include <lua5.1/lauxlib.h>
+#include <lua5.1/lualib.h>
 
-#define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nICMP Monitor v1.1.4\nHeiko Folkerts, BSI 2018-2020\n"
+#define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nICMP Monitor v1.2\nHeiko Folkerts, BSI 2018-2020\n"
 #define MASCOTT "                             ▄▄▄               ▄▄▄▄▄▄\n                 ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀\n                    ▀▄▄▄▓█▓██   █▓█▌         █▓   ▓████████▀\n                       ▀███▓▓(o)██▓▌       ▐█▓█(o)█▓█████▀\n                         ▀▀██▓█▓▓█         ████▓███▀▀\n                  ▄            ▀▀▀▀                          ▄\n                ▀▀█                                         ▐██▌\n                  ██▄     ____------▐██████▌------___     ▄▄██\n                 __█ █▄▄--   ___------▀▓▓▀-----___   --▄▄█ █▀__\n             __--   ▀█  ██▄▄▄▄    __--▄▓▓▄--__   ▄▄▄▄██  ██▀   --__\n         __--     __--▀█ ██  █▀▀█████▄▄▄▄▄▄███████  ██ █▀--__      --__\n     __--     __--    __▀▀█  █  ██  ██▀▀██▀▀██  ██  █▀▀__    --__      --__\n         __--     __--     ▀███ ██  ██  ██  ██ ████▀     --__    --__\n hfo   --     __--             ▀▀▀▀▀██▄▄██▄▄██▀▀▀▀           --__    --\n         __ --                                                   --__\n"
 #define PATH_LEN 256
 #define ICMP_HEADER_LEN 8
 #define UDP_HEADER_LEN 8
 #define IP_OR_TCP_HEADER_MINLEN 20 // Minimum Length of an IP-Header or a TCP-Header is 20 Bytes
 #define DEFAULT_BUFSIZE 9000 //Ethernet jumbo frame limit
-#define JSON_BUF_SIZE_BASELINE 65536 //Baseline for JSON Buffer
 #define ETHERNET_HEADER_LEN 14 //Length of an Ethernet Header
 
 #define CHECK(result, check)                                                            \
@@ -221,11 +223,6 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 //#define MY_TCPOLEN_RVBD_PROBE_MIN 3 //not yet implemented, thread as "tainted"
 //#define MY_TCPOLEN_RVBD_TRPY_MIN 16 //not yet implemented, thread as "tainted"
 
-//Global Variables and definitions
-long int JSON_BUF_SIZE;     //TODO: Seriously think about necessary Buffer-Size for JSON Output
-char* global_json;          //JSON Output defined global, to make all information visibel to functions for concatination and output.
-char* json_ptr;             //Pointer to actuall JSON output End, to concatinate strings with sprintf().
-
 struct ipv4icmp_t {
     uint8_t  ver;
     uint8_t  ihl;
@@ -248,5 +245,9 @@ struct user_t{
     gid_t   gid;        /* group ID */
 };
 
+//struct holding json for output
+typedef struct {
+        char* str;
+} json_struct;
 
 #endif

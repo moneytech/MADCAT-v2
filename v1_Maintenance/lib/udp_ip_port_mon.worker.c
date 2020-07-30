@@ -43,10 +43,11 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include "udp_ip_port_mon.helper.h"
 
 
-int do_stuff(unsigned char* buffer, int recv_len, char* hostaddress , char* data_path)
+int worker_udp(unsigned char* buffer, int recv_len, char* hostaddress , char* data_path)
 {
         struct ipv4udp_t ipv4udp; //struct to save IP-Header contents of intrest
         char* payload_hd_str = 0; //Payload as string in HexDump Format
+        char* payload_str = 0; //Payload as string
         unsigned char payload_sha1[SHA_DIGEST_LENGTH]; //SHA1 of payload
         char * payload_sha1_str = 0;
         char* global_json_old = 0; //old global_json_ptr for recalculation of json_ptr after reallocation of global_json.
@@ -57,7 +58,7 @@ int do_stuff(unsigned char* buffer, int recv_len, char* hostaddress , char* data
         char stop_time[64] = "";
         //beginning time
         //gettimeofday(&begin , NULL); //Get current time and...
-        time_str(start_time, sizeof(start_time)); //...generate string with current time
+        time_str(NULL, 0, start_time, sizeof(start_time)); //...generate string with current time
 
         if (recv_len < 28) //Minimum 20 Byte IP Header + 8 Byte UDP Header. Should never happen.
         {
@@ -121,19 +122,15 @@ ipv4udp.src_ip_str, ipv4udp.src_port, ipv4udp.dst_ip_str, ipv4udp.dst_port, ipv4
         }
 
         //Get current time and...
-        time_str(stop_time, sizeof(stop_time)); //...generate string with current time
+        time_str(NULL, 0, stop_time, sizeof(stop_time)); //...generate string with current time
         //Compute SHA1 of payload
         SHA1(ipv4udp.data, ipv4udp.data_len, payload_sha1);
         payload_sha1_str = print_hex_string(payload_sha1, SHA_DIGEST_LENGTH);
         //Make HexDump output out of binary payload
-        payload_hd_str = hex_dump(ipv4udp.data, ipv4udp.data_len, true);
-        //Expand JSON-Buffer
-        JSON_BUF_SIZE = JSON_BUF_SIZE + strlen(payload_hd_str) + 1; //new buffer size
-        global_json_old = global_json; //save actual pointer to buffer
-        CHECK(global_json = realloc(global_json, JSON_BUF_SIZE), != 0); //reallocate
-        json_ptr = global_json + (json_ptr - global_json_old); //recalculate json_ptr
+        payload_hd_str = hex_dump(ipv4udp.data, ipv4udp.data_len, true); //Do not forget to free! 
+        payload_str = print_hex_string(ipv4udp.data, ipv4udp.data_len); //Do not forget to free!
         //Log connection to STDOUT in json-format (Suricata-like)
-        json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), "\
+        json_do(0, "\
 \"src_ip\": \"%s\", \
 \"dest_port\": %d, \
 \"timestamp\": \"%s\", \
@@ -145,12 +142,25 @@ ipv4udp.src_ip_str, ipv4udp.src_port, ipv4udp.dst_ip_str, ipv4udp.dst_port, ipv4
 \"start\": \"%s\", \
 \"end\": \"%s\", \
 \"payload_hd\": \"%s\",\
+\"payload_str\": \"%s\",\
 \"payload_sha1\": \"%s\"\
-", ipv4udp.src_ip_str, ipv4udp.dst_port, start_time, ipv4udp.dst_ip_str, ipv4udp.src_port, start_time, stop_time, payload_hd_str, payload_sha1_str);
+", ipv4udp.src_ip_str,\
+ipv4udp.dst_port,\
+start_time,\
+ipv4udp.dst_ip_str,\
+ipv4udp.src_port,\
+start_time,\
+stop_time,\
+payload_hd_str,\
+payload_str,\
+payload_sha1_str);
 
         //free str allocated by strndup() in function char *inttoa(uint32_t i_addr)
         free(ipv4udp.src_ip_str);
         free(ipv4udp.dst_ip_str);
+        free(payload_sha1_str);
+        free(payload_str);
+        free(payload_hd_str);
         return ipv4udp.data_len;
 }
 

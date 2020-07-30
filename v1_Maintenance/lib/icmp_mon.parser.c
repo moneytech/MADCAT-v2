@@ -47,7 +47,7 @@ bool parse_ipopt(int opt_cpclno, const char* opt_name, \
     if((*opt_ptr_ptr + opt_len) > endofoptions_addr) return true; //Check length, signal tainted in case of failure
     //Option data to hex string
     char* hex_string = print_hex_string(*opt_ptr_ptr + 2, opt_len - 2);  //Extract option data as hex string. Has to be freed!
-    json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), "\"%s\": \"%s\", ", opt_name, hex_string); //JSON output
+    json_do(false, "\"%s\": \"%s\", ", opt_name, hex_string); //JSON output
     free(hex_string);
     *opt_ptr_ptr += opt_len; //set pointer to next option
     return false; //Option not tainted.
@@ -65,7 +65,7 @@ bool analyze_ip_header(const unsigned char* packet, int recv_len) //indicates ta
     char* ip_daddr = inttoa(iphdr->daddr); //Must be freed!
 
     //printf("\n\nlength: %d\n version:%x\n TOS: %x\n tot_len: %d\nid: 0x%x\n flags: 0x%04x\n ttl: %d\n protocol: %d\n check: 0x%04x\n src_addr: %s dest_addr: %s\n\n",
-    json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), ", \
+    json_do(0, ", \
 \"ip\": {\
 \"length\": %d, \
 \"version\": %d, \
@@ -95,10 +95,10 @@ ip_daddr\
     if (iphdr->ihl > 5) //If Options/Padding present (IP Header bigger than 5*4 = 20Byte) print them as hexadecimal string
     {
         char* hex_string = print_hex_string((char*)iphdr + IP_OR_TCP_HEADER_MINLEN, iphdr->ihl*4 - IP_OR_TCP_HEADER_MINLEN);
-        json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), ", \"ip_options_hex\": \"%s\"", hex_string);
+        json_do(0, ", \"ip_options_hex\": \"%s\"", hex_string);
         free(hex_string);
     }
-    json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), "}"); //close IP Header JSON object
+    json_do(0, ", "}"); //close IP Header JSON object
     */
 
     //Parse IP options
@@ -117,19 +117,19 @@ ip_daddr\
         }
         //set pointer to beginning of options
         unsigned char* opt_ptr = (unsigned char*) beginofoptions_addr;
-        json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), ", \"ip_options\": {"); //open json
+        json_do(0, ", \"ip_options\": {"); //open json
         while(!tainted && !eol && opt_ptr < (packet + ETHERNET_HEADER_LEN + iphdr->ihl*4))
         {
             //printf("2. IP Tainted: %d Type:%d\tAddr:0x%lx\n", tainted, *opt_ptr, (long int) opt_ptr); //Debug
             switch(*opt_ptr)
             {
                 case  MY_IPOPT_EOOL: //EOL is only one byte, so this is hopefully going to be easy.
-                    json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), "\"EOL\": \"\", ");
+                    json_do(0, "\"EOL\": \"\", ");
                     opt_ptr++;
                     eol = true;
                     break;
                 case MY_IPOPT_NOP: //NOP is only one byte, so this is going to be easy, too
-                    json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), "\"NOP\": \"\" , ");
+                    json_do(0, "\"NOP\": \"\" , ");
                     opt_ptr++;
                     break;
                 case MY_IPOPT_SEC:
@@ -216,12 +216,12 @@ ip_daddr\
 
         //output tainted status, hex output (even if not tainted, cause padding might be usefull too) and close json
         char* hex_string = print_hex_string(opt_ptr, endofoptions_addr-opt_ptr);    
-        json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), \
+        json_do(0, \
 "\"tainted\": %s, \"padding_hex\": \"%s\"}", (tainted ? "true" : "false"), hex_string);
             
         free(hex_string);
     } //End of if
-    json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), "}"); //close JSON object
+    json_do(0, "}"); //close JSON object
     //free
     free(ip_saddr);
     free(ip_daddr);
@@ -238,7 +238,7 @@ int analyze_udp_header(const unsigned char* packet, int recv_len)
 
     struct udphdr *udphdr = (struct udphdr *) (packet + iphdr->ihl*4);
 
-    json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), ", \
+    json_do(0, ", \
 \"udp\": {\
 \"src_port\": %d ,\
 \"dest_port\": %d ,\
@@ -261,7 +261,7 @@ bool parse_tcpopt_w_length(int opt_kind, int opt_len, const char* opt_name, \
     if( *(*opt_ptr_ptr+1) != opt_len || (*opt_ptr_ptr + opt_len) > endofoptions_addr) return true; //Check length, signal tainted in case of failure
     //Option data to hex string
     char* hex_string = print_hex_string(*opt_ptr_ptr + 2, opt_len - 2);  //Extract option data as hex string. Has to be freed!
-    json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), "\"%s\": \"%s\", ", opt_name, hex_string); //JSON output
+    json_do(0, "\"%s\": \"%s\", ", opt_name, hex_string); //JSON output
     free(hex_string);
     *opt_ptr_ptr += opt_len; //set pointer to next option
     return false; //Option not tainted.
@@ -282,7 +282,7 @@ int analyze_tcp_header(const unsigned char* packet, int recv_len) //returns numb
    //Append header JSON
     //printf("\n\nsrc_port: %d\ndst_port: %d\nseq: %u\nack_seq: %u\nhdr_len: %d\nres1: %x\nres2: %x\nurg: %x\nack: %x\npsh: %x\nrst: %x\nsyn: %x\nfin: %x\nwindow: %d\ncheck: 0x%02x\nurg_ptr: 0x%04x\n\n",\
 printf("\n\n
-    json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), ", \
+    json_do(0, ", \
 \"tcp\": {\
 \"src_port\": %d, \
 \"dest_port\": %d, \
@@ -327,7 +327,7 @@ ntohs(tcphdr->urg_ptr));
     if (tcphdr->doff > 5) //If Options/Padding present (TCP Header longer than 5*4 = 20Byte) print them as hexadecimal string
     {
         char* hex_string = print_hex_string((char*)tcphdr + IP_OR_TCP_HEADER_MINLEN, tcphdr->doff*4 - IP_OR_TCP_HEADER_MINLEN);
-        json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), ", \"tcp_options_hex\": \"%s\"", hex_string);
+        json_do(0, ", \"tcp_options_hex\": \"%s\"", hex_string);
         free(hex_string);
 
     }
@@ -349,18 +349,18 @@ ntohs(tcphdr->urg_ptr));
         }
         //set pointer to beginning of options
         unsigned char* opt_ptr = (unsigned char*) beginofoptions_addr;
-        json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), ", \"tcp_options\": {"); //open json
+        json_do(0, ", \"tcp_options\": {"); //open json
         while(!tainted && !eol && opt_ptr < (packet + ETHERNET_HEADER_LEN + iphdr->ihl*4 + tcphdr->doff*4))
         {
             //printf("2. TCP Tainted: %d kind:%d\tAddr:0x%lx\n", tainted, *opt_ptr, (long int) opt_ptr); //Debug
             switch(*opt_ptr)
             {
                 case MY_TCPOPT_NOP: //EOL is only one byte, so this is hopefully going to be easy.
-                    json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), "\"NOP\": \"\", ");
+                    json_do(0, "\"NOP\": \"\", ");
                     opt_ptr++;
                     break;
                 case MY_TCPOPT_EOL: //EOL is only one byte, so this is going to be easy, too
-                    json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), "\"EOL\": \"\", ");
+                    json_do(0, "\"EOL\": \"\", ");
                     opt_ptr++;
                     eol = true;
                     break;
@@ -420,7 +420,7 @@ ntohs(tcphdr->urg_ptr));
 
         //output tainted status, hex output (even if not tainted, cause padding might be usefull too) and close json
         char* hex_string = print_hex_string(opt_ptr, endofoptions_addr-opt_ptr);
-        json_ptr += snprintf(json_ptr, JSON_BUF_SIZE - (json_ptr - global_json), \
+        json_do(0, \
 "\"tainted\": %s, \"padding_hex\": \"%s\"}", (tainted ? "true" : "false"), hex_string);
             
         free(hex_string);

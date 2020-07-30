@@ -38,7 +38,7 @@ import time
 import threading
 import json
 
-VERSION = "MADCAT - Mass Attack Detecion Connection Acceptance Tool\n TCP Connection and SYN JSON-data postprocessor\n v1.1 for TCP/IP Portmonitor v1.1.4\nHeiko Folkerts, BSI 2018-2020\n"
+VERSION = "MADCAT - Mass Attack Detecion Connection Acceptance Tool\n TCP Connection and SYN JSON-data postprocessor\n v1.1 for TCP/IP Portmonitor v1.1.4 to v1.2\nHeiko Folkerts, BSI 2018-2020\n"
 MASCOTT = "                             ▄▄▄               ▄▄▄▄▄▄\n                 ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀\n                    ▀▄▄▄▓█▓██   █▓█▌         █▓   ▓████████▀\n                       ▀███▓▓(o)██▓▌       ▐█▓█(o)█▓█████▀\n                         ▀▀██▓█▓▓█         ████▓███▀▀\n                  ▄            ▀▀▀▀                          ▄\n                ▀▀█                                         ▐██▌\n                  ██▄     ____------▐██████▌------___     ▄▄██\n                 __█ █▄▄--   ___------▀▓▓▀-----___   --▄▄█ █▀__\n             __--   ▀█  ██▄▄▄▄    __--▄▓▓▄--__   ▄▄▄▄██  ██▀   --__\n         __--     __--▀█ ██  █▀▀█████▄▄▄▄▄▄███████  ██ █▀--__      --__\n     __--     __--    __▀▀█  █  ██  ██▀▀██▀▀██  ██  █▀▀__    --__      --__\n         __--     __--     ▀███ ██  ██  ██  ██ ████▀     --__    --__\n hfo   --     __--             ▀▀▀▀▀██▄▄██▄▄██▀▀▀▀           --__    --\n         __ --                                                   --__"
 
 #Time before a SYN is seen as part of a SYN-Scan, if connection can not be found in con_dict.
@@ -157,7 +157,7 @@ def output_accepted_con():
     #eprint("CON_O:") #DEBUG
     #eprint(time.time()) #DEBUG
     while True:
-        con_dict_evt.wait(); #Wait for new entry in con_dict
+        con_dict_evt.wait() #Wait for new entry in con_dict
         con_dict_evt.clear() #Indicate event has been seen
         time.sleep(DEF_CON_WAIT) #wait for SYN to catch up, because pcap_next() is slower than accept()
         while len(con_dict) > 0: #Repeat till every connection has been processed

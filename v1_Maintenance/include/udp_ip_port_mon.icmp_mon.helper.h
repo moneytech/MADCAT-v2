@@ -24,7 +24,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
     Programm erhalten haben. Wenn nicht, siehe <https://www.gnu.org/licenses/>.
 *******************************************************************************/
 /* MADCAT - Mass Attack Detecion Connection Acceptance Tool
- * TCP monitor library headerfile.
+ * UDP- and ICMP monitor library headerfile.
  *
  * Netfilter should be configured to block outgoing ICMP Destination unreachable (Port unreachable) packets, e.g.:
  *      iptables -I OUTPUT -p icmp --icmp-type destination-unreachable -j DROP
@@ -33,18 +33,11 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 */
 
 
-#ifndef TCP_IP_PORT_MON_HELPER_H
-#define TCP_IP_PORT_MON_HELPER_H
+#ifndef UDP_IP_PORT_ICMP_HELPER_H
+#define UDP_IP_PORT_ICMP_HELPER_H
 
-#include "tcp_ip_port_mon.h"
-#include "madcat.helper.h"
-
-//Helper Functions:
-void print_help_tcp(char* progname); //print TCP help message
-int init_pcap(char* dev, pcap_t **handle);
-void drop_root_privs(struct user_t user, const char* entity);
-void sig_handler_parent(int signo);
-void sig_handler_sigchld(int sig);
-void sig_handler_child(int signo);
+//UDP and ICMP HELPER
+void* saved_buffer(void * buffer); //saves and returns address of main buffer to be freed by signal handler
+void sig_handler(int signo); //Signal Handler for gracefull shutdown
 
 #endif

@@ -33,188 +33,39 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
  * TCP-IP port monitor.
  *
  *
- * Heiko Folkerts, BSI 2018-2019
+ * Heiko Folkerts, BSI 2018-2020
 */
 
 #include "tcp_ip_port_mon.helper.h"
 
 //Helper functions
+#include "madcat.helper.c"
 
-void get_user_ids(struct user_t* user) //adapted example code from manpage getpwnam(3)
+void print_help_tcp(char* progname) //print help message
 {
-    struct passwd pwd;
-    struct passwd *result;
-    char *buf;
-    size_t bufsize;
-    int s;
+    fprintf(stderr, "SYNTAX:\n    %s path_to_config_file\n\
+        Sample content of a config file:\n\n\
+            \tinterface = \"lo\"\n\
+            \thostaddress = \"127.1.1.1\"\n\
+            \tlistening_port = \"65535\"\n\
+            \tconnection_timeout = \"10\"\n\
+            \tuser = \"hf\"\n\
+            \tpath_to_save_tcp_streams = \"./tpm/\" --Must end with trailing \"/\", will be handled as prefix otherwise\n\
+            \t--max_file_size = \"1024\" --optional\n\
+        ", progname);
 
-    bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
-    if (bufsize == -1)          /* Value was indeterminate */
-        bufsize = 16384;        /* Should be more than enough */
+    fprintf(stderr, "\nLEGACY SYNTAX (pre v1.1.5):\n    %s interface hostaddress listening_port connection_timeout user path_to_save_tcp-streams [max_file_size]\n\
+        Path to directory MUST end with a trailing slash, e.g.  \"/path/to/my/dir/\"\n\
+        The last paramteter, max_file_size, is the maximum size of saved streams,\n\
+        but the last TCP Datagramm exceeding this size will be saved anyway.\n", progname);
 
-    buf = CHECK(malloc(bufsize), != 0);
-    if (buf == NULL) {
-        perror("malloc");
-        exit(EXIT_FAILURE);
-    }
-
-    s = CHECK(getpwnam_r(user->name, &pwd, buf, bufsize, &result), == 0);
-
-    user->uid = pwd.pw_uid;
-    user->gid = pwd.pw_gid;
-    free(buf);
+    fprintf(stderr,"\nExample Netfilter Rule to work properly:\n\
+        iptables -t nat -A PREROUTING -i enp0s8 -p tcp --dport 1:65534 -j DNAT --to 192.168.8.42:65535\n\
+        Listening Port is 65535 and hostaddress is 192.168.8.42 in this example.\n\n\
+    Must be run as root, but the priviliges will be droped to \"user\".\n\n\
+    Opens two named pipes (FiFo) containing live JSON output:\n\
+        \"%s\" for stream connection data, \"%s\" for header data.\n", CONNECT_FIFO, HEADER_FIFO);
     return;
-}
-
-void time_str(char* unix_buf, int unix_size, char* readable_buf, int readable_size)
-{
-        struct timeval tv;
-        char tmbuf[readable_size];
-        char tmzone[6]; //e.g. "+0100\0" is max. 6 chars
-
-        gettimeofday(&tv, NULL); //fetch struct timeval with actuall time and convert it to string...
-        strftime(tmbuf, readable_size, "%Y-%m-%dT%H:%M:%S", localtime(&tv.tv_sec)); //Target format: "2018-08-17T05:51:53.835934", therefore...
-        strftime(tmzone, 6, "%z", localtime(&tv.tv_sec)); //...get timezone...
-        //...and finally print time and ms to string, append timezone and ensure it is null terminated.
-        if (readable_buf != NULL)
-        {
-            snprintf(readable_buf, readable_size, "%s.%06ld%s", tmbuf, tv.tv_usec, tmzone); readable_buf[readable_size-1] = 0; //Human readable string
-        }
-        if (unix_buf != NULL)
-        {
-            snprintf(unix_buf, unix_size, "%ld.%ld", tv.tv_sec, tv.tv_usec); unix_buf[unix_size-1] = 0; //Unix time incl. usec
-        }
-        return;
-}
-
-/*
-void time_str_unix_us(char* buf, int buf_size)
-{
-        struct timeval tv;
-        gettimeofday(&tv, NULL); //fetch struct timeval with actuall time and convert it to string
-        return;
-}
-*/
-
-void print_hex(FILE* output, const unsigned char* buffer, int buffsize)
-{   
-    int i, offset = 16; //The offset of the offset is 16. X-D
-    fprintf(output, "00000000 "); //first offset
-    for(i=0; i<buffsize; i++)
-    {                    
-        fprintf(output, "%02x ", (unsigned char) buffer[i]);
-        offset++;
-        if (offset % 16 == 0) {
-            fprintf(output, "\n%08x ", offset);                    
-        } else if (offset % 8 == 0) {
-            fprintf(output, "\t");                    
-        }
-    }
-    fprintf(output, "\n\n");
-    return;
-}
-
-char *print_hex_string(const unsigned char* buffer, unsigned int buffsize) //Do not forget to free!
-{
-    char* output = malloc(2*buffsize+1); //output has to be min. 2*buffsize + 1 for 2 characters per byte and null-termination.
-    if(buffsize<=0) {output[0] = 0; return output;}; //return proper empty string
-    int i = 0;
-    for(i=0; i<buffsize; i++)
-        sprintf(output+2*i, "%02x", (unsigned char) buffer[i]);
-    output[2*i] = 0; //Terminate string with \0
-    return output;
-}
-
-//Put HexDump like output to string: DO NOT FORGET TO FREE!
-unsigned char* hex_dump(const void *addr, int len, const bool json)
-{
-    int i =0;
-    unsigned char ascii_buff[17]; //size is 16 character + \0
-    const unsigned char *pc = (const unsigned char*)addr;
-    //Hex output is 3 characters per Byte e.g. "ff " for 16 Bytes per row plus offset, ascii and padding with spaces. Number of rows is len div 16 plus first row.
-    int out_len = (16 * 3 + 32) * (len / 16 + 1);
-    unsigned char* output = malloc(out_len); //DO NOT FORGET TO FREE!
-    unsigned char* out_ptr = output;
-    memset(output, 0, out_len);
-
-    if (len == 0) {
-        return output;
-    }
-    if (len < 0) {
-        return output;
-    }
-    //Cap length to prevent possible overflow in output.
-    //Okay. It's at 4GB...
-    if (len > 0xFFFFFFFF) {
-        len = 0xFFFFFFFF;
-    }
-
-    // Process every byte in the data.
-    for (i = 0; i < len; i++)
-    {
-        // Multiple of 16 means new line (with line offset).
-
-        if ((i % 16) == 0)
-        {
-            // Just don't print ASCII for the zeroth line.
-            if (i != 0)
-            {
-                out_ptr += snprintf(out_ptr, out_len - (out_ptr - output),"  |%s|", ascii_buff);
-
-                if (json)
-                    out_ptr += snprintf(out_ptr, out_len - (out_ptr - output),"\\n");
-                else
-                    out_ptr += snprintf(out_ptr, out_len - (out_ptr - output),"\n");
-            }
-
-            // Output the offset.
-            out_ptr += snprintf(out_ptr, out_len - (out_ptr - output),"%08x ", i);
-        } else if ((i % 8) == 0) {
-            if (i != 0)
-                out_ptr += snprintf(out_ptr, out_len - (out_ptr - output)," ");
-        }
-
-
-        // Now the hex code for the specific character.
-        out_ptr += snprintf(out_ptr, out_len - (out_ptr - output)," %02x", pc[i]);
-
-        // And store a printable ASCII character for later.
-        if ((pc[i] < 0x20) || (pc[i] > 0x7e))
-            ascii_buff[i % 16] = '.';
-        else if (json && pc[i] == 0x22) //Do not insert " in JSON!
-            ascii_buff[i % 16] = '\'';
-        else if (json && pc[i] == 0x5c) //Do not insert \ in JSON!
-            ascii_buff[i % 16] = '/';
-        else
-            ascii_buff[i % 16] = pc[i];
-        ascii_buff[(i % 16) + 1] = '\0';
-    }
-
-    // Pad out last line if not exactly 16 characters.
-    while ((i % 16) != 0)
-    {
-        out_ptr += snprintf(out_ptr, out_len - (out_ptr - output),"   ");
-        if ((i % 8) == 0)
-            out_ptr += snprintf(out_ptr, out_len - (out_ptr - output)," ");
-
-        i++;
-    }
-
-    // And print the final ASCII bit.
-    out_ptr += snprintf(out_ptr, out_len - (out_ptr - output),"  |%s|", ascii_buff);
-    out_ptr = 0;    
-
-    //printf("TEST: result size: %d, size: %ld, output:\n%s\n", (16 * 3 + 32) * (len / 16 + 1), strlen(output), output);
-
-    return output;
-}
-
-char *inttoa(uint32_t i_addr) //inet_ntoa e.g. converts 127.1.1.1 to 127.0.0.1. This is bad e.g. for testing.
-{
-    char str_addr[16] = "";
-    //convert IP(v4)-Addresses from network byte order to string
-    snprintf(str_addr, 16, "%u.%u.%u.%u", i_addr & 0x000000ff, (i_addr & 0x0000ff00) >> 8, (i_addr & 0x00ff0000) >> 16, (i_addr & 0xff000000) >> 24);
-    return strndup(str_addr,16); //strndup ensures \0 termination. Do not forget to free()!
 }
 
 int init_pcap(char* dev, pcap_t **handle)
@@ -272,7 +123,7 @@ void sig_handler_parent(int signo)
     sem_close(consem);
     sem_unlink ("consem");
     // Free JSON-Buffer
-    free(global_json);
+    free(json_do(false, ""));
     //Family drama: Kill childs
     kill(pcap_pid, SIGTERM);
     kill(accept_pid, SIGTERM);

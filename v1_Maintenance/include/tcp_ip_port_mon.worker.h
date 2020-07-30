@@ -24,7 +24,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
     Programm erhalten haben. Wenn nicht, siehe <https://www.gnu.org/licenses/>.
 *******************************************************************************/
 /* MADCAT - Mass Attack Detecion Connection Acceptance Tool
- * ICMP monitor worker headerfile.
+ * TCP monitor worker headerfile.
  *
  * Netfilter should be configured to block outgoing ICMP Destination unreachable (Port unreachable) packets, e.g.:
  *      iptables -I OUTPUT -p icmp --icmp-type destination-unreachable -j DROP
@@ -39,7 +39,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include "tcp_ip_port_mon.h"
 
 //Connection worker:
-long int do_stuff(char* dst_addr, \
+long int worker_tcp(char* dst_addr, \
                   int dst_port, \
                   char* src_addr, \
                   int src_port, \
