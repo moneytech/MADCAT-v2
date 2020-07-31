@@ -1,77 +1,102 @@
 [
 {
   "directory": "/home/MADCAT/v2_Development/build/lib",
-  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.helper.c.o   -c /home/MADCAT/v2_Development/lib/udp_ip_port_mon.helper.c",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/UdpIpPortMonCore.dir/madcat.helper.c.o   -c /home/MADCAT/v2_Development/lib/madcat.helper.c",
+  "file": "/home/MADCAT/v2_Development/lib/madcat.helper.c"
+},
+{
+  "directory": "/home/MADCAT/v2_Development/build/lib",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.helper.c.o   -c /home/MADCAT/v2_Development/lib/udp_ip_port_mon.helper.c",
   "file": "/home/MADCAT/v2_Development/lib/udp_ip_port_mon.helper.c"
 },
 {
   "directory": "/home/MADCAT/v2_Development/build/lib",
-  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.parser.c.o   -c /home/MADCAT/v2_Development/lib/udp_ip_port_mon.parser.c",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.parser.c.o   -c /home/MADCAT/v2_Development/lib/udp_ip_port_mon.parser.c",
   "file": "/home/MADCAT/v2_Development/lib/udp_ip_port_mon.parser.c"
 },
 {
   "directory": "/home/MADCAT/v2_Development/build/lib",
-  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.worker.c.o   -c /home/MADCAT/v2_Development/lib/udp_ip_port_mon.worker.c",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.worker.c.o   -c /home/MADCAT/v2_Development/lib/udp_ip_port_mon.worker.c",
   "file": "/home/MADCAT/v2_Development/lib/udp_ip_port_mon.worker.c"
 },
 {
   "directory": "/home/MADCAT/v2_Development/build/lib",
-  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.helper.c.o   -c /home/MADCAT/v2_Development/lib/tcp_ip_port_mon.helper.c",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.icmp_mon.helper.c.o   -c /home/MADCAT/v2_Development/lib/udp_ip_port_mon.icmp_mon.helper.c",
+  "file": "/home/MADCAT/v2_Development/lib/udp_ip_port_mon.icmp_mon.helper.c"
+},
+{
+  "directory": "/home/MADCAT/v2_Development/build/lib",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/TcpIpPortMonCore.dir/madcat.helper.c.o   -c /home/MADCAT/v2_Development/lib/madcat.helper.c",
+  "file": "/home/MADCAT/v2_Development/lib/madcat.helper.c"
+},
+{
+  "directory": "/home/MADCAT/v2_Development/build/lib",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.helper.c.o   -c /home/MADCAT/v2_Development/lib/tcp_ip_port_mon.helper.c",
   "file": "/home/MADCAT/v2_Development/lib/tcp_ip_port_mon.helper.c"
 },
 {
   "directory": "/home/MADCAT/v2_Development/build/lib",
-  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.parser.c.o   -c /home/MADCAT/v2_Development/lib/tcp_ip_port_mon.parser.c",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.parser.c.o   -c /home/MADCAT/v2_Development/lib/tcp_ip_port_mon.parser.c",
   "file": "/home/MADCAT/v2_Development/lib/tcp_ip_port_mon.parser.c"
 },
 {
   "directory": "/home/MADCAT/v2_Development/build/lib",
-  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.worker.c.o   -c /home/MADCAT/v2_Development/lib/tcp_ip_port_mon.worker.c",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.worker.c.o   -c /home/MADCAT/v2_Development/lib/tcp_ip_port_mon.worker.c",
   "file": "/home/MADCAT/v2_Development/lib/tcp_ip_port_mon.worker.c"
 },
 {
   "directory": "/home/MADCAT/v2_Development/build/lib",
-  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/IcmpMonCore.dir/icmp_mon.helper.c.o   -c /home/MADCAT/v2_Development/lib/icmp_mon.helper.c",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/IcmpMonCore.dir/madcat.helper.c.o   -c /home/MADCAT/v2_Development/lib/madcat.helper.c",
+  "file": "/home/MADCAT/v2_Development/lib/madcat.helper.c"
+},
+{
+  "directory": "/home/MADCAT/v2_Development/build/lib",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/IcmpMonCore.dir/icmp_mon.helper.c.o   -c /home/MADCAT/v2_Development/lib/icmp_mon.helper.c",
   "file": "/home/MADCAT/v2_Development/lib/icmp_mon.helper.c"
 },
 {
   "directory": "/home/MADCAT/v2_Development/build/lib",
-  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/IcmpMonCore.dir/icmp_mon.parser.c.o   -c /home/MADCAT/v2_Development/lib/icmp_mon.parser.c",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/IcmpMonCore.dir/icmp_mon.parser.c.o   -c /home/MADCAT/v2_Development/lib/icmp_mon.parser.c",
   "file": "/home/MADCAT/v2_Development/lib/icmp_mon.parser.c"
 },
 {
   "directory": "/home/MADCAT/v2_Development/build/lib",
-  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/IcmpMonCore.dir/icmp_mon.worker.c.o   -c /home/MADCAT/v2_Development/lib/icmp_mon.worker.c",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/IcmpMonCore.dir/icmp_mon.worker.c.o   -c /home/MADCAT/v2_Development/lib/icmp_mon.worker.c",
   "file": "/home/MADCAT/v2_Development/lib/icmp_mon.worker.c"
 },
 {
+  "directory": "/home/MADCAT/v2_Development/build/lib",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/IcmpMonCore.dir/udp_ip_port_mon.icmp_mon.helper.c.o   -c /home/MADCAT/v2_Development/lib/udp_ip_port_mon.icmp_mon.helper.c",
+  "file": "/home/MADCAT/v2_Development/lib/udp_ip_port_mon.icmp_mon.helper.c"
+},
+{
   "directory": "/home/MADCAT/v2_Development/build/lib/rsp",
-  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/TcpProxyCore.dir/connection.c.o   -c /home/MADCAT/v2_Development/lib/rsp/connection.c",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpProxyCore.dir/connection.c.o   -c /home/MADCAT/v2_Development/lib/rsp/connection.c",
   "file": "/home/MADCAT/v2_Development/lib/rsp/connection.c"
 },
 {
   "directory": "/home/MADCAT/v2_Development/build/lib/rsp",
-  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/TcpProxyCore.dir/epollinterface.c.o   -c /home/MADCAT/v2_Development/lib/rsp/epollinterface.c",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpProxyCore.dir/epollinterface.c.o   -c /home/MADCAT/v2_Development/lib/rsp/epollinterface.c",
   "file": "/home/MADCAT/v2_Development/lib/rsp/epollinterface.c"
 },
 {
   "directory": "/home/MADCAT/v2_Development/build/lib/rsp",
-  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/TcpProxyCore.dir/logging.c.o   -c /home/MADCAT/v2_Development/lib/rsp/logging.c",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpProxyCore.dir/logging.c.o   -c /home/MADCAT/v2_Development/lib/rsp/logging.c",
   "file": "/home/MADCAT/v2_Development/lib/rsp/logging.c"
 },
 {
   "directory": "/home/MADCAT/v2_Development/build/lib/rsp",
-  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/TcpProxyCore.dir/netutils.c.o   -c /home/MADCAT/v2_Development/lib/rsp/netutils.c",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpProxyCore.dir/netutils.c.o   -c /home/MADCAT/v2_Development/lib/rsp/netutils.c",
   "file": "/home/MADCAT/v2_Development/lib/rsp/netutils.c"
 },
 {
   "directory": "/home/MADCAT/v2_Development/build/lib/rsp",
-  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/TcpProxyCore.dir/rsp.c.o   -c /home/MADCAT/v2_Development/lib/rsp/rsp.c",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpProxyCore.dir/rsp.c.o   -c /home/MADCAT/v2_Development/lib/rsp/rsp.c",
   "file": "/home/MADCAT/v2_Development/lib/rsp/rsp.c"
 },
 {
   "directory": "/home/MADCAT/v2_Development/build/lib/rsp",
-  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -o CMakeFiles/TcpProxyCore.dir/server_socket.c.o   -c /home/MADCAT/v2_Development/lib/rsp/server_socket.c",
+  "command": "/usr/bin/cc  -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1  -g   -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpProxyCore.dir/server_socket.c.o   -c /home/MADCAT/v2_Development/lib/rsp/server_socket.c",
   "file": "/home/MADCAT/v2_Development/lib/rsp/server_socket.c"
 },
 {

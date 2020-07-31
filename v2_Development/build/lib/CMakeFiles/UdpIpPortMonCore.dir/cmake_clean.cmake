@@ -1,5 +1,7 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/UdpIpPortMonCore.dir/madcat.helper.c.o"
   "CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.helper.c.o"
+  "CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.icmp_mon.helper.c.o"
   "CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.parser.c.o"
   "CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.worker.c.o"
   "libUdpIpPortMonCore.a"

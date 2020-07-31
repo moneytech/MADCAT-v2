@@ -41,41 +41,14 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 
 //Global includes, defines, definitons
 
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <signal.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <arpa/inet.h>
-#include <linux/netfilter_ipv4.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/time.h>
-#include <time.h>
-#include <pwd.h>
-#include <pcap.h>
-#include <netinet/ip.h>
-#include <netinet/tcp.h>
-#include <stdbool.h>
-#include <stdarg.h>
-#include <sys/file.h>
-#include <sys/types.h> 
-#include <sys/shm.h>
-#include <semaphore.h>
-#include <sys/wait.h>
-#include <sys/prctl.h>
-#include <openssl/sha.h>
-#include <lua5.1/lauxlib.h>
-#include <lua5.1/lualib.h>
+#include "madcat.common.h"
+#include "tcp_ip_port_mon.helper.h"
+#include "tcp_ip_port_mon.parser.h"
+#include "tcp_ip_port_mon.worker.h"
+#include "rsp.h"
 
 #define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nTCP-IP Port Monitor v1.2\nHeiko Folkerts, BSI 2018-2020\n" //Version string
-#define MASCOTT "                             ▄▄▄               ▄▄▄▄▄▄\n                 ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀\n                    ▀▄▄▄▓█▓██   █▓█▌         █▓   ▓████████▀\n                       ▀███▓▓(o)██▓▌       ▐█▓█(o)█▓█████▀\n                         ▀▀██▓█▓▓█         ████▓███▀▀\n                  ▄            ▀▀▀▀                          ▄\n                ▀▀█                                         ▐██▌\n                  ██▄     ____------▐██████▌------___     ▄▄██\n                 __█ █▄▄--   ___------▀▓▓▀-----___   --▄▄█ █▀__\n             __--   ▀█  ██▄▄▄▄    __--▄▓▓▄--__   ▄▄▄▄██  ██▀   --__\n         __--     __--▀█ ██  █▀▀█████▄▄▄▄▄▄███████  ██ █▀--__      --__\n     __--     __--    __▀▀█  █  ██  ██▀▀██▀▀██  ██  █▀▀__    --__      --__\n         __--     __--     ▀███ ██  ██  ██  ██ ████▀     --__    --__\n hfo   --     __--             ▀▀▀▀▀██▄▄██▄▄██▀▀▀▀           --__    --\n         __ --                                                   --__\n"
-#define DEBUG 2
+
 #define CHUNK_SIZE 512 //Chunks for receiving
 #define PATH_LEN 256 //Minium of maximum path lengths of Linux common file systems
 #define DEFAULT_BUFSIZE 9000 //Ethernet jumbo frame limit
@@ -184,17 +157,14 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 //#define MY_TCPOLEN_RVBD_TRPY_MIN 16 //not yet implemented, thread as "tainted"
 
 
-// Macro to check if an error occured, translate it, report it to STDERR, kill
-// the child process doing the PCAP-Sniffing, exit with error and dump core.
+// Macro to check if an error occured, translate it, report it to STDERR, calling shutdown callback function to exit with error and dump core.
 #define CHECK(result, check)                                                            \
         ({                                                                 \
                 typeof(result) retval = (result);                                           \
                 if (!(retval check)) {                                                      \
                         fprintf(stderr, "ERROR: Return value from function call '%s' is NOT %s at %s:%d.\n\tERRNO(%d): %s\n",          \
                                         #result, #check, __FILE__, __LINE__, errno, strerror(errno)); \
-                        if ( pcap_pid != 0 ) kill(pcap_pid, SIGINT);                                   \
-                        if ( accept_pid != 0 ) kill(accept_pid, SIGINT);                                \
-                        abort();  \
+                        kill(getpid(), SIGUSR1);                                            \
                 }                                                                       \
                 retval;                                                                     \
         })
@@ -211,12 +181,6 @@ int accept_pid; //PID of the Child doing the TCP Connection handling. Globally d
 sem_t *hdrsem; //Semaphore for named pipe containing TCP/IP data
 sem_t *consem; //Semaphore for named pipe containing connection data
 
-struct user_t{
-    char name[33];  //Linux user names may be up to 32 characters long + 0-Termination.
-    uid_t   uid;    //user ID
-    gid_t   gid;    //group ID
-};
-
 struct con_status_t{    //Connection status
     char tag[80];       //The connection tag is a buffer with a min. size of 80 Bytes.
     char start[64];     //Time string: Start of connection
@@ -225,10 +189,5 @@ struct con_status_t{    //Connection status
     char reason[16];    //Reason is either "timeout\0", "size exceeded\0" or "n/a\0". Usefull states like "FIN send\0" and "FIN recv\0" are not detectable.
     long int data_bytes;//received bytes
 };
-
-//struct holding json for output
-typedef struct {
-        char* str;
-} json_struct;
 
 #endif

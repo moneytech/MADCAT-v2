@@ -6,9 +6,7 @@
 
 #IncludeRegexTransform: 
 
-../include/madcat.helper.h
-
-../include/tcp_ip_port_mon.h
+../include/madcat.common.h
 errno.h
 -
 stdio.h
@@ -27,13 +25,9 @@ sys/socket.h
 -
 sys/types.h
 -
-sys/stat.h
--
 arpa/inet.h
 -
 linux/netfilter_ipv4.h
--
-unistd.h
 -
 fcntl.h
 -
@@ -43,9 +37,9 @@ time.h
 -
 pwd.h
 -
-pcap.h
--
 netinet/ip.h
+-
+netinet/udp.h
 -
 netinet/tcp.h
 -
@@ -54,6 +48,16 @@ stdbool.h
 stdarg.h
 -
 sys/file.h
+-
+openssl/sha.h
+-
+lua5.1/lauxlib.h
+-
+lua5.1/lualib.h
+-
+sys/stat.h
+-
+pcap.h
 -
 sys/types.h
 -
@@ -65,18 +69,36 @@ sys/wait.h
 -
 sys/prctl.h
 -
-openssl/sha.h
--
-lua5.1/lauxlib.h
--
-lua5.1/lualib.h
--
+
+../include/madcat.helper.h
+madcat.common.h
+../include/madcat.common.h
+
+../include/tcp_ip_port_mon.h
+madcat.common.h
+../include/madcat.common.h
+tcp_ip_port_mon.helper.h
+../include/tcp_ip_port_mon.helper.h
+tcp_ip_port_mon.parser.h
+../include/tcp_ip_port_mon.parser.h
+tcp_ip_port_mon.worker.h
+../include/tcp_ip_port_mon.worker.h
 
 ../include/tcp_ip_port_mon.helper.h
 tcp_ip_port_mon.h
 ../include/tcp_ip_port_mon.h
 madcat.helper.h
 ../include/madcat.helper.h
+
+../include/tcp_ip_port_mon.parser.h
+tcp_ip_port_mon.h
+../include/tcp_ip_port_mon.h
+
+../include/tcp_ip_port_mon.worker.h
+madcat.common.h
+../include/madcat.common.h
+tcp_ip_port_mon.h
+../include/tcp_ip_port_mon.h
 
 /home/MADCAT/v1_Maintenance/lib/madcat.helper.c
 madcat.helper.h
@@ -85,6 +107,18 @@ madcat.helper.h
 /home/MADCAT/v1_Maintenance/lib/tcp_ip_port_mon.helper.c
 tcp_ip_port_mon.helper.h
 /home/MADCAT/v1_Maintenance/lib/tcp_ip_port_mon.helper.h
-madcat.helper.c
-/home/MADCAT/v1_Maintenance/lib/madcat.helper.c
+madcat.helper.h
+/home/MADCAT/v1_Maintenance/lib/madcat.helper.h
+
+/home/MADCAT/v1_Maintenance/lib/tcp_ip_port_mon.parser.c
+tcp_ip_port_mon.helper.h
+/home/MADCAT/v1_Maintenance/lib/tcp_ip_port_mon.helper.h
+tcp_ip_port_mon.parser.h
+/home/MADCAT/v1_Maintenance/lib/tcp_ip_port_mon.parser.h
+
+/home/MADCAT/v1_Maintenance/lib/tcp_ip_port_mon.worker.c
+tcp_ip_port_mon.worker.h
+/home/MADCAT/v1_Maintenance/lib/tcp_ip_port_mon.worker.h
+tcp_ip_port_mon.helper.h
+/home/MADCAT/v1_Maintenance/lib/tcp_ip_port_mon.helper.h
 

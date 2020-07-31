@@ -39,6 +39,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 */
 
 #include "udp_ip_port_mon.icmp_mon.helper.h"
+#include "madcat.common.h"
 
 //saves and returns address of main buffer to be freed by signal handler
 void* saved_buffer(void * buffer)

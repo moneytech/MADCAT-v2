@@ -47,7 +47,5 @@ void sig_handler_parent(int signo); //Signal Handler for parent watchdog
 void sig_handler_sigchld(int signo); //Signal Handler for Listner Parent to prevent childs becoming Zombies
 void sig_handler_child(int signo); //Signal Handler for childs
 void sig_handler_shutdown(int signo); //Signal Handler for SIGUSR1 to initiate gracefull shutdown, e.g. by CHECK-Macro
-//TODO?
-char* json_do(bool init_or_reset, const char* format, ...); //Reset or initialize new JSON if first arguement is true and append formated string.
-void get_user_ids(struct user_t* user); //adapted example code from manpage getpwnam(3)
+
 #endif

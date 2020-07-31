@@ -32,10 +32,13 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 */
 
 //Header includes, defintions and globals
+#include "madcat.common.h"
+#include "madcat.helper.h"
 #include "icmp_mon.h"
 #include "icmp_mon.helper.h"
 #include "icmp_mon.parser.h"
 #include "icmp_mon.worker.h"
+#include "udp_ip_port_mon.icmp_mon.helper.h"
 
 //Main
 int main(int argc, char *argv[])
@@ -52,6 +55,7 @@ int main(int argc, char *argv[])
         struct user_t user;
         int bufsize = DEFAULT_BUFSIZE;
 
+        signal(SIGUSR1, sig_handler); //register handler as callback function used by CHECK-Macro
         CHECK(signal(SIGINT, sig_handler), != SIG_ERR); //register handler for SIGINT
         CHECK(signal(SIGTERM, sig_handler), != SIG_ERR); //register handler for SIGTERM
 

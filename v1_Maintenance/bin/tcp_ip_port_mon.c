@@ -41,7 +41,6 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include "madcat.helper.h"
 #include "tcp_ip_port_mon.h"
 
-
 //Main
 
 int main(int argc, char *argv[])

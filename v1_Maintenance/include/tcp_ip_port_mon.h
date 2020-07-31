@@ -48,7 +48,6 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 
 #define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nTCP-IP Port Monitor v1.2\nHeiko Folkerts, BSI 2018-2020\n" //Version string
 
-#define DEBUG 0
 #define CHUNK_SIZE 512 //Chunks for receiving
 #define PATH_LEN 256 //Minium of maximum path lengths of Linux common file systems
 #define DEFAULT_BUFSIZE 9000 //Ethernet jumbo frame limit
@@ -189,10 +188,5 @@ struct con_status_t{    //Connection status
     char reason[16];    //Reason is either "timeout\0", "size exceeded\0" or "n/a\0". Usefull states like "FIN send\0" and "FIN recv\0" are not detectable.
     long int data_bytes;//received bytes
 };
-
-//struct holding json for output
-typedef struct {
-        char* str;
-} json_struct;
 
 #endif

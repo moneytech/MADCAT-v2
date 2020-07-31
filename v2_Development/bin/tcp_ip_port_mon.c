@@ -37,10 +37,9 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 */
 
 //Header includes, defintions and globals
+#include "madcat.common.h"
+#include "madcat.helper.h"
 #include "tcp_ip_port_mon.h"
-#include "tcp_ip_port_mon.helper.h"
-#include "tcp_ip_port_mon.parser.h"
-#include "tcp_ip_port_mon.worker.h"
 
 //Main
 
@@ -53,6 +52,10 @@ int main(int argc, char *argv[])
         struct timeval begin , now;
         gettimeofday(&begin , NULL);
         time_str(NULL, 0, start_time, sizeof(start_time)); //Get Human readable string only
+
+        signal(SIGUSR1, sig_handler_shutdown); //register handler as callback function used by CHECK-Macro
+        CHECK(signal(SIGINT, sig_handler_parent), != SIG_ERR); //register handler for SIGINT for parent process
+        CHECK(signal(SIGTERM, sig_handler_parent), != SIG_ERR); //register handler for SIGTERM for parent process
 
         //semaphores for output globally defined for easy access inside functions
         //sem_t *hdrsem; //Semaphore for named pipe containing TCP/IP data
@@ -158,9 +161,6 @@ int main(int argc, char *argv[])
         //int pcap_pid = 0; //PID of the Child doing the PCAP-Sniffing. Globally defined, cause it's used in CHECK-Makro.
         //int accept_pid = 0; //PID of the Child doing the TCP Connection handling. Globally defined, cause it's used in CHECK-Makro.
         int parent_pid = getpid();
-
-        CHECK(signal(SIGINT, sig_handler_parent), != SIG_ERR); //register handler for SIGINT for parent process
-        CHECK(signal(SIGTERM, sig_handler_parent), != SIG_ERR); //register handler for SIGTERM for parent process
 
         //Fork in child, init pcap , drop priviliges, sniff for SYN-Packets and log them
 

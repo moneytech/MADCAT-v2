@@ -36,17 +36,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #ifndef UDP_IP_PORT_ICMP_HELPER_H
 #define UDP_IP_PORT_ICMP_HELPER_H
 
-#define CHECK(result, check)                                                            \
-        ({                                                                 \
-                typeof(result) retval = (result);                                           \
-                if (!(retval check)) {                                                      \
-                        fprintf(stderr, "ERROR: Return value from function call '%s' is NOT %s at %s:%d.\n\tERRNO(%d): %s\n",          \
-                                        #result, #check, __FILE__, __LINE__, errno, strerror(errno)); \
-                        abort();                                                        \
-                }                                                                       \
-                retval;                                                                     \
-        })
-
+#include "madcat.helper.h"
 
 //UDP and ICMP HELPER
 void* saved_buffer(void * buffer); //saves and returns address of main buffer to be freed by signal handler

@@ -57,9 +57,22 @@ include lib/CMakeFiles/TcpIpPortMonCore.dir/progress.make
 # Include the compile flags for this target's objects.
 include lib/CMakeFiles/TcpIpPortMonCore.dir/flags.make
 
+lib/CMakeFiles/TcpIpPortMonCore.dir/madcat.helper.c.o: lib/CMakeFiles/TcpIpPortMonCore.dir/flags.make
+lib/CMakeFiles/TcpIpPortMonCore.dir/madcat.helper.c.o: ../lib/madcat.helper.c
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/MADCAT/v2_Development/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object lib/CMakeFiles/TcpIpPortMonCore.dir/madcat.helper.c.o"
+	cd /home/MADCAT/v2_Development/build/lib && /usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/TcpIpPortMonCore.dir/madcat.helper.c.o   -c /home/MADCAT/v2_Development/lib/madcat.helper.c
+
+lib/CMakeFiles/TcpIpPortMonCore.dir/madcat.helper.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/TcpIpPortMonCore.dir/madcat.helper.c.i"
+	cd /home/MADCAT/v2_Development/build/lib && /usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/MADCAT/v2_Development/lib/madcat.helper.c > CMakeFiles/TcpIpPortMonCore.dir/madcat.helper.c.i
+
+lib/CMakeFiles/TcpIpPortMonCore.dir/madcat.helper.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/TcpIpPortMonCore.dir/madcat.helper.c.s"
+	cd /home/MADCAT/v2_Development/build/lib && /usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/MADCAT/v2_Development/lib/madcat.helper.c -o CMakeFiles/TcpIpPortMonCore.dir/madcat.helper.c.s
+
 lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.helper.c.o: lib/CMakeFiles/TcpIpPortMonCore.dir/flags.make
 lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.helper.c.o: ../lib/tcp_ip_port_mon.helper.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/MADCAT/v2_Development/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.helper.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/MADCAT/v2_Development/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.helper.c.o"
 	cd /home/MADCAT/v2_Development/build/lib && /usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.helper.c.o   -c /home/MADCAT/v2_Development/lib/tcp_ip_port_mon.helper.c
 
 lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.helper.c.i: cmake_force
@@ -72,7 +85,7 @@ lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.helper.c.s: cmake_force
 
 lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.parser.c.o: lib/CMakeFiles/TcpIpPortMonCore.dir/flags.make
 lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.parser.c.o: ../lib/tcp_ip_port_mon.parser.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/MADCAT/v2_Development/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.parser.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/MADCAT/v2_Development/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.parser.c.o"
 	cd /home/MADCAT/v2_Development/build/lib && /usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.parser.c.o   -c /home/MADCAT/v2_Development/lib/tcp_ip_port_mon.parser.c
 
 lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.parser.c.i: cmake_force
@@ -85,7 +98,7 @@ lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.parser.c.s: cmake_force
 
 lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.worker.c.o: lib/CMakeFiles/TcpIpPortMonCore.dir/flags.make
 lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.worker.c.o: ../lib/tcp_ip_port_mon.worker.c
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/MADCAT/v2_Development/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.worker.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/MADCAT/v2_Development/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.worker.c.o"
 	cd /home/MADCAT/v2_Development/build/lib && /usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -o CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.worker.c.o   -c /home/MADCAT/v2_Development/lib/tcp_ip_port_mon.worker.c
 
 lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.worker.c.i: cmake_force
@@ -98,6 +111,7 @@ lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.worker.c.s: cmake_force
 
 # Object files for target TcpIpPortMonCore
 TcpIpPortMonCore_OBJECTS = \
+"CMakeFiles/TcpIpPortMonCore.dir/madcat.helper.c.o" \
 "CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.helper.c.o" \
 "CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.parser.c.o" \
 "CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.worker.c.o"
@@ -105,12 +119,13 @@ TcpIpPortMonCore_OBJECTS = \
 # External object files for target TcpIpPortMonCore
 TcpIpPortMonCore_EXTERNAL_OBJECTS =
 
+lib/libTcpIpPortMonCore.a: lib/CMakeFiles/TcpIpPortMonCore.dir/madcat.helper.c.o
 lib/libTcpIpPortMonCore.a: lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.helper.c.o
 lib/libTcpIpPortMonCore.a: lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.parser.c.o
 lib/libTcpIpPortMonCore.a: lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.worker.c.o
 lib/libTcpIpPortMonCore.a: lib/CMakeFiles/TcpIpPortMonCore.dir/build.make
 lib/libTcpIpPortMonCore.a: lib/CMakeFiles/TcpIpPortMonCore.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/MADCAT/v2_Development/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking C static library libTcpIpPortMonCore.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/MADCAT/v2_Development/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking C static library libTcpIpPortMonCore.a"
 	cd /home/MADCAT/v2_Development/build/lib && $(CMAKE_COMMAND) -P CMakeFiles/TcpIpPortMonCore.dir/cmake_clean_target.cmake
 	cd /home/MADCAT/v2_Development/build/lib && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/TcpIpPortMonCore.dir/link.txt --verbose=$(VERBOSE)
 

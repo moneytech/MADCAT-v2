@@ -37,7 +37,7 @@ netutils.c
 rsp.c
 server_socket.c
 )
-target_compile_options (IcmpMonCore PRIVATE ${GCC_FLAGS})
+target_compile_options (TcpProxyCore PRIVATE ${GCC_FLAGS})
 
 install(
   TARGETS

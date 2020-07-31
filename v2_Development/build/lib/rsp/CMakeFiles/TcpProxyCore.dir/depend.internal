@@ -18,12 +18,16 @@ lib/rsp/CMakeFiles/TcpProxyCore.dir/netutils.c.o
  ../include/rsp/netutils.h
  /home/MADCAT/v2_Development/lib/rsp/netutils.c
 lib/rsp/CMakeFiles/TcpProxyCore.dir/rsp.c.o
+ ../include/madcat.common.h
  ../include/madcat.helper.h
  ../include/rsp/epollinterface.h
  ../include/rsp/logging.h
  ../include/rsp/rsp.h
  ../include/rsp/server_socket.h
  ../include/tcp_ip_port_mon.h
+ ../include/tcp_ip_port_mon.helper.h
+ ../include/tcp_ip_port_mon.parser.h
+ ../include/tcp_ip_port_mon.worker.h
  /home/MADCAT/v2_Development/lib/rsp/rsp.c
 lib/rsp/CMakeFiles/TcpProxyCore.dir/server_socket.c.o
  ../include/rsp/connection.h

@@ -30,25 +30,27 @@
 
 
 add_library(IcmpMonCore STATIC #SHARED #STATIC
+  madcat.helper.c
   icmp_mon.helper.c
   icmp_mon.parser.c
   icmp_mon.worker.c
+  udp_ip_port_mon.icmp_mon.helper.c
 )
-target_compile_options (IcmpMonCore PRIVATE ${GCC_FLAGS})
 
 add_library(TcpIpPortMonCore STATIC #SHARED #STATIC
- tcp_ip_port_mon.helper.c
- tcp_ip_port_mon.parser.c
- tcp_ip_port_mon.worker.c
+  madcat.helper.c
+  tcp_ip_port_mon.helper.c
+  tcp_ip_port_mon.parser.c
+  tcp_ip_port_mon.worker.c
 )
-target_compile_options (TcpIpPortMonCore PRIVATE ${GCC_FLAGS})
 
 add_library(UdpIpPortMonCore STATIC #SHARED #STATIC
+  madcat.helper.c
   udp_ip_port_mon.helper.c
   udp_ip_port_mon.parser.c
   udp_ip_port_mon.worker.c
+  udp_ip_port_mon.icmp_mon.helper.c
 )
-target_compile_options (UdpIpPortMonCore PRIVATE ${GCC_FLAGS})
 
 install(
   TARGETS

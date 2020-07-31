@@ -36,6 +36,8 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #ifndef MADCAT_HELPER_H
 #define MADCAT_HELPER_H
 
+#include "madcat.common.h"
+
 //MADCAT HELPER
 void time_str(char* unix_buf, int unix_size, char* readable_buf, int readable_size);
 void get_user_ids(struct user_t* user); //adapted example code from manpage getpwnam(3)

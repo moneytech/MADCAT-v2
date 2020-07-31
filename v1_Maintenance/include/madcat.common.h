@@ -68,6 +68,20 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include <sys/wait.h>
 #include <sys/prctl.h>
 
+#define DEBUG 2
+
+// Macro to check if an error occured, translate it, report it to STDERR, calling shutdown callback function to exit with error and dump core.
+#define CHECK(result, check)                                                            \
+        ({                                                                 \
+                typeof(result) retval = (result);                                           \
+                if (!(retval check)) {                                                      \
+                        fprintf(stderr, "ERROR: Return value from function call '%s' is NOT %s at %s:%d.\n\tERRNO(%d): %s\n",          \
+                                        #result, #check, __FILE__, __LINE__, errno, strerror(errno)); \
+                        kill(getpid(), SIGUSR1);                                            \
+                }                                                                       \
+                retval;                                                                     \
+        })
+
 //#define	__USE_MISC //make struct_tm.h, included from time.h, provide "long int tm_gmtoff" and  "const char *tm_zone"
 
 #define MASCOTT "                             ▄▄▄               ▄▄▄▄▄▄\n                 ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀\n                    ▀▄▄▄▓█▓██   █▓█▌         █▓   ▓████████▀\n                       ▀███▓▓(o)██▓▌       ▐█▓█(o)█▓█████▀\n                         ▀▀██▓█▓▓█         ████▓███▀▀\n                  ▄            ▀▀▀▀                          ▄\n                ▀▀█                                         ▐██▌\n                  ██▄     ____------▐██████▌------___     ▄▄██\n                 __█ █▄▄--   ___------▀▓▓▀-----___   --▄▄█ █▀__\n             __--   ▀█  ██▄▄▄▄    __--▄▓▓▄--__   ▄▄▄▄██  ██▀   --__\n         __--     __--▀█ ██  █▀▀█████▄▄▄▄▄▄███████  ██ █▀--__      --__\n     __--     __--    __▀▀█  █  ██  ██▀▀██▀▀██  ██  █▀▀__    --__      --__\n         __--     __--     ▀███ ██  ██  ██  ██ ████▀     --__    --__\n hfo   --     __--             ▀▀▀▀▀██▄▄██▄▄██▀▀▀▀           --__    --\n         __ --                                                   --__\n"
