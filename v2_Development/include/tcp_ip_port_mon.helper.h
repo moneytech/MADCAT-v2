@@ -39,7 +39,9 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include "tcp_ip_port_mon.h"
 #include "madcat.helper.h"
 
-#define PCN_STRLEN 6
+#define PCN_STRLEN 6 //listen- and backport string length in proxy_conf_node_t
+#define EMPTY_STR "" //constant empty string for initialization of json_data_node_t
+#define STR_BUFFER_SIZE 65536 //Generic string buffer size
 
 struct proxy_conf_node_t //linked list element to hold proxy configuration items
 {
@@ -54,6 +56,33 @@ struct proxy_conf_node_t //linked list element to hold proxy configuration items
 struct proxy_conf_t { //proxy configuration
     struct proxy_conf_node_t* portlist; //head pointer to linked list with proxy configuration items
     bool portmap[65536]; //map of ports used to proxy network traffic
+};
+
+struct json_data_t { //json_data structure...
+    struct json_data_node_t *list;
+} *jd; //..defined globally as "jd" for easy access in all functions
+
+struct json_data_node_t { //json data list element
+    struct json_data_node_t *next; //next element in list
+    struct json_data_node_t *prev; //prev element in list
+    long long unsigned int id; //id, usally originating from a pointer (void*) to e.g. an epoll handler structure
+    
+    //all variables of json output, exepct constant string values e.g. "proxy_flow" or "closed"
+    char* src_ip;
+    int   src_port;
+    char* dest_ip;
+    char* dest_port;
+    char* timestamp;
+    char* unixtime;
+    char* start;
+    char* end;
+    long long unsigned int bytes_toserver;
+    long long unsigned int bytes_toclient;    
+    char* proxy_ip;
+    int   proxy_port;
+    char* backend_ip;
+    char* backend_port;
+    
 };
 
 //Helper Functions:
@@ -71,5 +100,11 @@ struct proxy_conf_t* pc_init(); //initialize proxy configuration
 void pc_push(struct proxy_conf_t* pc, int listenport, char* backendaddr, int backendport); //push new proxy configuration item to linked list
 struct proxy_conf_node_t* pc_get(struct proxy_conf_t* pc, int listenport); //get proxy configuration for listenport
 void pc_print(struct proxy_conf_t* pc); //print proxy configuration
+//Helper functions for json data structure and double linked list //TODO: Make list thread-safe?
+struct json_data_t* jd_init();  //initialize json data structure
+void jd_push(struct json_data_t* jd, long long unsigned int id); //push new json data list node wit id "id" to list
+struct json_data_node_t* jd_get(struct json_data_t* jd, long long int id); //get json data node by id
+bool jd_del(struct json_data_t* jd, long long int id);  //remove json data node by id
+void jd_print_list(struct json_data_t* jd); //print complete json data list
 
 #endif

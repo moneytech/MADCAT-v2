@@ -77,7 +77,7 @@ int connect_to_backend(char* backend_host,
         exit(1);
     }
 
-    
+    /*
     //MADCAT start
     //Get local client address and port
     struct sockaddr local_address;
@@ -90,16 +90,8 @@ int connect_to_backend(char* backend_host,
     proxy_sock.client_addr = inttoa(*(uint32_t*)ip_ptr);
     
     //fprintf(stderr, "\n\n############### \n\tServer IP: %s\n\tServer PORT: %u\n\n", inttoa(*(uint32_t*)ip_ptr), proxy_sock.client_port);
-
-    /* //Not necessary, known by config.
-    port_ptr = (char*) &(addrs_iter->ai_addr->sa_data);
-    ip_ptr = (char*) &(addrs_iter->ai_addr->sa_data) + 2;
-    unsigned int b_port = ((uint8_t) (*port_ptr)) * 256 + ((uint8_t) (*(port_ptr+1)));
-    
-    //fprintf(stderr, "\n\n############### \n\tBackend IP: %s\n\tBackend PORT: %u\n\n", inttoa(*(uint32_t*)ip_ptr), b_port);
-    */
-
     //MADCAT end
+    */
 
     freeaddrinfo(addrs);
 

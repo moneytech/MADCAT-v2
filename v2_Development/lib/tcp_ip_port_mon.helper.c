@@ -46,13 +46,19 @@ void print_help_tcp(char* progname) //print help message
 {
     fprintf(stderr, "SYNTAX:\n    %s path_to_config_file\n\
         Sample content of a config file:\n\n\
-            \tinterface = \"lo\"\n\
-            \thostaddress = \"127.1.1.1\"\n\
+            \tinterface = \"enp0s8\"\n\
+            \thostaddress = \"10.1.2.3\"\n\
             \tlistening_port = \"65535\"\n\
             \tconnection_timeout = \"10\"\n\
             \tuser = \"hf\"\n\
             \tpath_to_save_tcp_streams = \"./tpm/\" --Must end with trailing \"/\", will be handled as prefix otherwise\n\
             \t--max_file_size = \"1024\" --optional\n\
+            \t--TCP Proxy configuration\n\
+            \ttcpproxy = {\n\
+            \t-- [<listen port>] = { \"<backend IP>\", <backend Port> },\n\
+            \t\t[22]  = { \"192.168.10.222\", 22 },\n\
+            \t\t[80]  = { \"192.168.20.80\", 8080 },\n\
+            \t}\n\
         ", progname);
 
     fprintf(stderr, "\nLEGACY SYNTAX (pre v1.1.5):\n    %s interface hostaddress listening_port connection_timeout user path_to_save_tcp-streams [max_file_size]\n\
@@ -61,8 +67,8 @@ void print_help_tcp(char* progname) //print help message
         but the last TCP Datagramm exceeding this size will be saved anyway.\n", progname);
 
     fprintf(stderr,"\nExample Netfilter Rule to work properly:\n\
-        iptables -t nat -A PREROUTING -i enp0s8 -p tcp --dport 1:65534 -j DNAT --to 192.168.8.42:65535\n\
-        Listening Port is 65535 and hostaddress is 192.168.8.42 in this example.\n\n\
+        iptables -t nat -A PREROUTING -i enp0s8 -p tcp --dport 1:65534 -j DNAT --to 10.1.2.3:65535\n\
+        Listening Port is 65535 and hostaddress is 10.1.2.3 in this example.\n\n\
     Must be run as root, but the priviliges will be droped to \"user\".\n\n\
     Opens two named pipes (FiFo) containing live JSON output:\n\
         \"%s\" for stream connection data, \"%s\" for header data.\n", CONNECT_FIFO, HEADER_FIFO);
@@ -133,8 +139,6 @@ void sig_handler_parent(int signo)
     sem_unlink ("hdrsem");
     sem_close(consem);
     sem_unlink ("consem");
-    // Free JSON-Buffer
-    free(json_do(false, ""));
     //Family drama: Kill childs
     //TODO: Kill Proxys
     kill(pcap_pid, SIGTERM);
@@ -279,5 +283,138 @@ void pc_print(struct proxy_conf_t* pc) //print proxy configuration
         fprintf(stderr, "\tProxy local port: %d -> Backend socket: %s:%d\n", pc_node->listenport, pc_node->backendaddr, pc_node->backendport);
         pc_node = pc_node->next;
     }
+    return;
+}
+
+//Helper functions for json data structure and double linked list
+
+struct json_data_t* jd_init()  //initialize json data structure
+{
+    struct json_data_t* jd = malloc (sizeof(struct json_data_t));
+    jd->list = 0;
+    return jd;
+}
+
+void jd_push(struct json_data_t* jd, long long unsigned int id) //push new json data list node wit id "id" to list
+{
+    struct json_data_node_t* jd_node = malloc (sizeof(struct json_data_node_t)); //new node
+
+    //initialize inside variables    
+    jd_node->id = id;
+    jd_node->src_ip =  EMPTY_STR;
+    jd_node->src_port = 0;
+    jd_node->dest_ip =  EMPTY_STR;
+    jd_node->dest_port =  EMPTY_STR;
+    jd_node->timestamp =  EMPTY_STR;
+    jd_node->unixtime =  EMPTY_STR;
+    jd_node->start =  EMPTY_STR;
+    jd_node->end =  EMPTY_STR;
+    jd_node->bytes_toserver =  0;
+    jd_node->bytes_toclient =  0;
+    jd_node->proxy_ip =  EMPTY_STR;
+    jd_node->proxy_port =  0;
+    jd_node->backend_ip =  EMPTY_STR;
+    jd_node->backend_port =  EMPTY_STR;
+
+    //push element to beginning of list
+    //TODO: More efficient, when appendig to end?
+    if(jd->list != 0) jd->list->prev=jd_node;
+    jd_node->next = jd->list;
+    jd->list = jd_node;
+    jd_node->prev = 0;
+
+    return;
+}
+
+struct json_data_node_t* jd_get(struct json_data_t* jd, long long int id) //get json data node by id
+{
+    struct json_data_node_t* result = jd->list;
+    while ( result != 0)
+    {
+        if(result->id == id) return result;
+        result = result->next;
+    }
+    return 0;
+}
+
+bool jd_del(struct json_data_t* jd, long long int id)  //remove json data node by id
+{
+    struct json_data_node_t* jd_node = jd_get(jd, id);
+    if (jd_node == 0) return false;
+
+    //free all strings if not identical to initial constant string of "EMPTY_STR"
+    if (jd_node->src_ip != EMPTY_STR) free(jd_node->src_ip);
+    if (jd_node->dest_ip !=  EMPTY_STR) free(jd_node->dest_ip);
+    if (jd_node->dest_port !=  EMPTY_STR) free(jd_node->dest_port);
+    if (jd_node->timestamp !=  EMPTY_STR) free(jd_node->timestamp);
+    if (jd_node->unixtime !=  EMPTY_STR) free(jd_node->unixtime);
+    if (jd_node->start !=  EMPTY_STR) free(jd_node->start);
+    if (jd_node->end !=  EMPTY_STR) free(jd_node->end);
+    if (jd_node->proxy_ip !=  EMPTY_STR) free(jd_node->proxy_ip);
+    if (jd_node->backend_ip !=  EMPTY_STR) free(jd_node->backend_ip);
+    if (jd_node->backend_port !=  EMPTY_STR) free(jd_node->backend_port);
+
+    //reorganize list pointers
+    if (jd_node == jd->list) jd->list = jd_node->next; //Is it the head node?
+    if (jd_node->prev != 0) jd_node->prev->next = jd_node->next;
+    if (jd_node->next != 0) jd_node->next->prev = jd_node->prev;
+
+    free(jd_node); //free the node element itself
+
+    return true;
+}
+
+void jd_print_list(struct json_data_t* jd) //print complete json data list
+{
+    struct json_data_node_t* jd_node = jd->list;
+
+    fprintf(stderr, "\n<START>\n");
+
+    while ( jd_node != 0 )
+    {
+        fprintf(stderr, "\n\
+long long unsigned int id: %p\n\
+void* jd_node: %p\n\
+struct json_data_node_t *next: %p\n\
+struct json_data_node_t *prev: %p\n\
+char* src_ip: %s\n\
+int   src_port: %d\n\
+char* dest_ip: %s\n\
+char* dest_port: %s\n\
+char* timestamp: %s\n\
+char* unixtime: %s\n\
+char* start: %s\n\
+char* end: %s\n\
+long long unsigned int bytes_toserver: %lld\n\
+long long unsigned int bytes_toclient: %lld\n\
+char* proxy_ip: %s\n\
+int   proxy_port: %d\n\
+char* backend_ip: %s\n\
+char* backend_port: %s\n\
+\n",\
+(void*) jd_node->id,\
+jd_node,
+jd_node->next,\
+jd_node->prev,\
+jd_node->src_ip,\
+jd_node->src_port,\
+jd_node->dest_ip,\
+jd_node->dest_port,\
+jd_node->timestamp,\
+jd_node->unixtime,\
+jd_node->start,\
+jd_node->end,\
+jd_node->bytes_toserver,\
+jd_node->bytes_toclient,\
+jd_node->proxy_ip,\
+jd_node->proxy_port,\
+jd_node->backend_ip,\
+jd_node->backend_port\
+);
+
+        jd_node = jd_node->next;
+    }
+
+    fprintf(stderr, "<END>\n\n");
     return;
 }

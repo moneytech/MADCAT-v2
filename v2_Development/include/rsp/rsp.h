@@ -31,6 +31,6 @@ struct proxy_socket_t { //Adresses and ports globally defined for easy access fo
 } proxy_sock;
 
 int rsp(struct proxy_conf_node_t* pcn, char* server_addr);
-void json_out(struct proxy_data* data);
+void json_out(struct json_data_t* jd, long long int id);
 
 #endif

@@ -24,8 +24,10 @@ void on_client_read(void* closure, char* buffer, int len)
         return;
     }
     connection_write(data->backend, buffer, len);
-    fprintf(stderr,"\n\n+++++ %p\n\n", data->client);
-    data->bytes_toserver += len; //MADCAT //TODO
+    //MADCAT
+    //log, using data->client as id, which also contains the struct epoll_event_handler*
+    jd_get(jd, (long long unsigned int) data->client)->bytes_toserver += len;
+    //data->bytes_toserver += len;
 }
 
 
@@ -36,8 +38,7 @@ void on_client_close(void* closure)
         return;
     }
 
-    json_out(data); //MADCAT
-    fprintf(stderr,"\n\n----- %p\n\n", data->client);
+    json_out(jd, (long long unsigned int) data->client); //MADCAT
 
     connection_close(data->backend);
     data->client = NULL;
@@ -54,8 +55,10 @@ void on_backend_read(void* closure, char* buffer, int len)
     }
     connection_write(data->client, buffer, len);
     
-    fprintf(stderr,"\n\n+++++ %p\n\n", data->client);
-    data->bytes_toclient += len; //MADCAT //TODO
+    //MADCAT
+    //log, using data->client as id, which also contains the struct epoll_event_handler*
+    jd_get(jd, (long long unsigned int) data->client)->bytes_toclient += len;
+    //data->bytes_toclient += len;
 }
 
 
@@ -66,8 +69,8 @@ void on_backend_close(void* closure)
         return;
     }
 
-    json_out(data); //MADCAT
-    fprintf(stderr,"\n\n----- %p\n\n", data->client);
+    //MADCAT
+    json_out(jd, (long long unsigned int) data->client); //MADCAT
 
     connection_close(data->client);
     data->client = NULL;
@@ -93,10 +96,33 @@ struct proxy_data*  handle_client_connection(int client_socket_fd,
     proxy->client = client_connection;
     proxy->backend = backend_connection;
 
-    proxy->bytes_toclient = 0; //MADCAT
-    proxy->bytes_toserver = 0; //MADCAT
 
-    fprintf(stderr,"\n\n===== %p @ %d\n\n", proxy->client, proxy_sock.client_port);
+    //MADCAT start
+    if ( !jd_get(jd, (long long unsigned int) proxy->client)) jd_push(jd, (long long unsigned int) proxy->client);
+
+    jd_get(jd, (long long unsigned int) proxy->client)->bytes_toclient = 0;
+    jd_get(jd, (long long unsigned int) proxy->client)->bytes_toserver = 0;
+    
+    //proxy->bytes_toclient = 0; //MADCAT
+    //proxy->bytes_toserver = 0; //MADCAT
+
+    
+    //Get local client address and port
+    struct sockaddr local_address;
+    int addr_size = sizeof(local_address);
+    getsockname(backend_socket_fd, &local_address, &addr_size);
+
+    char* port_ptr = local_address.sa_data;
+    char* ip_ptr = (char*) &(local_address.sa_data) + 2;
+    proxy_sock.client_port = ((uint8_t) (*port_ptr)) * 256 + ((uint8_t) (*(port_ptr+1)));
+    //proxy_sock.client_addr = inttoa(*(uint32_t*)ip_ptr);
+    
+    jd_get(jd, (long long unsigned int) proxy->client)->proxy_ip = inttoa(*(uint32_t*)ip_ptr);
+    jd_get(jd, (long long unsigned int) proxy->client)->proxy_port = proxy_sock.client_port;
+    jd_get(jd, (long long unsigned int) proxy->client)->backend_ip = strncpy(malloc(strlen(proxy_sock.backend_addr) +1 ), proxy_sock.backend_addr, strlen(proxy_sock.backend_addr) +1 );
+    jd_get(jd, (long long unsigned int) proxy->client)->backend_port = strncpy(malloc(strlen(proxy_sock.backend_port_str) +1 ), proxy_sock.backend_port_str, strlen(proxy_sock.backend_port_str) +1 );
+
+    //MADCAT end
 
     struct connection_closure* client_closure = (struct connection_closure*) client_connection->closure;
     client_closure->on_read = on_client_read;
@@ -119,7 +145,7 @@ void handle_server_socket_event(struct epoll_event_handler* self, uint32_t event
 {
     struct server_socket_event_data* closure = (struct server_socket_event_data*) self->closure;
 
-    /*MADCAT START*/
+    //MADCAT start
     struct sockaddr_in claddr; //Clientaddress
     socklen_t claddr_len = sizeof(claddr);
 
@@ -128,7 +154,7 @@ void handle_server_socket_event(struct epoll_event_handler* self, uint32_t event
     time_str(start_time_unix, sizeof(start_time_unix), start_time, sizeof(start_time));
 
     struct proxy_data* proxy;
-    /*MADCAT END*/
+    //MADCAT end
 
     int client_socket_fd;
     while (1) {
@@ -149,31 +175,18 @@ void handle_server_socket_event(struct epoll_event_handler* self, uint32_t event
                                          closure->backend_port_str);
     }
 
-    //MADCAT logging
-    fprintf(stderr,"\n\n#### %p\n\n", proxy->client);
-    //Initialze JSON for logging
-    json_do(true,"");
-    //Log connection in json-format (Suricata-like).
-    json_do(false, "{\
-\"src_ip\": \"%s\", \
-\"dest_port\": %s, \
-\"timestamp\": \"%s\", \
-\"dest_ip\": \"%s\", \
-\"src_port\": %d, \
-\"proto\": \"TCP\", \
-\"event_type\": \"proxy_flow\", \
-\"unixtime\": %s, \
-\"flow\": { \
-\"start\": \"%s\"\
-", \
-inet_ntoa(claddr.sin_addr), \
-proxy_sock.server_port_str, \
-start_time, \
-proxy_sock.server_addr, \
-ntohs(claddr.sin_port), \
-start_time_unix, \
-start_time\
-);
+    //MADCAT start
+    //Log first part of connection in json data list, using struct epoll_event_handler* client as id.
+    if ( !jd_get(jd, (long long unsigned int) proxy->client)) jd_push(jd, (long long unsigned int) proxy->client);
+
+    jd_get(jd, (long long unsigned int) proxy->client)->src_ip = strncpy(malloc(strlen(inet_ntoa(claddr.sin_addr)) +1 ), inet_ntoa(claddr.sin_addr), strlen(inet_ntoa(claddr.sin_addr)) +1 );
+    jd_get(jd, (long long unsigned int) proxy->client)->dest_port = strncpy(malloc(strlen(proxy_sock.server_port_str) +1 ), proxy_sock.server_port_str, strlen(proxy_sock.server_port_str) +1 );
+    jd_get(jd, (long long unsigned int) proxy->client)->timestamp = strncpy(malloc(strlen(start_time) +1 ), start_time, strlen(start_time) +1 );
+    jd_get(jd, (long long unsigned int) proxy->client)->start = strncpy(malloc(strlen(start_time) +1 ), start_time, strlen(start_time) +1 );
+    jd_get(jd, (long long unsigned int) proxy->client)->dest_ip = strncpy(malloc(strlen(proxy_sock.server_addr) +1 ), proxy_sock.server_addr, strlen(proxy_sock.server_addr) +1 );
+    jd_get(jd, (long long unsigned int) proxy->client)->src_port = ntohs(claddr.sin_port);
+    jd_get(jd, (long long unsigned int) proxy->client)->unixtime = strncpy(malloc(strlen(start_time_unix) +1 ), start_time_unix, strlen(start_time_unix) +1 );
+    //MADCAT end
 
     return;
 }

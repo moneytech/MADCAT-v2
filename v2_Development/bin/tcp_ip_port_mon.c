@@ -241,8 +241,6 @@ int main(int argc, char *argv[])
             }
         }
 
-        sleep(3600); //XXX
-
         sleep(0.1); //sleep, so output is not mangled between forks
         if ( !(accept_pid =fork()) ) { //Create listening child process
             //Variables for listning socket

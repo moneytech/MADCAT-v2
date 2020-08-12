@@ -158,3 +158,15 @@ tcp_ip_port_mon.helper.h
 madcat.helper.h
 /home/MADCAT/v2_Development/lib/madcat.helper.h
 
+/home/MADCAT/v2_Development/lib/tcp_ip_port_mon.parser.c
+tcp_ip_port_mon.helper.h
+/home/MADCAT/v2_Development/lib/tcp_ip_port_mon.helper.h
+tcp_ip_port_mon.parser.h
+/home/MADCAT/v2_Development/lib/tcp_ip_port_mon.parser.h
+
+/home/MADCAT/v2_Development/lib/tcp_ip_port_mon.worker.c
+tcp_ip_port_mon.worker.h
+/home/MADCAT/v2_Development/lib/tcp_ip_port_mon.worker.h
+tcp_ip_port_mon.helper.h
+/home/MADCAT/v2_Development/lib/tcp_ip_port_mon.helper.h
+
