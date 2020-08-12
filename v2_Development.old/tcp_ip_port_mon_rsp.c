@@ -570,6 +570,7 @@ struct proxy_data* handle_client_connection(int client_socket_fd,
     backend_closure->on_close = on_backend_close;
     backend_closure->on_close_closure = proxy;
 
+    //MADCAT
     return proxy;
 
 }
@@ -636,45 +637,6 @@ start_time\
 );
 
     return;
-}
-
-int create_and_bind(char* hostaddr, char* server_port_str) //MADCAT
-{
-    //Variables for listning socket
-    struct sockaddr_in addr; //Hostaddress
-    struct sockaddr_in trgaddr; //Storage for original destination port
-    struct sockaddr_storage claddr; //Clientaddress
-    char clientaddr[INET6_ADDRSTRLEN] = "";
-    
-    int server_port = atoi(server_port_str);
-
-    prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
-    CHECK(signal(SIGTERM, sig_handler_child), != SIG_ERR); //re-register handler for SIGTERM for child process
-    CHECK(signal(SIGCHLD, sig_handler_sigchld), != SIG_ERR); //register handler for parents to prevent childs becoming Zombies
-
-    accept_pid = getpid();
-
-    socklen_t trgaddr_len = sizeof(trgaddr);
-    socklen_t claddr_len = sizeof(claddr);
-    socklen_t addr_len = sizeof(addr);
-    int server_socket_fd = CHECK(socket(AF_INET, SOCK_STREAM, IPPROTO_TCP), != -1); //create socket filedescriptor
-
-    //Initialize address struct (Host)
-    bzero(&addr, addr_len);
-    addr.sin_family=AF_INET;
-    CHECK(inet_aton(hostaddr, &addr.sin_addr), != 0); //set and check listening address
-    addr.sin_port = htons(server_port); //set listening port
-
-    struct linger sl = { 1, 5 };
-    int on = 1;
-
-    CHECK(setsockopt(server_socket_fd, SOL_SOCKET, SO_REUSEADDR, &on, (socklen_t)sizeof(on)), != -1);
-    CHECK(setsockopt(server_socket_fd, SOL_SOCKET, SO_LINGER, &sl, (socklen_t)sizeof(sl)), != -1);
-
-    //Bind socket and begin listening
-    CHECK(bind(server_socket_fd, (struct sockaddr*)&addr, sizeof(addr)), != -1);
-
-    return server_socket_fd;
 }
 
 /* OLD

@@ -45,3 +45,9 @@ path_to_save_udp_data = "./upm/"
 path_to_save_icmp_data = "./ipm/"
 max_file_size = "10000" --optional: Max. Size for TCP-Streams to be saved or jsonized.
 bufsize = "16384" --optional: Receiving Buffer size for UDP or ICMP Module
+--TCP Proxy configuration
+tcpproxy = { -- [<listen port>] = { "<backend IP", <backend Port> },
+            [222]  = { "192.168.2.198", 22 },
+            [2222] = { "192.168.2.198", 222 },
+            [80]   = { "192.168.2.198", 8080 },
+           }

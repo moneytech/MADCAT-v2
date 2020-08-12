@@ -69,14 +69,24 @@ void print_help_tcp(char* progname) //print help message
     return;
 }
 
-int init_pcap(char* dev, pcap_t **handle)
+int init_pcap(char* dev, char* dev_addr, pcap_t **handle)
 {
     char errbuf[PCAP_ERRBUF_SIZE];// Error string 
     struct bpf_program fp;    // The compiled filter 
-    char filter_exp[] = PCAP_FILTER; //The filter expression 
+    char filter_exp[ strlen(PCAP_FILTER) + strlen(dev_addr) + 1 ]; //The filter expression
     bpf_u_int32 mask;    // Our netmask 
     bpf_u_int32 net;    // Our IP 
-    
+
+    //Capture only TCP-SYN's...
+    strncpy(filter_exp, PCAP_FILTER, sizeof(filter_exp));
+    //...for some systems (Linux Kernel >= 5 ???) own host IP has to be appended, so that the final filter string looks like "tcp[tcpflags] & (tcp-syn) != 0 and tcp[tcpflags] & (tcp-ack) == 0 & dst host 1.2.3.4"
+    strncat(filter_exp, dev_addr, sizeof(filter_exp) - sizeof(PCAP_FILTER));
+
+    #if DEBUG >= 2
+        fprintf(stderr, "*** DEBUG [PID %d] PCAP Filter Expression: \"%s\"\n", getpid(), filter_exp);
+        fflush(stderr);
+    #endif
+
     // Find the properties for the device 
     if (pcap_lookupnet(dev, &net, &mask, errbuf) == -1)
         return -1;
@@ -126,6 +136,7 @@ void sig_handler_parent(int signo)
     // Free JSON-Buffer
     free(json_do(false, ""));
     //Family drama: Kill childs
+    //TODO: Kill Proxys
     kill(pcap_pid, SIGTERM);
     kill(accept_pid, SIGTERM);
     //exit parent process
@@ -177,5 +188,96 @@ void sig_handler_shutdown(int signo)
     if ( pcap_pid != 0 ) kill(pcap_pid, SIGINT);
     if ( accept_pid != 0 ) kill(accept_pid, SIGINT);
     abort();
+    return;
+}
+
+//Helper functions for proxy configuration
+
+void get_config_table(lua_State* L, char* name, struct proxy_conf_t* pc) //read proxy configuration from parsed LUA-File by luaL_dofile(...)
+{
+    char* backendaddr = 0;
+    int backendport = 0;
+    
+    lua_getglobal(L, name); //push objekt "name" to stack and...
+
+    if ( !lua_istable(L, -1) ) //...check if this objekt is a table
+    {
+        fprintf(stderr, "No proxy config found. Variable \"%s\" must be a LUA table.)\n", name);
+        exit(1);
+    }
+    
+    //Iterate over all possible portnumbers.
+    //TODO: Think about a more clever solution.
+    for (int listenport = 0; listenport<65536; listenport++)
+    {
+        //fprintf(stderr,"LOOP %d:", listenport);
+        //pc_print(pc);
+        
+        lua_pushnumber(L, listenport); //push actuall portnumber on stack and...
+        lua_gettable(L, -2);  //...call lua_gettable with this portnumber as key
+        if( !lua_isnil(L,-1) ) //if corresponding value is not NIL...
+        {
+            lua_pushnumber(L, 1); //push "1" on the stack for the first elemnt in sub-table and...
+            lua_gettable(L, -2);  //...fetch this entry
+            backendaddr = (char*) lua_tostring(L, -1);
+            lua_pop(L, 1); //remove result from stack
+            
+            lua_pushnumber(L, 2); //push "2" on the stack for the second elemnt in sub-table and...
+            lua_gettable(L, -2); //...fetch this entry
+            backendport = lua_tonumber(L, -1);
+            lua_pop(L, 1);  //remove result from stack      
+            
+            pc_push(pc, listenport, backendaddr, backendport);
+            pc->portmap[listenport] = true;
+        }
+        lua_pop(L, 1); //remove sub-table from stack
+    }
+    return;
+}
+
+struct proxy_conf_t* pc_init() //initialize proxy configuration
+{
+    struct proxy_conf_t* pc = malloc (sizeof(struct proxy_conf_t)); 
+    pc->portlist = 0; //set headpointer to 0
+    for (int listenport = 0; listenport<65536; listenport++) pc->portmap[listenport] = false; //initilze map of ports used to proxy network traffic
+    return pc;
+}
+
+void pc_push(struct proxy_conf_t* pc, int listenport, char* backendaddr, int backendport) //push new proxy configuration item to linked list
+{
+    struct proxy_conf_node_t* pc_node = malloc (sizeof(struct proxy_conf_node_t));
+    
+    pc_node->listenport = listenport;
+     snprintf(pc_node->listenport_str, PCN_STRLEN, "%d", listenport);
+    //pc_node->backendaddr = backendaddr; //Make copy instead, to get full control over data and circumvent data corruption by free(backendaddr), etc.
+    pc_node->backendaddr = malloc(strlen(backendaddr)+1);
+     strncpy(pc_node->backendaddr, backendaddr, strlen(backendaddr)+1);
+    pc_node->backendport = backendport;
+     snprintf(pc_node->backendport_str, PCN_STRLEN, "%d", backendport);
+
+    pc_node->next = pc->portlist;
+    pc->portlist = pc_node;
+    return;
+}
+
+struct proxy_conf_node_t* pc_get(struct proxy_conf_t* pc, int listenport) //get proxy configuration for listenport
+{
+    struct proxy_conf_node_t* result = pc->portlist;
+    while ( result != 0)
+    {
+        if(result->listenport == listenport) return result;
+        result = result->next;
+    }
+    return 0;
+}
+
+void pc_print(struct proxy_conf_t* pc) //print proxy configuration
+{
+    struct proxy_conf_node_t* pc_node = pc->portlist;
+    while ( pc_node != 0)
+    {
+        fprintf(stderr, "\tProxy local port: %d -> Backend socket: %s:%d\n", pc_node->listenport, pc_node->backendaddr, pc_node->backendport);
+        pc_node = pc_node->next;
+    }
     return;
 }

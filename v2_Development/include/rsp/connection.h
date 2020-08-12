@@ -1,3 +1,8 @@
+#ifndef CONNECTION_H
+#define CONNECTION_H
+
+#include "tcp_ip_port_mon.h"
+
 struct connection_closure {
     void (*on_read)(void* closure, char* buffer, int len);
     void* on_read_closure;
@@ -13,3 +18,5 @@ extern void connection_write(struct epoll_event_handler* self, char* data, int l
 extern void connection_close(struct epoll_event_handler* self);
 
 extern struct epoll_event_handler* create_connection(int connection_fd);
+
+#endif

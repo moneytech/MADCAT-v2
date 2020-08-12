@@ -3,8 +3,10 @@
 
 bin/CMakeFiles/tcp_ip_port_mon.dir/tcp_ip_port_mon.c.o: ../include/madcat.common.h
 bin/CMakeFiles/tcp_ip_port_mon.dir/tcp_ip_port_mon.c.o: ../include/madcat.helper.h
+bin/CMakeFiles/tcp_ip_port_mon.dir/tcp_ip_port_mon.c.o: ../include/rsp/connection.h
 bin/CMakeFiles/tcp_ip_port_mon.dir/tcp_ip_port_mon.c.o: ../include/rsp/epollinterface.h
 bin/CMakeFiles/tcp_ip_port_mon.dir/tcp_ip_port_mon.c.o: ../include/rsp/logging.h
+bin/CMakeFiles/tcp_ip_port_mon.dir/tcp_ip_port_mon.c.o: ../include/rsp/netutils.h
 bin/CMakeFiles/tcp_ip_port_mon.dir/tcp_ip_port_mon.c.o: ../include/rsp/rsp.h
 bin/CMakeFiles/tcp_ip_port_mon.dir/tcp_ip_port_mon.c.o: ../include/rsp/server_socket.h
 bin/CMakeFiles/tcp_ip_port_mon.dir/tcp_ip_port_mon.c.o: ../include/tcp_ip_port_mon.h

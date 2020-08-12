@@ -204,11 +204,11 @@ unsigned char* hex_dump(const void *addr, int len, const bool json)
 char *inttoa(uint32_t i_addr) //inet_ntoa e.g. converts 127.1.1.1 to 127.0.0.1. This is bad e.g. for testing.
 {
     char str_addr[16] = "";
-    //convert IP(v4)-Addresses from network byte order to string
     snprintf(str_addr, 16, "%u.%u.%u.%u", i_addr & 0x000000ff, (i_addr & 0x0000ff00) >> 8, (i_addr & 0x00ff0000) >> 16, (i_addr & 0xff000000) >> 24);
     return strndup(str_addr,16); //strndup ensures \0 termination. Do not forget to free()!
 }
 
+//initialze json objekt and concatinate to it
 char* json_do(bool init_or_reset, const char* format, ...)
 {
 

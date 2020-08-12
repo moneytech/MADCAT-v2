@@ -39,13 +39,37 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include "tcp_ip_port_mon.h"
 #include "madcat.helper.h"
 
+#define PCN_STRLEN 6
+
+struct proxy_conf_node_t //linked list element to hold proxy configuration items
+{
+    int listenport;
+    char listenport_str[PCN_STRLEN];
+    int backendport;
+    char backendport_str[PCN_STRLEN];
+    char* backendaddr;
+    struct proxy_conf_node_t* next;
+};
+
+struct proxy_conf_t { //proxy configuration
+    struct proxy_conf_node_t* portlist; //head pointer to linked list with proxy configuration items
+    bool portmap[65536]; //map of ports used to proxy network traffic
+};
+
 //Helper Functions:
 void print_help_tcp(char* progname); //print TCP help message
-int init_pcap(char* dev, pcap_t **handle);
+int init_pcap(char* dev, char* dev_addr, pcap_t **handle);
 void drop_root_privs(struct user_t user, const char* entity);
+//Signal Handler:
 void sig_handler_parent(int signo); //Signal Handler for parent watchdog
 void sig_handler_sigchld(int signo); //Signal Handler for Listner Parent to prevent childs becoming Zombies
 void sig_handler_child(int signo); //Signal Handler for childs
 void sig_handler_shutdown(int signo); //Signal Handler for SIGUSR1 to initiate gracefull shutdown, e.g. by CHECK-Macro
+//Helper functions for proxy configuration:
+void get_config_table(lua_State* L, char* name, struct proxy_conf_t* pc); //read proxy configuration from parsed LUA-File by luaL_dofile(...)
+struct proxy_conf_t* pc_init(); //initialize proxy configuration
+void pc_push(struct proxy_conf_t* pc, int listenport, char* backendaddr, int backendport); //push new proxy configuration item to linked list
+struct proxy_conf_node_t* pc_get(struct proxy_conf_t* pc, int listenport); //get proxy configuration for listenport
+void pc_print(struct proxy_conf_t* pc); //print proxy configuration
 
 #endif

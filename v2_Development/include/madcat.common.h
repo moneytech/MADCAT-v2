@@ -36,7 +36,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #ifndef MADCAT_COMMON_H
 #define MADCAT_COMMON_H
 
-#define DEBUG 2
+#define DEBUG 0
 
 #include <errno.h>
 #include <stdio.h>

@@ -77,6 +77,9 @@ int main(int argc, char *argv[])
         int max_file_size = -1;
         int max_conn = 0;
 
+        //Structure holding proxy configuration items
+        struct proxy_conf_t* pc = pc_init(pc);
+
         // Checking if number of arguments is one (config file) or 6 or 7 (command line).
         if (argc != 2  && (argc < 7 || argc > 8))
         {
@@ -126,6 +129,10 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "\tmax_file_size: %s\n", get_config_opt(luaState, "max_file_size"));
             }
 
+            //Read proxy configuration
+            get_config_table(luaState, "tcpproxy", pc);
+            pc_print(pc);
+
             lua_close(luaState);
         } 
         else //copy legacy command line arguments to variables
@@ -158,10 +165,10 @@ int main(int argc, char *argv[])
         pcap_t *handle; //pcap Session handle 
         struct pcap_pkthdr header; // The pcap header it gives back
         const unsigned char* packet; //The Packet from pcap
-        //int pcap_pid = 0; //PID of the Child doing the PCAP-Sniffing. Globally defined, cause it's used in CHECK-Makro.
-        //int accept_pid = 0; //PID of the Child doing the TCP Connection handling. Globally defined, cause it's used in CHECK-Makro.
+        //int pcap_pid = 0; //PID of the Child doing the PCAP-Sniffing. Globally defined, cause it's used in CHECK-Makro callback function.
+        //int accept_pid = 0; //PID of the Child doing the TCP Connection handling. Globally defined, cause it's used in CHECK-Makro callback function.
         int parent_pid = getpid();
-
+        
         //Fork in child, init pcap , drop priviliges, sniff for SYN-Packets and log them
 
         if( !(pcap_pid=fork()) )
@@ -171,7 +178,7 @@ int main(int argc, char *argv[])
             #if DEBUG >= 2
                 fprintf(stderr, "*** DEBUG [PID %d] Initialize PCAP\n", getpid());
             #endif
-            CHECK(init_pcap(interface, &handle), == 0); //Init libpcap
+            CHECK(init_pcap(interface, hostaddr, &handle), == 0); //Init libpcap
 
             hdrsem = CHECK(sem_open ("hdrsem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED);  //open semaphore for named pipe containing TCP/IP data
 
@@ -210,16 +217,33 @@ int main(int argc, char *argv[])
             }
         }
 
-        /***** TODO *****/
-        if ( !fork() )//Create Reverse Proxy child process(es)
-        {
-            prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
-            CHECK(signal(SIGTERM, sig_handler_child), != SIG_ERR); //register handler for SIGTERM for child process
-            CHECK(rsp("/home/MADCAT/v2_Development/configs/proxy.lua"), != 0);
-            exit(0);
-        }
-        /***** TODO *****/
+        //Make FIFO for connection discribing JSON Output
+        unlink(CONNECT_FIFO);
+        CHECK(mkfifo(CONNECT_FIFO, 0660), == 0);
+        confifo = fopen(CONNECT_FIFO, "r+"); //FILE* confifo is globally defined to be reachabel for both proxy-childs and accept-childs
+        fprintf(stderr, "%s [PID %d] FIFO for connection json: %s\n", start_time, getpid(), CONNECT_FIFO);
 
+        consem = CHECK(sem_open ("consem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED);
+
+        sleep(0.1); //sleep, so output is not mangled between forks
+        for (int listenport = 1; listenport<65536; listenport++)
+        {
+            if(pc->portmap[listenport])
+            {
+                if ( !fork() ) //Create Reverse Proxy child process(es) //TODO: Save PID
+                {
+                    //fprintf(stderr, "%s [PID %d] Starting Proxy on Port %d...\n", start_time, getpid(), listenport);
+                    prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
+                    CHECK(signal(SIGTERM, sig_handler_child), != SIG_ERR); //re-register handler for SIGTERM for child process
+                    CHECK(rsp(pc_get(pc, listenport), hostaddr), != 0); //start proxy                 
+
+                }
+            }
+        }
+
+        sleep(3600); //XXX
+
+        sleep(0.1); //sleep, so output is not mangled between forks
         if ( !(accept_pid =fork()) ) { //Create listening child process
             //Variables for listning socket
             struct sockaddr_in addr; //Hostaddress
@@ -232,8 +256,6 @@ int main(int argc, char *argv[])
             CHECK(signal(SIGCHLD, sig_handler_sigchld), != SIG_ERR); //register handler for parents to prevent childs becoming Zombies
 
             accept_pid = getpid();
-
-            consem = CHECK(sem_open ("consem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED);
 
             socklen_t trgaddr_len = sizeof(trgaddr);
             socklen_t claddr_len = sizeof(claddr);
@@ -259,12 +281,6 @@ int main(int argc, char *argv[])
             fprintf(stderr, "%s [PID %d] ", start_time, getpid());
             drop_root_privs(user, "Listner");
 
-            //Make FIFO for connection discribing JSON Output
-            unlink(CONNECT_FIFO);
-            CHECK(mkfifo(CONNECT_FIFO, 0660), == 0);
-            FILE* confifo = fopen(CONNECT_FIFO, "r+");
-            fprintf(stderr, "%s [PID %d] FIFO for connection json: %s\n", start_time, getpid(), CONNECT_FIFO);
-        
             //Main listening loop
             while (1) {
 	                #if DEBUG >= 2
@@ -313,6 +329,7 @@ int main(int argc, char *argv[])
             drop_root_privs(user, "Parent Watchdog");
 
             // Parent Watchdog Loop.
+            //TODO: Watch for Proxy PIDs
             int stat_pcap = 0;
             int stat_accept = 0;
             while (1) {

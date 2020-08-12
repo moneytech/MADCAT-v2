@@ -1,41 +1,26 @@
-#include <errno.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <sys/time.h>
-
+#include "logging.h"
 
 void rsp_log(char* format, ...)
 {
-    char without_ms[64];
-    char with_ms[64];
-    struct timeval tv;
-    struct tm *tm;
+    char log_time[64];
+    time_str(NULL, 0, log_time, 64);
 
-    gettimeofday(&tv, NULL);
-    if ((tm = localtime(&tv.tv_sec)) != NULL)
-    {
-        strftime(without_ms, sizeof(without_ms), "%Y-%m-%d %H:%M:%S.%%06u %z", tm);
-        snprintf(with_ms, sizeof(with_ms), without_ms, tv.tv_usec);
-        fprintf(stdout, "[%s] ", with_ms); 
-    }
+    fprintf(stderr, "%s [PID %d] Proxy: ", log_time, getpid()); 
 
     va_list argptr;
     va_start(argptr, format);
-    vfprintf(stdout, format, argptr);
+    vfprintf(stderr, format, argptr);
     va_end(argptr);
 
-    fprintf(stdout, "\n");
+    fprintf(stderr, "\n");
 
-    fflush(stdout);
+    fflush(stderr);
 }
 
 
 void rsp_log_error(char* message)
 {
     char* error = strerror(errno);
-    rsp_log("%s: %s", message, error);
+    rsp_log("%s (%s)", message, error);
 }
 

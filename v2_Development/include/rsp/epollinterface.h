@@ -1,3 +1,8 @@
+#ifndef EPOLLINTERFACE_H
+#define EPOLLINTERFACE_H
+
+#include "tcp_ip_port_mon.h"
+
 struct epoll_event_handler {
     int fd;
     void (*handle)(struct epoll_event_handler*, uint32_t);
@@ -13,3 +18,5 @@ extern void epoll_remove_handler(struct epoll_event_handler* handler);
 extern void epoll_add_to_free_list(void* block);
 
 extern void epoll_do_reactor_loop();
+
+#endif

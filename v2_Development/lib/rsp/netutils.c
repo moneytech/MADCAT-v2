@@ -42,9 +42,9 @@ int connect_to_backend(char* backend_host,
     getaddrinfo_error = getaddrinfo(backend_host, backend_port_str, &hints, &addrs);
     if (getaddrinfo_error != 0) {
         if (getaddrinfo_error == EAI_SYSTEM) {
-            rsp_log_error("Couldn't find backend");
+            rsp_log_error("Couldn't find backend (EAI_SYSTEM)");
         } else {
-            rsp_log("Couldn't find backend: %s", gai_strerror(getaddrinfo_error));
+            rsp_log("Couldn't find backend: %s (%d)", gai_strerror(getaddrinfo_error), getaddrinfo_error);
         }
         exit(1);
     }
@@ -68,6 +68,7 @@ int connect_to_backend(char* backend_host,
             break;
         }
 
+
         close(backend_socket_fd);
     }
 
@@ -75,6 +76,30 @@ int connect_to_backend(char* backend_host,
         rsp_log("Couldn't connect to backend");
         exit(1);
     }
+
+    
+    //MADCAT start
+    //Get local client address and port
+    struct sockaddr local_address;
+    int addr_size = sizeof(local_address);
+    getsockname(backend_socket_fd, &local_address, &addr_size);
+
+    char* port_ptr = local_address.sa_data;
+    char* ip_ptr = (char*) &(local_address.sa_data) + 2;
+    proxy_sock.client_port = ((uint8_t) (*port_ptr)) * 256 + ((uint8_t) (*(port_ptr+1)));
+    proxy_sock.client_addr = inttoa(*(uint32_t*)ip_ptr);
+    
+    //fprintf(stderr, "\n\n############### \n\tServer IP: %s\n\tServer PORT: %u\n\n", inttoa(*(uint32_t*)ip_ptr), proxy_sock.client_port);
+
+    /* //Not necessary, known by config.
+    port_ptr = (char*) &(addrs_iter->ai_addr->sa_data);
+    ip_ptr = (char*) &(addrs_iter->ai_addr->sa_data) + 2;
+    unsigned int b_port = ((uint8_t) (*port_ptr)) * 256 + ((uint8_t) (*(port_ptr+1)));
+    
+    //fprintf(stderr, "\n\n############### \n\tBackend IP: %s\n\tBackend PORT: %u\n\n", inttoa(*(uint32_t*)ip_ptr), b_port);
+    */
+
+    //MADCAT end
 
     freeaddrinfo(addrs);
 

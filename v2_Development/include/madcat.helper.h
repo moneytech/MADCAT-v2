@@ -44,7 +44,7 @@ void get_user_ids(struct user_t* user); //adapted example code from manpage getp
 void print_hex(FILE* output, const unsigned char* buffer, int buffsize);
 char *print_hex_string(const unsigned char* buffer, unsigned int buffsize); //Do not forget to free!
 unsigned char* hex_dump(const void *addr, int len, const bool json);
-char *inttoa(uint32_t i_addr); //inet_ntoa e.g. converts 127.1.1.1 to 127.0.0.1. This is bad e.g. for testing.
+char *inttoa(uint32_t i_addr); //convert IP(v4)-Addresses from network byte order to string (inet_ntoa e.g. converts 127.1.1.1 to 127.0.0.1. This is bad e.g. for testing.)
 char* json_do(bool init_or_reset, const char* format, ...); //Reset or initialize new JSON if first arguement is true and append formated string.
 const char* get_config_opt(lua_State* L, char* name); //Returns configuration items from LUA config file
 
