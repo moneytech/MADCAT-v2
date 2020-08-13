@@ -40,23 +40,26 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include "madcat.helper.h"
 
 #define PCN_STRLEN 6 //listen- and backport string length in proxy_conf_node_t
-#define EMPTY_STR "" //constant empty string for initialization of json_data_node_t
 #define STR_BUFFER_SIZE 65536 //Generic string buffer size
 
 struct proxy_conf_node_t //linked list element to hold proxy configuration items
 {
+    struct proxy_conf_node_t* next;
+
     int listenport;
     char listenport_str[PCN_STRLEN];
     int backendport;
     char backendport_str[PCN_STRLEN];
     char* backendaddr;
-    struct proxy_conf_node_t* next;
+
+    pid_t pid; //Process ID of corresponding proxy.
 };
 
 struct proxy_conf_t { //proxy configuration
     struct proxy_conf_node_t* portlist; //head pointer to linked list with proxy configuration items
     bool portmap[65536]; //map of ports used to proxy network traffic
-};
+    int num_elemnts;
+} *pc; //globally defined to be easly accesible inside rsp-proxy to check if root priviliges can be dropped (ports <1023)
 
 struct json_data_t { //json_data structure...
     struct json_data_node_t *list;
@@ -95,10 +98,11 @@ void sig_handler_sigchld(int signo); //Signal Handler for Listner Parent to prev
 void sig_handler_child(int signo); //Signal Handler for childs
 void sig_handler_shutdown(int signo); //Signal Handler for SIGUSR1 to initiate gracefull shutdown, e.g. by CHECK-Macro
 //Helper functions for proxy configuration:
-void get_config_table(lua_State* L, char* name, struct proxy_conf_t* pc); //read proxy configuration from parsed LUA-File by luaL_dofile(...)
+int get_config_table(lua_State* L, char* name, struct proxy_conf_t* pc); //read proxy configuration from parsed LUA-File by luaL_dofile(...). Returns number of read elements.
 struct proxy_conf_t* pc_init(); //initialize proxy configuration
 void pc_push(struct proxy_conf_t* pc, int listenport, char* backendaddr, int backendport); //push new proxy configuration item to linked list
-struct proxy_conf_node_t* pc_get(struct proxy_conf_t* pc, int listenport); //get proxy configuration for listenport
+struct proxy_conf_node_t* pc_get_lport(struct proxy_conf_t* pc, int listenport); //get proxy configuration for listenport
+struct proxy_conf_node_t* pc_get_pid(struct proxy_conf_t* pc, pid_t pid); //get proxy configuration for proxy with Process ID "pid"
 void pc_print(struct proxy_conf_t* pc); //print proxy configuration
 //Helper functions for json data structure and double linked list //TODO: Make list thread-safe?
 struct json_data_t* jd_init();  //initialize json data structure

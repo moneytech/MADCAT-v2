@@ -229,6 +229,23 @@ int create_and_bind(char* hostaddr, char* server_port_str)
     //Bind socket and begin listening
     CHECK(bind(server_socket_fd, (struct sockaddr*)&addr, sizeof(addr)), != -1);
 
+    //XXX MADCAT start
+    char log_time[64] = ""; //Human readable start time (actual time zone)
+    time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only
+
+    //Drop Priviliges, if remote ports is above 1023 and thus do not needs root privliges for backend connection
+    if(pc_get_pid(pc, getpid())->backendport > 1023)
+    {
+        fprintf(stderr, "%s [PID %d] Proxy: Priviliges CAN be dropped (backend port %d is above 1023), thus", log_time, getpid(), pc_get_lport(pc, server_port)->backendport);
+        drop_root_privs(user, "");
+    }
+    else
+    {
+        fprintf(stderr, "%s [PID %d] Proxy: Priviliges CAN NOT be dropped (backend port %d is below 1024), thus running as root\n", log_time, getpid(), pc_get_lport(pc, server_port)->backendport);
+    }
+    fflush(stderr);
+    //XXX MADCAT end */
+
     return server_socket_fd;
 }
 

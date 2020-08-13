@@ -130,19 +130,35 @@ void drop_root_privs(struct user_t user, const char* entity) // if process is ru
 //Signal Handler for parent watchdog
 void sig_handler_parent(int signo)
 {
+    int stat_pcap = 0;
+    int stat_accept = 0;
+
     char stop_time[64] = ""; //Human readable stop time (actual time zone)
     time_str(NULL, 0, stop_time, sizeof(stop_time)); //Get Human readable string only
     fprintf(stderr, "\n%s [PID %d] Received Signal %s, shutting down...\n", stop_time, getpid(), strsignal(signo));
+
     sleep(1); //Let childs exit first
+
     //Unlink and close semaphores
     sem_close(hdrsem);
     sem_unlink ("hdrsem");
     sem_close(consem);
     sem_unlink ("consem");
-    //Family drama: Kill childs
+    
+    //Family drama: Check if they are still alive and kill childs
     //TODO: Kill Proxys
-    kill(pcap_pid, SIGTERM);
-    kill(accept_pid, SIGTERM);
+    if ( !waitpid(accept_pid, &stat_accept, WNOHANG) )
+        kill(accept_pid, SIGTERM);
+
+    if ( !waitpid(accept_pid, &stat_accept, WNOHANG) )
+        kill(pcap_pid, SIGTERM);
+
+    for (int listenport = 1; listenport <65536; listenport++)
+    {
+        if ( pc->portmap[listenport] && !waitpid(pc_get_lport(pc, listenport)->pid, &stat_accept, WNOHANG) )
+            kill(pc_get_lport(pc, listenport)->pid, SIGTERM);
+    }
+
     //exit parent process
     exit(signo);
     return;
@@ -197,10 +213,12 @@ void sig_handler_shutdown(int signo)
 
 //Helper functions for proxy configuration
 
-void get_config_table(lua_State* L, char* name, struct proxy_conf_t* pc) //read proxy configuration from parsed LUA-File by luaL_dofile(...)
+int get_config_table(lua_State* L, char* name, struct proxy_conf_t* pc) //read proxy configuration from parsed LUA-File by luaL_dofile(...). Returns number of read elements.
 {
     char* backendaddr = 0;
     int backendport = 0;
+
+    int num_elements = 0;
     
     lua_getglobal(L, name); //push objekt "name" to stack and...
 
@@ -216,7 +234,7 @@ void get_config_table(lua_State* L, char* name, struct proxy_conf_t* pc) //read 
     {
         //fprintf(stderr,"LOOP %d:", listenport);
         //pc_print(pc);
-        
+                
         lua_pushnumber(L, listenport); //push actuall portnumber on stack and...
         lua_gettable(L, -2);  //...call lua_gettable with this portnumber as key
         if( !lua_isnil(L,-1) ) //if corresponding value is not NIL...
@@ -233,10 +251,11 @@ void get_config_table(lua_State* L, char* name, struct proxy_conf_t* pc) //read 
             
             pc_push(pc, listenport, backendaddr, backendport);
             pc->portmap[listenport] = true;
+            num_elements++;
         }
         lua_pop(L, 1); //remove sub-table from stack
     }
-    return;
+    return num_elements;
 }
 
 struct proxy_conf_t* pc_init() //initialize proxy configuration
@@ -259,12 +278,15 @@ void pc_push(struct proxy_conf_t* pc, int listenport, char* backendaddr, int bac
     pc_node->backendport = backendport;
      snprintf(pc_node->backendport_str, PCN_STRLEN, "%d", backendport);
 
+    pc_node->pid = 0; //Set pid for proxy for this configuration to 0, because it is not running yet.
+
     pc_node->next = pc->portlist;
     pc->portlist = pc_node;
+    pc->num_elemnts++;
     return;
 }
 
-struct proxy_conf_node_t* pc_get(struct proxy_conf_t* pc, int listenport) //get proxy configuration for listenport
+struct proxy_conf_node_t* pc_get_lport(struct proxy_conf_t* pc, int listenport) //get proxy configuration for listenport
 {
     struct proxy_conf_node_t* result = pc->portlist;
     while ( result != 0)
@@ -274,6 +296,18 @@ struct proxy_conf_node_t* pc_get(struct proxy_conf_t* pc, int listenport) //get 
     }
     return 0;
 }
+
+struct proxy_conf_node_t* pc_get_pid(struct proxy_conf_t* pc, pid_t pid) //get proxy configuration for proxy with Process ID "pid"
+{
+    struct proxy_conf_node_t* result = pc->portlist;
+    while ( result != 0)
+    {
+        if(result->pid == pid) return result;
+        result = result->next;
+    }
+    return 0;
+}
+
 
 void pc_print(struct proxy_conf_t* pc) //print proxy configuration
 {

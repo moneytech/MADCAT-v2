@@ -50,7 +50,7 @@ int worker_icmp(unsigned char* buffer, int recv_len, char* hostaddress , char* d
         char * payload_sha1_str = 0;
         char file_name[2*PATH_LEN] = ""; //double path length for concatination purposes. PATH_LEN *MUST* be enforced when combinating path and filename!
         struct timeval begin;
-        char start_time[64] = "";
+        char log_time[64] = "";
         char stop_time[64] = "";
         char* hex_string = 0; //Hex string containing ICMP-Data
         //Variables for inner packet analysis
@@ -60,11 +60,11 @@ int worker_icmp(unsigned char* buffer, int recv_len, char* hostaddress , char* d
         int data_offset = 0; //Data after end of 8-Byte ICMP-Header + data_offset, covering the parsed and JSONized data, is going to be dumped in a file.
         //beginning time
         gettimeofday(&begin , NULL); //Get current time and...
-        time_str(NULL, 0, start_time, sizeof(start_time)); //...generate string with current time
+        time_str(NULL, 0, log_time, sizeof(log_time)); //...generate string with current time
 
         if (recv_len < 24) //Minimum 20 Byte IP Header + 4 Byte ICMP Header. Should never happen.
         {
-            fprintf(stderr, "%s ALERT: Paket to short for ICMP over IPv4, dumping %d Bytes of data:\n", start_time, recv_len);
+            fprintf(stderr, "%s ALERT: Paket to short for ICMP over IPv4, dumping %d Bytes of data:\n", log_time, recv_len);
             print_hex(stderr, buffer, recv_len); //Dump malformed paket for analysis
             return -1;
         }
@@ -89,7 +89,7 @@ int worker_icmp(unsigned char* buffer, int recv_len, char* hostaddress , char* d
         //Things that should never ever happen.
         if( ipv4icmp.ver != 4 || ipv4icmp.ihl < 20 || ipv4icmp.ihl > 60 || (ipv4icmp.ihl + ICMP_HEADER_LEN) > recv_len  || ipv4icmp.proto != 1 ) 
         {
-            fprintf(stderr, "%s ALERT: Malformed Paket. Dumping %d Bytes of data:\n", start_time, recv_len);
+            fprintf(stderr, "%s ALERT: Malformed Paket. Dumping %d Bytes of data:\n", log_time, recv_len);
             print_hex(stderr, buffer, recv_len);
             free(ipv4icmp.src_ip_str);
             free(ipv4icmp.dst_ip_str);
@@ -107,7 +107,7 @@ int worker_icmp(unsigned char* buffer, int recv_len, char* hostaddress , char* d
         ipv4icmp.data_len = recv_len - (ipv4icmp.ihl + ICMP_HEADER_LEN);
         //print_hex(stderr, buffer, recv_len); //Debug
         //Log connection
-        fprintf(stderr, "%s Received packet from %s to %s, type %u, code %u, with %ld Bytes of DATA.\n", start_time, \
+        fprintf(stderr, "%s Received packet from %s to %s, type %u, code %u, with %ld Bytes of DATA.\n", log_time, \
 ipv4icmp.src_ip_str, ipv4icmp.dst_ip_str, ipv4icmp.type, ipv4icmp.code, ipv4icmp.data_len);
         //Compute SHA1 of payload
         SHA1(ipv4icmp.data, ipv4icmp.data_len, payload_sha1);
@@ -126,7 +126,7 @@ ipv4icmp.src_ip_str, ipv4icmp.dst_ip_str, ipv4icmp.type, ipv4icmp.code, ipv4icmp
 \"icmp_code\": %d, \
 \"proto\": \"ICMP\", \
 \"event_type\": \"flow\"", \
-start_time, \
+log_time, \
 ipv4icmp.src_ip_str, \
 ipv4icmp.dst_ip_str, \
 ipv4icmp.type, \
@@ -327,19 +327,19 @@ ntohs(*(uint16_t*) (ipv4icmp.icmp_hdr + 3*sizeof(uint16_t))));
         if(ipv4icmp.data_len - data_offset > 0 || tainted) //data_offset is left = 0 if tainted
         {
                     //Generate filename LinuxTimeStamp-milisecends_destinationAddress-destinationPort_sourceAddress-sourcePort.tpm
-                    sprintf(file_name, "%s%s_%s_%s-%u_%u.ipm", data_path, start_time, ipv4icmp.dst_ip_str, ipv4icmp.src_ip_str, ipv4icmp.type, ipv4icmp.code);
+                    sprintf(file_name, "%s%s_%s_%s-%u_%u.ipm", data_path, log_time, ipv4icmp.dst_ip_str, ipv4icmp.src_ip_str, ipv4icmp.type, ipv4icmp.code);
                     file_name[PATH_LEN-1] = 0; //Enforcing PATH_LEN
                     file = fopen(file_name,"wb"); //Open File
                     //Write when -and only WHEN - nothing went wrong data to file
                     if (file != 0) {
-                        fprintf(stderr, "%s FILENAME: %s\n", start_time, file_name);
+                        fprintf(stderr, "%s FILENAME: %s\n", log_time, file_name);
                         fwrite(ipv4icmp.data + data_offset, ipv4icmp.data_len - data_offset, 1, file);
                         CHECK(fflush(file), == 0);
                         fclose(file);
                     }
                     else 
                     { //if somthing went wrong, log it.
-                        fprintf(stderr, "%s ERROR: Could not write to file %s\n", start_time, file_name);
+                        fprintf(stderr, "%s ERROR: Could not write to file %s\n", log_time, file_name);
                     }
         }
 
@@ -358,7 +358,7 @@ ntohs(*(uint16_t*) (ipv4icmp.icmp_hdr + 3*sizeof(uint16_t))));
 \"payload_sha1\": \"%s\"\
 }}",\
 (tainted ? "true" : "false"),\
-start_time,\
+log_time,\
 stop_time,\
 ipv4icmp.data_len,\
 payload_hd_str,\

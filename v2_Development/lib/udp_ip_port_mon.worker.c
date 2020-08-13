@@ -54,15 +54,15 @@ int worker_udp(unsigned char* buffer, int recv_len, char* hostaddress , char* da
         FILE *file = 0;
         char file_name[2*PATH_LEN] = ""; //double path length for concatination purposes. PATH_LEN *MUST* be enforced when combinating path and filename!
         struct timeval begin;
-        char start_time[64] = "";
+        char log_time[64] = "";
         char stop_time[64] = "";
         //beginning time
         //gettimeofday(&begin , NULL); //Get current time and...
-        time_str(NULL, 0, start_time, sizeof(start_time)); //...generate string with current time
+        time_str(NULL, 0, log_time, sizeof(log_time)); //...generate string with current time
 
         if (recv_len < 28) //Minimum 20 Byte IP Header + 8 Byte UDP Header. Should never happen.
         {
-            fprintf(stderr, "%s ALERT: Paket to short for UDP over IPv4, dumping %d Bytes of data:\n", start_time, recv_len);
+            fprintf(stderr, "%s ALERT: Paket to short for UDP over IPv4, dumping %d Bytes of data:\n", log_time, recv_len);
             print_hex(stderr, buffer, recv_len); //Dump malformed paket for analysis
             return -1;
         }
@@ -87,7 +87,7 @@ int worker_udp(unsigned char* buffer, int recv_len, char* hostaddress , char* da
         //Things that should never ever happen.
         if( ipv4udp.type != 4 || ipv4udp.ihl < 20 || ipv4udp.ihl > 60 || (ipv4udp.ihl + UDP_HEADER_LEN) > recv_len  || ipv4udp.proto != 17 ) 
         {
-            fprintf(stderr, "%s ALERT: Malformed Paket. Dumping %d Bytes of data:\n", start_time, recv_len);
+            fprintf(stderr, "%s ALERT: Malformed Paket. Dumping %d Bytes of data:\n", log_time, recv_len);
             print_hex(stderr, buffer, recv_len);
             free(ipv4udp.src_ip_str);
             free(ipv4udp.dst_ip_str);
@@ -99,25 +99,25 @@ int worker_udp(unsigned char* buffer, int recv_len, char* hostaddress , char* da
         ipv4udp.data_len = recv_len - (ipv4udp.ihl + UDP_HEADER_LEN);
         ipv4udp.data = buffer + ipv4udp.ihl + UDP_HEADER_LEN;
         //Log connection
-        fprintf(stderr, "%s Received packet from %s:%u to %s:%u with %d Bytes of DATA.\n", start_time, \
+        fprintf(stderr, "%s Received packet from %s:%u to %s:%u with %d Bytes of DATA.\n", log_time, \
 ipv4udp.src_ip_str, ipv4udp.src_port, ipv4udp.dst_ip_str, ipv4udp.dst_port, ipv4udp.data_len);
         
         if(ipv4udp.data_len > 0) //if some date has been received, save the content of the datagram in a file
         {
                     //Generate filename LinuxTimeStamp-milisecends_destinationAddress-destinationPort_sourceAddress-sourcePort.tpm
-                    sprintf(file_name, "%s%s_%s-%u_%s-%u.upm", data_path, start_time, ipv4udp.dst_ip_str, ipv4udp.dst_port, ipv4udp.src_ip_str, ipv4udp.src_port);
+                    sprintf(file_name, "%s%s_%s-%u_%s-%u.upm", data_path, log_time, ipv4udp.dst_ip_str, ipv4udp.dst_port, ipv4udp.src_ip_str, ipv4udp.src_port);
                     file_name[PATH_LEN-1] = 0; //Enforcing PATH_LEN
                     file = fopen(file_name,"wb"); //Open File
                     //Write when -and only WHEN - nothing went wrong data to file
                     if (file != 0) {
-                        fprintf(stderr, "%s FILENAME: %s\n", start_time, file_name);
+                        fprintf(stderr, "%s FILENAME: %s\n", log_time, file_name);
                         fwrite(ipv4udp.data, ipv4udp.data_len, 1, file);
                         CHECK(fflush(file), == 0);
                         fclose(file);
                     }
                     else 
                     { //if somthing went wrong, log it.
-                        fprintf(stderr, "%s ERROR: Could not write to file %s\n", start_time, file_name);
+                        fprintf(stderr, "%s ERROR: Could not write to file %s\n", log_time, file_name);
                     }
         }
 
@@ -146,10 +146,10 @@ ipv4udp.src_ip_str, ipv4udp.src_port, ipv4udp.dst_ip_str, ipv4udp.dst_port, ipv4
 \"payload_sha1\": \"%s\"\
 ", ipv4udp.src_ip_str,\
 ipv4udp.dst_port,\
-start_time,\
+log_time,\
 ipv4udp.dst_ip_str,\
 ipv4udp.src_port,\
-start_time,\
+log_time,\
 stop_time,\
 payload_hd_str,\
 payload_str,\

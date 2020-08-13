@@ -36,7 +36,7 @@
 
 interface = "lo" --interface to listen on
 hostaddress = "127.1.1.1" --address to listen on
-listening_port = "65535" --TCP-Port to listen on
+listening_port = "555" --TCP-Port to listen on
 connection_timeout = "10" --Timout for TCP-Connections
 user = "hf" --user to drop privileges to.
 --Paths for Files containing Payload: Must end with trailing "/", will be handled as prefix otherwise.
@@ -45,6 +45,7 @@ path_to_save_udp_data = "./upm/"
 path_to_save_icmp_data = "./ipm/"
 max_file_size = "10000" --optional: Max. Size for TCP-Streams to be saved or jsonized.
 bufsize = "16384" --optional: Receiving Buffer size for UDP or ICMP Module
+--proxy_wait_restart = "2" --time to wait before a crashed proxy restarts, e.g. because backend has failed
 --TCP Proxy configuration
 tcpproxy = { -- [<listen port>] = { "<backend IP>", <backend Port> },
             [222]  = { "192.168.2.198", 22 },

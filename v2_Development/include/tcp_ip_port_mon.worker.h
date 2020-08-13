@@ -48,8 +48,8 @@ long int worker_tcp(char* dst_addr, \
                   char* data_path, \
                   int max_file_size, \
                   int s,\
-                  char* start_time, \
-                  char* start_time_unix, \
+                  char* log_time, \
+                  char* log_time_unix, \
                   FILE* confifo);
 
 #endif

@@ -48,14 +48,17 @@ int main(int argc, char *argv[])
 {
         //get start time
         struct timeval begin;
-        char start_time[64] = "";
+        char log_time[64] = "";
         gettimeofday(&begin , NULL); //Get current time and...
-        time_str(NULL, 0, start_time, sizeof(start_time)); //...generate string with current time
+        time_str(NULL, 0, log_time, sizeof(log_time)); //...generate string with current time
+
+        //pseudo constant empty string e.g. for initialization of json_data_node_t and checks. Not used define here, because this would lead to several instances of an empty constant string with different addresses.
+        EMPTY_STR[0] = 0;
         
         //Parse command line
         char hostaddr[INET6_ADDRSTRLEN] = "";
         char data_path[PATH_LEN] = "";
-        struct user_t user;
+        //struct user_t user; //globally defined, used to drop priviliges in arbitrarry functions. May become local, if not needed.
         int bufsize = DEFAULT_BUFSIZE;
 
         signal(SIGUSR1, sig_handler); //register handler as callback function used by CHECK-Macro
@@ -77,34 +80,34 @@ int main(int argc, char *argv[])
         {
             lua_State *luaState = lua_open();
             if (luaL_dofile(luaState, argv[1]) != 0) {
-                fprintf(stderr, "%s [PID %d] Error parsing config file: %s\n\tRun without command line arguments for help.\n", start_time, getpid(), lua_tostring(luaState, -1));
+                fprintf(stderr, "%s [PID %d] Error parsing config file: %s\n\tRun without command line arguments for help.\n", log_time, getpid(), lua_tostring(luaState, -1));
                 exit(1);
             }
 
-            fprintf(stderr, "%s Parsing config file: %s\n", start_time, argv[1]);
+            fprintf(stderr, "%s Parsing config file: %s\n", log_time, argv[1]);
 
-            fprintf(stderr, "\tHostaddress: %s\n", get_config_opt(luaState, "hostaddress"));
             strncpy(hostaddr, get_config_opt(luaState, "hostaddress"), sizeof(hostaddr)); hostaddr[sizeof(hostaddr)-1] = 0;
+            fprintf(stderr, "\tHostaddress: %s\n", hostaddr);
 
             strncpy(user.name, get_config_opt(luaState, "user"), sizeof(user.name)); user.name[sizeof(user.name)-1] = 0;
-            fprintf(stderr, "\tuser: %s\n", get_config_opt(luaState, "user"));
+            fprintf(stderr, "\tuser: %s\n", user.name);
             
             strncpy(data_path, get_config_opt(luaState, "path_to_save_udp_data"), sizeof(data_path)); data_path[sizeof(data_path)-1] = 0;
-            fprintf(stderr, "\tpath_to_save_udp_data: %s\n", get_config_opt(luaState, "path_to_save_udp_data"));
+            fprintf(stderr, "\tpath_to_save_udp_data: %s\n", data_path);
 
              //check if mandatory string parameters are present, bufsize is NOT mandatory, the rest are numbers and are handled otherwise
             if(strlen(hostaddr) == 0 || strlen(user.name) == 0 || strlen(data_path) == 0)
             {
-                fprintf(stderr, "%s [PID %d] Error in config file: %s\n", start_time, getpid(), argv[1]);
+                fprintf(stderr, "%s [PID %d] Error in config file: %s\n", log_time, getpid(), argv[1]);
                 print_help_udp(argv[0]);
                 return -1;
             }
 
-            if(get_config_opt(luaState, "bufsize") != 0) //if optional parameter is given, set it.
+            if(get_config_opt(luaState, "bufsize") != EMPTY_STR) //if optional parameter is given, set it.
             {
                 bufsize = atoi(get_config_opt(luaState, "bufsize")); //convert string type to integer type (bufsize)
-                fprintf(stderr, "\tbufsize: %s\n", get_config_opt(luaState, "bufsize"));
             }
+            fprintf(stderr, "\tbufsize: %s\n", get_config_opt(luaState, "bufsize"));
 
             lua_close(luaState);
         }
@@ -131,7 +134,7 @@ int main(int argc, char *argv[])
                 return -2;
         }
 
-        fprintf(stderr, "%s Starting with hostaddress %s, bufsize is %d Byte...\n", start_time, hostaddr, bufsize);
+        fprintf(stderr, "%s Starting with hostaddress %s, bufsize is %d Byte...\n", log_time, hostaddr, bufsize);
 
         //Variables
         struct sockaddr_in addr; //Hostaddress
@@ -143,7 +146,7 @@ int main(int argc, char *argv[])
         int listenfd = CHECK(socket(AF_INET, SOCK_RAW, IPPROTO_UDP), != -1); //create socket filedescriptor
         // if process is running as root, drop privileges
         if (getuid() == 0) {
-            fprintf(stderr, "%s Droping priviliges to user %s...", start_time, user.name);
+            fprintf(stderr, "%s Droping priviliges to user %s...", log_time, user.name);
             get_user_ids(&user); //Get traget user UDI + GID
             CHECK(setgid(user.gid), == 0); // Drop GID first for security reasons!
             CHECK(setuid(user.uid), == 0);

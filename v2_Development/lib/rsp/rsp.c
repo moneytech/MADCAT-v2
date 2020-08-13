@@ -91,23 +91,12 @@ int rsp(struct proxy_conf_node_t *pcn, char* server_addr)
     proxy_sock.server_port_str = pcn->listenport_str;
     proxy_sock.backend_addr = pcn->backendaddr;
     proxy_sock.backend_port_str = pcn->backendport_str;
+
+    rsp_log("Starting. Local: %s:%s -> Remote: %s:%s", proxy_sock.server_addr , proxy_sock.server_port_str, proxy_sock.backend_addr, proxy_sock.backend_port_str);
+
     //Initialze JSON data struct for logging
     jd = jd_init();
     
-    //Make copys to prevent data corruption...
-    //...Investigated and found: Making copy in pc_push(...) by strncpy(pc_node->backendaddr, backendaddr, strlen(backendaddr)+1), see there.
-    //Leaving old workaround here as comment for...well, purposes...
-    /*
-    proxy_sock.server_addr = malloc(strlen(server_addr)+1); //strlen + \0
-     strncpy(proxy_sock.server_addr, server_addr, strlen(server_addr)+1);
-    proxy_sock.server_port_str = malloc(strlen(pcn->listenport_str)+1);
-     strncpy(proxy_sock.server_port_str, pcn->listenport_str, strlen(pcn->listenport_str)+1);
-    proxy_sock.backend_addr = malloc(strlen(pcn->backendaddr)+1);
-     strncpy(proxy_sock.backend_addr, pcn->backendaddr, strlen(pcn->backendaddr)+1);
-    proxy_sock.backend_port_str = malloc(strlen(pcn->backendport_str)+1);
-     strncpy(proxy_sock.backend_port_str, pcn->backendport_str, strlen(pcn->backendport_str)+1);
-    */
-
     signal(SIGPIPE, SIG_IGN);
 
     epoll_init();
@@ -117,10 +106,8 @@ int rsp(struct proxy_conf_node_t *pcn, char* server_addr)
                                  proxy_sock.backend_addr,
                                  proxy_sock.backend_port_str);
 
-    rsp_log("Started. Local: %s:%s -> Remote: %s:%s", proxy_sock.server_addr , proxy_sock.server_port_str, proxy_sock.backend_addr, proxy_sock.backend_port_str);
+   
     epoll_do_reactor_loop();
-
-    free(json_do(false, "")); //TODO: If so, free in signal handler, cause this is unreachable code.
 
     return 0;
 }

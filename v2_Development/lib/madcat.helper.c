@@ -248,12 +248,12 @@ char* json_do(bool init_or_reset, const char* format, ...)
     return json.str; //return pointer to (new) string
 }
 
-const char* get_config_opt(lua_State* L, char* name) //Returns configuration items from LUA config file
+const char * get_config_opt(lua_State* L, char* name) //Returns configuration items from LUA config file
 {
     lua_getglobal(L, name);
     if (!lua_isstring(L, -1)) {
-        //fprintf(stderr, "%s must be a string", name);
-        return strndup("",1); //return Empty string, if configuration item was not found. DO NOT FORGET TO FREE!
+        //fprintf(stderr, "%p %s must be a string\n", EMPTY_STR, name);
+        return (const char*) EMPTY_STR; //return constant Empty string, if configuration item was not found.
     }
-    return (const char*) lua_tostring(L, -1); //DO NOT FORGET TO FREE!
+    return lua_tostring(L, -1); //DO NOT FORGET TO FREE!
 }

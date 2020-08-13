@@ -47,15 +47,18 @@ int main(int argc, char *argv[])
 {
         fflush(stdout); fflush(stderr);
         //Start time
-        char start_time[64] = ""; //Human readable start time (actual time zone)
-        char start_time_unix[64] = ""; //Unix timestamp (UTC)
+        char log_time[64] = ""; //Human readable start time (actual time zone)
+        char log_time_unix[64] = ""; //Unix timestamp (UTC)
         struct timeval begin , now;
         gettimeofday(&begin , NULL);
-        time_str(NULL, 0, start_time, sizeof(start_time)); //Get Human readable string only
+        time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only
 
         signal(SIGUSR1, sig_handler_shutdown); //register handler as callback function used by CHECK-Macro
         CHECK(signal(SIGINT, sig_handler_parent), != SIG_ERR); //register handler for SIGINT for parent process
         CHECK(signal(SIGTERM, sig_handler_parent), != SIG_ERR); //register handler for SIGTERM for parent process
+
+        //pseudo constant empty string e.g. for initialization of json_data_node_t and checks. Not used #define here, because this would lead to several instances of an empty constant string with different addresses.
+        EMPTY_STR[0] = 0;
 
         //semaphores for output globally defined for easy access inside functions
         //sem_t *hdrsem; //Semaphore for named pipe containing TCP/IP data
@@ -72,13 +75,13 @@ int main(int argc, char *argv[])
         int port = 65535;
         char interface[16]= "";
         double timeout = 30;
-        struct user_t user;
         char data_path[PATH_LEN] = "";
         int max_file_size = -1;
         int max_conn = 0;
 
         //Structure holding proxy configuration items
-        struct proxy_conf_t* pc = pc_init(pc);
+        pc = pc_init(pc);
+        double proxy_wait_restart = 5; //time to wait before a crashed proxy restarts, e.g. because backend has failed, defaults to 5 seconds
 
         // Checking if number of arguments is one (config file) or 6 or 7 (command line).
         if (argc != 2  && (argc < 7 || argc > 8))
@@ -91,45 +94,51 @@ int main(int argc, char *argv[])
         {
             lua_State *luaState = lua_open();
             if (luaL_dofile(luaState, argv[1]) != 0) {
-                fprintf(stderr, "%s [PID %d] Error parsing config file: %s\n\tRun without command line arguments for help.\n", start_time, getpid(), lua_tostring(luaState, -1));
+                fprintf(stderr, "%s [PID %d] Error parsing config file: %s\n\tRun without command line arguments for help.\n", log_time, getpid(), lua_tostring(luaState, -1));
                 exit(1);
             }
 
-            fprintf(stderr, "%s [PID %d] Parsing config file: %s\n", start_time, getpid(), argv[1]);
+            fprintf(stderr, "%s [PID %d] Parsing config file: %s\n", log_time, getpid(), argv[1]);
 
-            fprintf(stderr,"\tInterface: %s\n", get_config_opt(luaState, "interface"));
             strncpy(interface, get_config_opt(luaState, "interface"), sizeof(interface)); interface[sizeof(interface)-1] = 0;  //copy interface and ensure null termination of this string. Ugly.
+            fprintf(stderr,"\tInterface: %s\n", interface);
 
-            fprintf(stderr, "\tHostaddress: %s\n", get_config_opt(luaState, "hostaddress"));
             strncpy(hostaddr, get_config_opt(luaState, "hostaddress"), sizeof(hostaddr)); hostaddr[sizeof(hostaddr)-1] = 0;
+            fprintf(stderr, "\tHostaddress: %s\n", hostaddr);
 
             port = atoi(get_config_opt(luaState, "listening_port")); //convert string type to integer type (port)
-            fprintf(stderr, "\tlistening Port: %s\n", get_config_opt(luaState, "listening_port"));
+            fprintf(stderr, "\tlistening Port: %d\n", port);
 
             timeout = (double) atof(get_config_opt(luaState, "connection_timeout")); //set timeout and convert to integer type.
-            fprintf(stderr, "\ttimeout: %s\n", get_config_opt(luaState, "connection_timeout"));
+            fprintf(stderr, "\ttimeout: %lf\n", timeout);
 
             strncpy(user.name, get_config_opt(luaState, "user"), sizeof(user.name)); user.name[sizeof(user.name)-1] = 0;
-            fprintf(stderr, "\tuser: %s\n", get_config_opt(luaState, "user"));
+            fprintf(stderr, "\tuser: %s\n", user.name);
             
             strncpy(data_path, get_config_opt(luaState, "path_to_save_tcp_streams"), sizeof(data_path)); data_path[sizeof(data_path)-1] = 0;
-            fprintf(stderr, "\tpath_to_save_tcp_streams: %s\n", get_config_opt(luaState, "path_to_save_tcp_streams"));
+            fprintf(stderr, "\tpath_to_save_tcp_streams: %s\n", data_path);
 
             //check if mandatory string parameters are present, bufsize is NOT mandatory, the rest are numbers and are handled otherwise
             if(strlen(interface) == 0 || strlen(hostaddr) == 0 || strlen(user.name) == 0 || strlen(data_path) == 0)
             {
-                fprintf(stderr, "%s [PID %d] Error in config file: %s\n", start_time, getpid(), argv[1]);
+                fprintf(stderr, "%s [PID %d] Error in config file: %s\n", log_time, getpid(), argv[1]);
                 print_help_tcp(argv[0]);
                 return -1;
             }
 
-            if(get_config_opt(luaState, "max_file_size") != 0) //if optional parameter is given, set it.
+            if(get_config_opt(luaState, "max_file_size") != EMPTY_STR) //if optional parameter is given, set it.
             {
                 max_file_size = atoi(get_config_opt(luaState, "max_file_size"));
-                fprintf(stderr, "\tmax_file_size: %s\n", get_config_opt(luaState, "max_file_size"));
             }
+            fprintf(stderr, "\tmax_file_size: %d\n", max_file_size);
 
             //Read proxy configuration
+            if(get_config_opt(luaState, "proxy_wait_restart") != EMPTY_STR) //if optional parameter is given, set it.
+            {
+                proxy_wait_restart = (double) atof(get_config_opt(luaState, "proxy_wait_restart")); //convert string ype to integer type (proxy_wait_restart)
+            }
+            fprintf(stderr, "\tFailed proxy restart time: %lf\n", proxy_wait_restart);
+
             get_config_table(luaState, "tcpproxy", pc);
             pc_print(pc);
 
@@ -153,12 +162,12 @@ int main(int argc, char *argv[])
 
         if(port < 1 || port > 65535) //Range checks
         {
-                fprintf(stderr, "%s [PID %d] Port %d out of range.\n", start_time, getpid(), port);
+                fprintf(stderr, "%s [PID %d] Port %d out of range.\n", log_time, getpid(), port);
                 return -2;
         }
 
         fprintf(stderr, "%s [PID %d] Starting on interface %s with hostaddress %s on port %d, timeout is %lfs, data path is %s\n", \
-                start_time, getpid(), interface, hostaddr, port, timeout, data_path);
+                log_time, getpid(), interface, hostaddr, port, timeout, data_path);
 
         //Variabels for PCAP sniffing
 
@@ -168,9 +177,33 @@ int main(int argc, char *argv[])
         //int pcap_pid = 0; //PID of the Child doing the PCAP-Sniffing. Globally defined, cause it's used in CHECK-Makro callback function.
         //int accept_pid = 0; //PID of the Child doing the TCP Connection handling. Globally defined, cause it's used in CHECK-Makro callback function.
         int parent_pid = getpid();
-        
-        //Fork in child, init pcap , drop priviliges, sniff for SYN-Packets and log them
 
+        //Make FIFO for connection discribing JSON Output
+        unlink(CONNECT_FIFO);
+        CHECK(mkfifo(CONNECT_FIFO, 0660), == 0);
+        confifo = fopen(CONNECT_FIFO, "r+"); //FILE* confifo is globally defined to be reachabel for both proxy-childs and accept-childs
+        fprintf(stderr, "%s [PID %d] FIFO for connection json: %s\n", log_time, getpid(), CONNECT_FIFO);
+
+        consem = CHECK(sem_open ("consem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED);
+
+        //Start proxys.
+        for (int listenport = 1; listenport<65536; listenport++) //TODO: More Clever solution thus this is brute force.
+        {
+            if(pc->portmap[listenport])
+            {
+                if ( !(pc_get_lport(pc, listenport)->pid = fork()) ) //Create Reverse Proxy child process(es) and save PID for parent watchdog.
+                {
+                    pc_get_lport(pc, listenport)->pid = getpid(); //update copy of listelemnt in this (forked) copy with own PID, to be able to find own config.
+                    //fprintf(stderr, "%s [PID %d] Starting Proxy on Port %d...\n", log_time, getpid(), listenport);
+                    prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
+                    CHECK(signal(SIGTERM, sig_handler_child), != SIG_ERR); //re-register handler for SIGTERM for child process
+                    CHECK(rsp(pc_get_lport(pc, listenport), hostaddr), != 0); //start proxy           
+                }
+                usleep(10000); //sleep 10ms, so output is not mangled between forks
+            }
+        }
+
+        //Fork in child, init pcap , drop priviliges, sniff for SYN-Packets and log them
         if( !(pcap_pid=fork()) )
         {
             prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
@@ -182,14 +215,14 @@ int main(int argc, char *argv[])
 
             hdrsem = CHECK(sem_open ("hdrsem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED);  //open semaphore for named pipe containing TCP/IP data
 
-            fprintf(stderr, "%s [PID %d] ", start_time, getpid());
+            fprintf(stderr, "%s [PID %d] ", log_time, getpid());
             drop_root_privs(user, "Sniffer"); //drop priviliges
 
             //Make FIFO for header discribing JSON Output
             unlink(HEADER_FIFO);
             CHECK(mkfifo(HEADER_FIFO, 0660), == 0);
             FILE* hdrfifo = fopen(HEADER_FIFO, "r+");
-            fprintf(stderr, "%s [PID %d] FIFO for header JSON: %s\n", start_time, getpid(), HEADER_FIFO);
+            fprintf(stderr, "%s [PID %d] FIFO for header JSON: %s\n", log_time, getpid(), HEADER_FIFO);
 
             int data_bytes = 0; //eventually exisiting data bytes in SYN (yes, this would be akward)
             while (1)
@@ -198,15 +231,15 @@ int main(int argc, char *argv[])
                 packet = pcap_next(handle, &header); //Wait for and grab TCP-SYN (see PCAP_FILTER) (Maybe of maybe not BLOCKING!)
                 if (packet == 0) {continue;}
                 //Preserve actuall start time of Connection attempt.
-                time_str(start_time_unix, sizeof(start_time_unix), start_time, sizeof(start_time));
+                time_str(log_time_unix, sizeof(log_time_unix), log_time, sizeof(log_time));
                 //Begin new global JSON output and open JSON object
-                json_do(true, "{\"timestamp\": \"%s\"", start_time);
+                json_do(true, "{\"timestamp\": \"%s\"", log_time);
                 //Analyze Headers and discard malformed packets
                 if(analyze_ip_header(packet, header) < 0) {continue;}
                 data_bytes = analyze_tcp_header(packet, header);
                 if(data_bytes < 0) {continue;}
                 //JSON Ouput and close JSON object
-                json_do(false, "}, \"data_bytes\": %d, \"unixtime\": %s}", data_bytes, start_time_unix);
+                json_do(false, "}, \"data_bytes\": %d, \"unixtime\": %s}", data_bytes, log_time_unix);
                 sem_wait(hdrsem); //Acquire lock for output
                 fprintf(hdrfifo,"%s\n", json_do(false, "")); //print json output for further analysis
                 sem_post(hdrsem); //release lock
@@ -217,32 +250,8 @@ int main(int argc, char *argv[])
             }
         }
 
-        //Make FIFO for connection discribing JSON Output
-        unlink(CONNECT_FIFO);
-        CHECK(mkfifo(CONNECT_FIFO, 0660), == 0);
-        confifo = fopen(CONNECT_FIFO, "r+"); //FILE* confifo is globally defined to be reachabel for both proxy-childs and accept-childs
-        fprintf(stderr, "%s [PID %d] FIFO for connection json: %s\n", start_time, getpid(), CONNECT_FIFO);
-
-        consem = CHECK(sem_open ("consem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED);
-
-        sleep(0.1); //sleep, so output is not mangled between forks
-        for (int listenport = 1; listenport<65536; listenport++)
-        {
-            if(pc->portmap[listenport])
-            {
-                if ( !fork() ) //Create Reverse Proxy child process(es) //TODO: Save PID
-                {
-                    //fprintf(stderr, "%s [PID %d] Starting Proxy on Port %d...\n", start_time, getpid(), listenport);
-                    prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
-                    CHECK(signal(SIGTERM, sig_handler_child), != SIG_ERR); //re-register handler for SIGTERM for child process
-                    CHECK(rsp(pc_get(pc, listenport), hostaddr), != 0); //start proxy                 
-
-                }
-            }
-        }
-
-        sleep(0.1); //sleep, so output is not mangled between forks
-        if ( !(accept_pid =fork()) ) { //Create listening child process
+        usleep(10000); //sleep 10ms, so output is not mangled between forks
+        if ( !(accept_pid=fork()) ) { //Create listening child process
             //Variables for listning socket
             struct sockaddr_in addr; //Hostaddress
             struct sockaddr_in trgaddr; //Storage for original destination port
@@ -276,7 +285,7 @@ int main(int argc, char *argv[])
             CHECK(bind(listenfd, (struct sockaddr*)&addr, sizeof(addr)), != -1);
             CHECK(listen(listenfd, 5), != -1);
 
-            fprintf(stderr, "%s [PID %d] ", start_time, getpid());
+            fprintf(stderr, "%s [PID %d] ", log_time, getpid());
             drop_root_privs(user, "Listner");
 
             //Main listening loop
@@ -293,7 +302,7 @@ int main(int argc, char *argv[])
                             prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
                             CHECK(signal(SIGTERM, sig_handler_child), != SIG_ERR); //register handler for SIGTERM for child process
                             //Preserve actual start time of connection attempt.
-                            time_str(start_time_unix, sizeof(start_time_unix), start_time, sizeof(start_time));
+                            time_str(log_time_unix, sizeof(log_time_unix), log_time, sizeof(log_time));
                             CHECK(getsockopt(openfd, SOL_IP, SO_ORIGINAL_DST, (struct sockaddr*)&trgaddr, &trgaddr_len), != -1); //Read original dst. port from NAT-table
                             struct sockaddr_in *s = (struct sockaddr_in *)&claddr; //create temporary struct to call inet_ntop() properly
                             //retrieve client target IPv4 (important when listening on ANY_ADDR)
@@ -303,7 +312,7 @@ int main(int argc, char *argv[])
 	                            fprintf(stderr, "*** DEBUG [PID %d] Accept-Child entering Worker\n", getpid());
 	                        #endif
                             long int data_bytes = worker_tcp(inet_ntoa(trgaddr.sin_addr), ntohs(trgaddr.sin_port), clientaddr, ntohs(s->sin_port),\
-                                                           timeout, data_path, max_file_size, openfd, start_time, start_time_unix, confifo);
+                                                           timeout, data_path, max_file_size, openfd, log_time, log_time_unix, confifo);
 	                        #if DEBUG >= 2
 	                            fprintf(stderr, "*** DEBUG [PID %d] Accept-Child left Worker\n", getpid());
 	                        #endif
@@ -319,15 +328,15 @@ int main(int argc, char *argv[])
             }
 
         } else {
-            sleep(2);
+            sleep(2); //Wait before starting Watchdog
             //Log start of Watchdog
             gettimeofday(&begin , NULL);
-            time_str(NULL, 0, start_time, sizeof(start_time)); //Get Human readable string only
-            fprintf(stderr, "%s [PID %d] ", start_time, getpid());
-            drop_root_privs(user, "Parent Watchdog");
+            time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only
+            //priviliges for watchdog can not be dropped anymore, because it may need to restart proxys with root priviliges
+            //drop_root_privs(user, "Parent Watchdog");
+            fprintf(stderr, "%s [PID %d] Parent Watchdog active...", log_time, getpid());
 
             // Parent Watchdog Loop.
-            //TODO: Watch for Proxy PIDs
             int stat_pcap = 0;
             int stat_accept = 0;
             while (1) {
@@ -335,19 +344,45 @@ int main(int argc, char *argv[])
                 //fprintf(stderr, "waitpid accept: P:%d S:%d\n", waitpid(accept_pid, &stat_accept, WNOHANG), stat_pcap);
                 if ( waitpid(pcap_pid, &stat_pcap, WNOHANG) ) {
                     gettimeofday(&begin , NULL);
-                    time_str(NULL, 0, start_time, sizeof(start_time)); //Get Human readable string only, reuse start_time var.
-                    fprintf(stderr, "%s [PID %d] Sniffer (PID %d) crashed. ARE YOU ROOT?", start_time, getpid(), accept_pid);
+                    time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only, reuse log_time var.
+                    fprintf(stderr, "%s [PID %d] Sniffer (PID %d) crashed. ARE YOU ROOT?", log_time, getpid(), accept_pid);
                     sig_handler_parent(SIGTERM);
                     break;
                 }
                 if ( waitpid(accept_pid, &stat_accept, WNOHANG) ) {
                     gettimeofday(&begin , NULL);
-                    time_str(NULL, 0, start_time, sizeof(start_time)); //Get Human readable string only, reuser start_time var. 
-                    fprintf(stderr, "%s [PID %d] Listner (PID %d) crashed. ARE YOU ROOT?", start_time, getpid(), accept_pid);
+                    time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only, reuse log_time var. 
+                    fprintf(stderr, "%s [PID %d] Listner (PID %d) crashed. ARE YOU ROOT?", log_time, getpid(), accept_pid);
                     sig_handler_parent(SIGTERM);
                     break;
                 }
-                sleep(2);
+                for (int listenport = 1; listenport <65536; listenport++)
+                {
+                    if ( pc->portmap[listenport] && waitpid(pc_get_lport(pc, listenport)->pid, &stat_accept, WNOHANG) )
+                    {
+                        time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only
+                        fprintf(stderr, "%s [PID %d] Proxy with PID %d, local port: %d -> Backend socket: %s:%d, exited, restarting in %lf seconds...\n",\
+                            log_time,\
+                            getpid(),\
+                            pc_get_lport(pc, listenport)->pid,\
+                            pc_get_lport(pc, listenport)->listenport,\
+                            pc_get_lport(pc, listenport)->backendaddr,\
+                            pc_get_lport(pc, listenport)->backendport,\
+                            proxy_wait_restart);
+                        
+                        if ( !(pc_get_lport(pc, listenport)->pid=fork()) ) //Re-create Reverse Proxy child process and save PID.
+                        {
+                            sleep(proxy_wait_restart);
+                            pc_get_lport(pc, listenport)->pid = getpid(); //update copy of listelemnt in this (forked) copy with own PID, to be able to find own config.
+                            //fprintf(stderr, "%s [PID %d] Starting Proxy on Port %d...\n", log_time, getpid(), listenport);
+                            prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
+                            CHECK(signal(SIGTERM, sig_handler_child), != SIG_ERR); //re-register handler for SIGTERM for child process
+                            CHECK(rsp(pc_get_lport(pc, listenport), hostaddr), != 0); //start proxy         
+                        }
+                    }
+                }
+
+                sleep(2); //Watch for childs every 2 seconds.
             }
         }
 
