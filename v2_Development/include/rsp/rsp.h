@@ -1,9 +1,6 @@
 #ifndef RSP_H
 #define RSP_H
 
-#include "tcp_ip_port_mon.h"
-#include "tcp_ip_port_mon.helper.h"
-
 #include "epollinterface.h"
 #include "logging.h"
 #include "server_socket.h"
@@ -31,6 +28,5 @@ struct proxy_socket_t { //Adresses and ports globally defined for easy access fo
 } proxy_sock;
 
 int rsp(struct proxy_conf_node_t* pcn, char* server_addr);
-void json_out(struct json_data_t* jd, long long int id);
 
 #endif

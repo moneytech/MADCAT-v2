@@ -41,7 +41,6 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 
 //Global includes, defines, definitons
 
-#include "madcat.common.h"
 #include "tcp_ip_port_mon.helper.h"
 #include "tcp_ip_port_mon.parser.h"
 #include "tcp_ip_port_mon.worker.h"
@@ -54,11 +53,6 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #define DEFAULT_BUFSIZE 9000 //Ethernet jumbo frame limit
 #define ETHERNET_HEADER_LEN 14 //Length of an Ethernet Header
 #define IP_OR_TCP_HEADER_MINLEN 20 // Minimum Length of an IP-Header or a TCP-Header is 20 Bytes
-//Capture only TCP-SYN's, for some sytems (Linux Kernel >= 5 ???) own host IP has to be appended,
-//so that the final filter string looks like "tcp[tcpflags] & (tcp-syn) != 0 and tcp[tcpflags] & (tcp-ack) == 0 & dst host 1.2.3.4"
-#define PCAP_FILTER "tcp[tcpflags] & (tcp-syn) != 0 and tcp[tcpflags] & (tcp-ack) == 0 and dst host "
-#define HEADER_FIFO "/tmp/header_json.tpm"
-#define CONNECT_FIFO "/tmp/connect_json.tpm"
 
 /* IP options as definde in Wireshark*/
 //Original names cause redifinition warnings, so prefix "MY" has been added
@@ -183,14 +177,5 @@ pid_t accept_pid; //PID of the Child doing the TCP Connection handling. Globally
 sem_t *hdrsem; //Semaphore for named pipe containing TCP/IP data
 sem_t *consem; //Semaphore for named pipe containing connection data
 FILE* confifo; //FILE* confifo is globally defined to be reachabel for both proxy-childs and accept-childs
-
-struct con_status_t{    //Connection status
-    char tag[80];       //The connection tag is a buffer with a min. size of 80 Bytes.
-    char start[64];     //Time string: Start of connection
-    char end[64];       //Time string: End of connection
-    char state[16];     //State is either "closed\0", "open\0" or "n/a\0"
-    char reason[16];    //Reason is either "timeout\0", "size exceeded\0" or "n/a\0". Usefull states like "FIN send\0" and "FIN recv\0" are not detectable.
-    long int data_bytes;//received bytes
-};
 
 #endif

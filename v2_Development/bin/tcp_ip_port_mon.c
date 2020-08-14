@@ -334,42 +334,34 @@ int main(int argc, char *argv[])
             time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only
             //priviliges for watchdog can not be dropped anymore, because it may need to restart proxys with root priviliges
             //drop_root_privs(user, "Parent Watchdog");
-            fprintf(stderr, "%s [PID %d] Parent Watchdog active...", log_time, getpid());
+            fprintf(stderr, "%s [PID %d] Parent Watchdog active. PIDs of childs at startup time:\n", log_time, getpid());
 
             // Parent Watchdog Loop.
             int stat_pcap = 0;
             int stat_accept = 0;
+            bool firstrun = true;
             while (1) {
-                //fprintf(stderr, "waitpid pcap: P:%d S:%d\n", waitpid(pcap_pid, &stat_pcap, WNOHANG), stat_pcap);
-                //fprintf(stderr, "waitpid accept: P:%d S:%d\n", waitpid(accept_pid, &stat_accept, WNOHANG), stat_pcap);
+                gettimeofday(&begin , NULL);
+                time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only for this watchdog cycle
+                if (firstrun) fprintf(stderr, "\tSniffer\t\t\t: %d\n\tListner\t\t\t: %d\n", pcap_pid, accept_pid);
+
                 if ( waitpid(pcap_pid, &stat_pcap, WNOHANG) ) {
-                    gettimeofday(&begin , NULL);
-                    time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only, reuse log_time var.
-                    fprintf(stderr, "%s [PID %d] Sniffer (PID %d) crashed. ARE YOU ROOT?", log_time, getpid(), accept_pid);
+                    fprintf(stderr, "%s [PID %d] Sniffer (PID %d) crashed. ARE YOU ROOT?", log_time, getpid(), pcap_pid);
                     sig_handler_parent(SIGTERM);
                     break;
                 }
                 if ( waitpid(accept_pid, &stat_accept, WNOHANG) ) {
-                    gettimeofday(&begin , NULL);
-                    time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only, reuse log_time var. 
                     fprintf(stderr, "%s [PID %d] Listner (PID %d) crashed. ARE YOU ROOT?", log_time, getpid(), accept_pid);
                     sig_handler_parent(SIGTERM);
                     break;
                 }
                 for (int listenport = 1; listenport <65536; listenport++)
                 {
+                    if (firstrun && pc->portmap[listenport]) fprintf(stderr, "\tProxy at Port %d\t: %d\n", listenport, pc_get_lport(pc, listenport)->pid);
+
                     if ( pc->portmap[listenport] && waitpid(pc_get_lport(pc, listenport)->pid, &stat_accept, WNOHANG) )
                     {
-                        time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only
-                        fprintf(stderr, "%s [PID %d] Proxy with PID %d, local port: %d -> Backend socket: %s:%d, exited, restarting in %lf seconds...\n",\
-                            log_time,\
-                            getpid(),\
-                            pc_get_lport(pc, listenport)->pid,\
-                            pc_get_lport(pc, listenport)->listenport,\
-                            pc_get_lport(pc, listenport)->backendaddr,\
-                            pc_get_lport(pc, listenport)->backendport,\
-                            proxy_wait_restart);
-                        
+                        pid_t old_pid = pc_get_lport(pc, listenport)->pid;
                         if ( !(pc_get_lport(pc, listenport)->pid=fork()) ) //Re-create Reverse Proxy child process and save PID.
                         {
                             sleep(proxy_wait_restart);
@@ -377,11 +369,25 @@ int main(int argc, char *argv[])
                             //fprintf(stderr, "%s [PID %d] Starting Proxy on Port %d...\n", log_time, getpid(), listenport);
                             prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
                             CHECK(signal(SIGTERM, sig_handler_child), != SIG_ERR); //re-register handler for SIGTERM for child process
-                            CHECK(rsp(pc_get_lport(pc, listenport), hostaddr), != 0); //start proxy         
+                            CHECK(rsp(pc_get_lport(pc, listenport), hostaddr), != 0); //start proxy
                         }
+
+                        fprintf(stderr, "%s [PID %d] Proxy with PID %d, local port: %d -> Backend socket: %s:%d, exited, restarting in %lf seconds with PID %d...\n",\
+                            log_time,\
+                            getpid(),\
+                            old_pid,\
+                            pc_get_lport(pc, listenport)->listenport,\
+                            pc_get_lport(pc, listenport)->backendaddr,\
+                            pc_get_lport(pc, listenport)->backendport,\
+                            proxy_wait_restart,\
+                            pc_get_lport(pc, listenport)->pid\
+                        );
+
+                        usleep(10000); //sleep 10ms, so output is not mangled between forks
                     }
                 }
 
+                firstrun = false;
                 sleep(2); //Watch for childs every 2 seconds.
             }
         }

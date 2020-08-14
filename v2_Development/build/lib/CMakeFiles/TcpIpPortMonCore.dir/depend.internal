@@ -8,16 +8,8 @@ lib/CMakeFiles/TcpIpPortMonCore.dir/madcat.helper.c.o
 lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.helper.c.o
  ../include/madcat.common.h
  ../include/madcat.helper.h
- ../include/rsp/connection.h
- ../include/rsp/epollinterface.h
- ../include/rsp/logging.h
- ../include/rsp/netutils.h
- ../include/rsp/rsp.h
- ../include/rsp/server_socket.h
- ../include/tcp_ip_port_mon.h
+ ../include/tcp_ip_port_mon.common.h
  ../include/tcp_ip_port_mon.helper.h
- ../include/tcp_ip_port_mon.parser.h
- ../include/tcp_ip_port_mon.worker.h
  /home/MADCAT/v2_Development/lib/tcp_ip_port_mon.helper.c
 lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.parser.c.o
  ../include/madcat.common.h
@@ -28,6 +20,7 @@ lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.parser.c.o
  ../include/rsp/netutils.h
  ../include/rsp/rsp.h
  ../include/rsp/server_socket.h
+ ../include/tcp_ip_port_mon.common.h
  ../include/tcp_ip_port_mon.h
  ../include/tcp_ip_port_mon.helper.h
  ../include/tcp_ip_port_mon.parser.h
@@ -42,6 +35,7 @@ lib/CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.worker.c.o
  ../include/rsp/netutils.h
  ../include/rsp/rsp.h
  ../include/rsp/server_socket.h
+ ../include/tcp_ip_port_mon.common.h
  ../include/tcp_ip_port_mon.h
  ../include/tcp_ip_port_mon.helper.h
  ../include/tcp_ip_port_mon.parser.h

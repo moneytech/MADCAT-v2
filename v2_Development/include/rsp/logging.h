@@ -13,7 +13,7 @@
 */
 
 extern void rsp_log(char* format, ...);
-
 extern void rsp_log_error(char* message);
+void json_out(struct json_data_t* jd, long long int id);
 
 #endif

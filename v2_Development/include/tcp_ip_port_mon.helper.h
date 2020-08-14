@@ -36,8 +36,14 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #ifndef TCP_IP_PORT_MON_HELPER_H
 #define TCP_IP_PORT_MON_HELPER_H
 
-#include "tcp_ip_port_mon.h"
+#include "tcp_ip_port_mon.common.h"
 #include "madcat.helper.h"
+
+//Capture only TCP-SYN's, for some sytems (Linux Kernel >= 5 ???) own host IP has to be appended,
+//so that the final filter string looks like "tcp[tcpflags] & (tcp-syn) != 0 and tcp[tcpflags] & (tcp-ack) == 0 & dst host 1.2.3.4"
+#define PCAP_FILTER "tcp[tcpflags] & (tcp-syn) != 0 and tcp[tcpflags] & (tcp-ack) == 0 and dst host "
+#define HEADER_FIFO "/tmp/header_json.tpm"
+#define CONNECT_FIFO "/tmp/connect_json.tpm"
 
 #define PCN_STRLEN 6 //listen- and backport string length in proxy_conf_node_t
 #define STR_BUFFER_SIZE 65536 //Generic string buffer size
