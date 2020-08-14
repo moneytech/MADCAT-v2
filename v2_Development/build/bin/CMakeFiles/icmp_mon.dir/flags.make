@@ -6,5 +6,5 @@ C_FLAGS = -g   -gdwarf-2 -fno-strict-aliasing
 
 C_DEFINES = 
 
-C_INCLUDES = -I/home/MADCAT/v2_Development/include -I/home/MADCAT/v2_Development/include/rsp -I/usr/include/lua5.1 
+C_INCLUDES = -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/include/lua5.1 
 

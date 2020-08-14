@@ -33,7 +33,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
  * Compile with libpcap:
  * gcc -I . -o tcp_ip_port_mon tcp_ip_port_mon.c -lpcap -pthread
  *
- * Heiko Folkerts, BSI 2018-2019
+ * Heiko Folkerts, BSI 2018-2020
 */
 
 #ifndef TCP_IP_PORT_MON_H
@@ -46,7 +46,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include "tcp_ip_port_mon.worker.h"
 #include "rsp.h"
 
-#define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nTCP-IP Port Monitor v1.2\nHeiko Folkerts, BSI 2018-2020\n" //Version string
+#define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nTCP-IP Port Monitor v2.0 beta-1\nHeiko Folkerts, BSI 2018-2020\n" //Version string
 
 #define CHUNK_SIZE 512 //Chunks for receiving
 #define PATH_LEN 256 //Minium of maximum path lengths of Linux common file systems

@@ -1,4 +1,4 @@
-# Install script for directory: /home/MADCAT/v2_Development/lib/rsp
+# Install script for directory: /home/MADCAT/MADCAT-v2/v2_Development/lib/rsp
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -38,6 +38,6 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE STATIC_LIBRARY FILES "/home/MADCAT/v2_Development/build/lib/libTcpProxyCore.a")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE STATIC_LIBRARY FILES "/home/MADCAT/MADCAT-v2/v2_Development/build/lib/libTcpProxyCore.a")
 endif()
 

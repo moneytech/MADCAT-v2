@@ -1,4 +1,4 @@
-# Install script for directory: /home/MADCAT/v2_Development
+# Install script for directory: /home/MADCAT/MADCAT-v2/v2_Development
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -39,9 +39,9 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/MADCAT/v2_Development/build/lib/cmake_install.cmake")
-  include("/home/MADCAT/v2_Development/build/lib/rsp/cmake_install.cmake")
-  include("/home/MADCAT/v2_Development/build/bin/cmake_install.cmake")
+  include("/home/MADCAT/MADCAT-v2/v2_Development/build/lib/cmake_install.cmake")
+  include("/home/MADCAT/MADCAT-v2/v2_Development/build/lib/rsp/cmake_install.cmake")
+  include("/home/MADCAT/MADCAT-v2/v2_Development/build/bin/cmake_install.cmake")
 
 endif()
 
@@ -53,5 +53,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/MADCAT/v2_Development/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/MADCAT/MADCAT-v2/v2_Development/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
