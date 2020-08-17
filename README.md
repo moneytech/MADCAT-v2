@@ -3,6 +3,11 @@ heiko.folkerts [at] bsi.bund.de or github [at] thevoid.email
 
 MADCAT v1 Maintenance is found here: https://github.com/FolkertsHeiko/MADCAT-v1
 
+RSP - A Really Simple Proxy
+GitHub: https://github.com/gpjt/rsp
+Documentation: http://www.gilesthomas.com/2013/08/writing-a-reverse-proxyloadbalancer-from-the-ground-up-in-c-part-0/
+Gratefully adopted and modified for MADCAT by Heiko Folkerts, BSI 2019-2020 with special thanks to Giles Thomas.
+
                              ▄▄▄               ▄▄▄▄▄▄
                  ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀
                     ▀▄▄▄▓█▓██   █▓█▌         █▓   ▓████████▀
