@@ -33,7 +33,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
  * TCP-IP port monitor.
  *
  *
- * Heiko Folkerts, BSI 2018-2019
+ * Heiko Folkerts, BSI 2018-2020
 */
 
 #include "tcp_ip_port_mon.helper.h"

@@ -1,3 +1,8 @@
+RSP - A Really Simple Proxy
+GitHub: https://github.com/gpjt/rsp
+Documentation: http://www.gilesthomas.com/2013/08/writing-a-reverse-proxyloadbalancer-from-the-ground-up-in-c-part-0/
+Gratefully adopted and modified for MADCAT by Heiko Folkerts, BSI 2019-2020 with special thanks to Giles Thomas:
+
 Copyright (c) 2013 Giles Thomas
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

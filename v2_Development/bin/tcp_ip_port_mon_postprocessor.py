@@ -29,7 +29,7 @@
  # TCP Connection- and SYN-JSON data postprocessor for TCP/IP Portmonitor
  #
  #
- # Heiko Folkerts, BSI 2018-2019
+ # Heiko Folkerts, BSI 2018-2020
 ##
 
 from __future__ import print_function

@@ -29,7 +29,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
  * Netfilter should be configured to block outgoing ICMP Destination unreachable (Port unreachable) packets, e.g.:
  *      iptables -I OUTPUT -p icmp --icmp-type destination-unreachable -j DROP
  *
- * Heiko Folkerts, BSI 2018-2019
+ * Heiko Folkerts, BSI 2018-2020
 */
 
 

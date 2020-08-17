@@ -33,7 +33,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
  * Compile with libpcap and includes from local directory:
  * gcc -I . -o tcp_ip_port_mon tcp_ip_port_mon.c -lpcap -pthread -lssl -lcrypto --no-strict-aliasing
  *
- * Heiko Folkerts, BSI 2018-2019
+ * Heiko Folkerts, BSI 2018-2020
 */
 
 //Header includes, defintions and globals

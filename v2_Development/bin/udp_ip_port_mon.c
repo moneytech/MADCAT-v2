@@ -31,7 +31,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
  *
  * Compile with "gcc -I . -o udp_ip_port_mon udp_ip_port_mon.c -lcrypto"
  *
- * Heiko Folkerts, BSI 2018-2019
+ * Heiko Folkerts, BSI 2018-2020
 */
 
 //Header includes, defintions and globals

@@ -32,7 +32,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 /* MADCAT - Mass Attack Detecion Connection Acceptance Tool
  * ICMP Monitor.
  *
- * Heiko Folkerts, BSI 2018-2019
+ * Heiko Folkerts, BSI 2018-2020
 */
 
 #include "icmp_mon.worker.h"

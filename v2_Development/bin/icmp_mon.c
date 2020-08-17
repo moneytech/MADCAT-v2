@@ -26,7 +26,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 /* MADCAT - Mass Attack Detecion Connection Acceptance Tool
  * ICMP monitor.
  *
- * Heiko Folkerts, BSI 2018-2019
+ * Heiko Folkerts, BSI 2018-2020
  *
  * Compile with "gcc -I . -o icmp_mon udp_ip_port_mon.c -lcrypto"
 */
