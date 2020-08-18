@@ -155,8 +155,8 @@ void sig_handler_parent(int signo)
 
     for (int listenport = 1; listenport <65536; listenport++)
     {
-        if ( pc->portmap[listenport] && !waitpid(pc_get_lport(pc, listenport)->pid, &stat_accept, WNOHANG) )
-            kill(pc_get_lport(pc, listenport)->pid, SIGTERM);
+        if ( pc->portmap[listenport] && !waitpid(pctcp_get_lport(pc, listenport)->pid, &stat_accept, WNOHANG) )
+            kill(pctcp_get_lport(pc, listenport)->pid, SIGTERM);
     }
 
     //exit parent process
@@ -213,7 +213,7 @@ void sig_handler_shutdown(int signo)
 
 //Helper functions for proxy configuration
 
-int get_config_table(lua_State* L, char* name, struct proxy_conf_t* pc) //read proxy configuration from parsed LUA-File by luaL_dofile(...). Returns number of read elements.
+int get_config_table(lua_State* L, char* name, struct proxy_conf_tcp_t* pc) //read proxy configuration from parsed LUA-File by luaL_dofile(...). Returns number of read elements.
 {
     char* backendaddr = 0;
     int backendport = 0;
@@ -224,8 +224,8 @@ int get_config_table(lua_State* L, char* name, struct proxy_conf_t* pc) //read p
 
     if ( !lua_istable(L, -1) ) //...check if this objekt is a table
     {
-        fprintf(stderr, "No proxy config found. Variable \"%s\" must be a LUA table.)\n", name);
-        exit(1);
+        fprintf(stderr, "\tNo proxy config found. Variable \"%s\" must be a LUA table.\n", name);
+        return num_elements;
     }
     
     //Iterate over all possible portnumbers.
@@ -233,7 +233,7 @@ int get_config_table(lua_State* L, char* name, struct proxy_conf_t* pc) //read p
     for (int listenport = 0; listenport<65536; listenport++)
     {
         //fprintf(stderr,"LOOP %d:", listenport);
-        //pc_print(pc);
+        //pctcp_print(pc);
                 
         lua_pushnumber(L, listenport); //push actuall portnumber on stack and...
         lua_gettable(L, -2);  //...call lua_gettable with this portnumber as key
@@ -249,7 +249,7 @@ int get_config_table(lua_State* L, char* name, struct proxy_conf_t* pc) //read p
             backendport = lua_tonumber(L, -1);
             lua_pop(L, 1);  //remove result from stack      
             
-            pc_push(pc, listenport, backendaddr, backendport);
+            pctcp_push(pc, listenport, backendaddr, backendport);
             pc->portmap[listenport] = true;
             num_elements++;
         }
@@ -258,37 +258,37 @@ int get_config_table(lua_State* L, char* name, struct proxy_conf_t* pc) //read p
     return num_elements;
 }
 
-struct proxy_conf_t* pc_init() //initialize proxy configuration
+struct proxy_conf_tcp_t* pctcp_init() //initialize proxy configuration
 {
-    struct proxy_conf_t* pc = malloc (sizeof(struct proxy_conf_t)); 
+    struct proxy_conf_tcp_t* pc = malloc (sizeof(struct proxy_conf_tcp_t)); 
     pc->portlist = 0; //set headpointer to 0
     for (int listenport = 0; listenport<65536; listenport++) pc->portmap[listenport] = false; //initilze map of ports used to proxy network traffic
     return pc;
 }
 
-void pc_push(struct proxy_conf_t* pc, int listenport, char* backendaddr, int backendport) //push new proxy configuration item to linked list
+void pctcp_push(struct proxy_conf_tcp_t* pc, int listenport, char* backendaddr, int backendport) //push new proxy configuration item to linked list
 {
-    struct proxy_conf_node_t* pc_node = malloc (sizeof(struct proxy_conf_node_t));
+    struct proxy_conf_tcp_node_t* pctcp_node = malloc (sizeof(struct proxy_conf_tcp_node_t));
     
-    pc_node->listenport = listenport;
-     snprintf(pc_node->listenport_str, PCN_STRLEN, "%d", listenport);
-    //pc_node->backendaddr = backendaddr; //Make copy instead, to get full control over data and circumvent data corruption by free(backendaddr), etc.
-    pc_node->backendaddr = malloc(strlen(backendaddr)+1);
-     strncpy(pc_node->backendaddr, backendaddr, strlen(backendaddr)+1);
-    pc_node->backendport = backendport;
-     snprintf(pc_node->backendport_str, PCN_STRLEN, "%d", backendport);
+    pctcp_node->listenport = listenport;
+     snprintf(pctcp_node->listenport_str, PCN_STRLEN, "%d", listenport);
+    //pctcp_node->backendaddr = backendaddr; //Make copy instead, to get full control over data and circumvent data corruption by free(backendaddr), etc.
+    pctcp_node->backendaddr = malloc(strlen(backendaddr)+1);
+     strncpy(pctcp_node->backendaddr, backendaddr, strlen(backendaddr)+1);
+    pctcp_node->backendport = backendport;
+     snprintf(pctcp_node->backendport_str, PCN_STRLEN, "%d", backendport);
 
-    pc_node->pid = 0; //Set pid for proxy for this configuration to 0, because it is not running yet.
+    pctcp_node->pid = 0; //Set pid for proxy for this configuration to 0, because it is not running yet.
 
-    pc_node->next = pc->portlist;
-    pc->portlist = pc_node;
+    pctcp_node->next = pc->portlist;
+    pc->portlist = pctcp_node;
     pc->num_elemnts++;
     return;
 }
 
-struct proxy_conf_node_t* pc_get_lport(struct proxy_conf_t* pc, int listenport) //get proxy configuration for listenport
+struct proxy_conf_tcp_node_t* pctcp_get_lport(struct proxy_conf_tcp_t* pc, int listenport) //get proxy configuration for listenport
 {
-    struct proxy_conf_node_t* result = pc->portlist;
+    struct proxy_conf_tcp_node_t* result = pc->portlist;
     while ( result != 0)
     {
         if(result->listenport == listenport) return result;
@@ -297,9 +297,9 @@ struct proxy_conf_node_t* pc_get_lport(struct proxy_conf_t* pc, int listenport) 
     return 0;
 }
 
-struct proxy_conf_node_t* pc_get_pid(struct proxy_conf_t* pc, pid_t pid) //get proxy configuration for proxy with Process ID "pid"
+struct proxy_conf_tcp_node_t* pctcp_get_pid(struct proxy_conf_tcp_t* pc, pid_t pid) //get proxy configuration for proxy with Process ID "pid"
 {
-    struct proxy_conf_node_t* result = pc->portlist;
+    struct proxy_conf_tcp_node_t* result = pc->portlist;
     while ( result != 0)
     {
         if(result->pid == pid) return result;
@@ -309,13 +309,13 @@ struct proxy_conf_node_t* pc_get_pid(struct proxy_conf_t* pc, pid_t pid) //get p
 }
 
 
-void pc_print(struct proxy_conf_t* pc) //print proxy configuration
+void pctcp_print(struct proxy_conf_tcp_t* pc) //print proxy configuration
 {
-    struct proxy_conf_node_t* pc_node = pc->portlist;
-    while ( pc_node != 0)
+    struct proxy_conf_tcp_node_t* pctcp_node = pc->portlist;
+    while ( pctcp_node != 0)
     {
-        fprintf(stderr, "\tProxy local port: %d -> Backend socket: %s:%d\n", pc_node->listenport, pc_node->backendaddr, pc_node->backendport);
-        pc_node = pc_node->next;
+        fprintf(stderr, "\tProxy local port: %d -> Backend socket: %s:%d\n", pctcp_node->listenport, pctcp_node->backendaddr, pctcp_node->backendport);
+        pctcp_node = pctcp_node->next;
     }
     return;
 }

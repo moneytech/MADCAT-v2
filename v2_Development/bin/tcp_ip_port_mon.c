@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
         int max_conn = 0;
 
         //Structure holding proxy configuration items
-        pc = pc_init(pc);
+        pc = pctcp_init(pc);
         double proxy_wait_restart = 5; //time to wait before a crashed proxy restarts, e.g. because backend has failed, defaults to 5 seconds
 
         // Checking if number of arguments is one (config file) or 6 or 7 (command line).
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
             fprintf(stderr, "\tFailed proxy restart time: %lf\n", proxy_wait_restart);
 
             get_config_table(luaState, "tcpproxy", pc);
-            pc_print(pc);
+            pctcp_print(pc);
 
             lua_close(luaState);
         } 
@@ -191,13 +191,13 @@ int main(int argc, char *argv[])
         {
             if(pc->portmap[listenport])
             {
-                if ( !(pc_get_lport(pc, listenport)->pid = fork()) ) //Create Reverse Proxy child process(es) and save PID for parent watchdog.
+                if ( !(pctcp_get_lport(pc, listenport)->pid = fork()) ) //Create Reverse Proxy child process(es) and save PID for parent watchdog.
                 {
-                    pc_get_lport(pc, listenport)->pid = getpid(); //update copy of listelemnt in this (forked) copy with own PID, to be able to find own config.
+                    pctcp_get_lport(pc, listenport)->pid = getpid(); //update copy of listelemnt in this (forked) copy with own PID, to be able to find own config.
                     //fprintf(stderr, "%s [PID %d] Starting Proxy on Port %d...\n", log_time, getpid(), listenport);
                     prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
                     CHECK(signal(SIGTERM, sig_handler_child), != SIG_ERR); //re-register handler for SIGTERM for child process
-                    CHECK(rsp(pc_get_lport(pc, listenport), hostaddr), != 0); //start proxy           
+                    CHECK(rsp(pctcp_get_lport(pc, listenport), hostaddr), != 0); //start proxy           
                 }
                 usleep(10000); //sleep 10ms, so output is not mangled between forks
             }
@@ -246,7 +246,6 @@ int main(int argc, char *argv[])
                 fprintf(stdout,"{\"HEADER\": %s}\n", json_do(false, "")); //print json output for logging
                 fflush(hdrfifo);
                 fflush(stdout);
-                free(json_do(0,""));
             }
         }
 
@@ -321,7 +320,6 @@ int main(int argc, char *argv[])
 	                        #if DEBUG >= 2
 	                            fprintf(stderr, "*** DEBUG [PID %d] Accept-Child openfd closed, returning.\n", getpid());
 	                        #endif
-                            free(json_do(false, ""));
                             exit(0); //kill child process
                     }
                     close(openfd); //Close connection
@@ -357,30 +355,30 @@ int main(int argc, char *argv[])
                 }
                 for (int listenport = 1; listenport <65536; listenport++)
                 {
-                    if (firstrun && pc->portmap[listenport]) fprintf(stderr, "\tProxy at Port %d\t: %d\n", listenport, pc_get_lport(pc, listenport)->pid);
+                    if (firstrun && pc->portmap[listenport]) fprintf(stderr, "\tProxy at Port %d\t: %d\n", listenport, pctcp_get_lport(pc, listenport)->pid);
 
-                    if ( pc->portmap[listenport] && waitpid(pc_get_lport(pc, listenport)->pid, &stat_accept, WNOHANG) )
+                    if ( pc->portmap[listenport] && waitpid(pctcp_get_lport(pc, listenport)->pid, &stat_accept, WNOHANG) )
                     {
-                        pid_t old_pid = pc_get_lport(pc, listenport)->pid;
-                        if ( !(pc_get_lport(pc, listenport)->pid=fork()) ) //Re-create Reverse Proxy child process and save PID.
+                        pid_t old_pid = pctcp_get_lport(pc, listenport)->pid;
+                        if ( !(pctcp_get_lport(pc, listenport)->pid=fork()) ) //Re-create Reverse Proxy child process and save PID.
                         {
                             sleep(proxy_wait_restart);
-                            pc_get_lport(pc, listenport)->pid = getpid(); //update copy of listelemnt in this (forked) copy with own PID, to be able to find own config.
+                            pctcp_get_lport(pc, listenport)->pid = getpid(); //update copy of listelemnt in this (forked) copy with own PID, to be able to find own config.
                             //fprintf(stderr, "%s [PID %d] Starting Proxy on Port %d...\n", log_time, getpid(), listenport);
                             prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
                             CHECK(signal(SIGTERM, sig_handler_child), != SIG_ERR); //re-register handler for SIGTERM for child process
-                            CHECK(rsp(pc_get_lport(pc, listenport), hostaddr), != 0); //start proxy
+                            CHECK(rsp(pctcp_get_lport(pc, listenport), hostaddr), != 0); //start proxy
                         }
 
                         fprintf(stderr, "%s [PID %d] Proxy with PID %d, local port: %d -> Backend socket: %s:%d, exited, restarting in %lf seconds with PID %d...\n",\
                             log_time,\
                             getpid(),\
                             old_pid,\
-                            pc_get_lport(pc, listenport)->listenport,\
-                            pc_get_lport(pc, listenport)->backendaddr,\
-                            pc_get_lport(pc, listenport)->backendport,\
+                            pctcp_get_lport(pc, listenport)->listenport,\
+                            pctcp_get_lport(pc, listenport)->backendaddr,\
+                            pctcp_get_lport(pc, listenport)->backendport,\
                             proxy_wait_restart,\
-                            pc_get_lport(pc, listenport)->pid\
+                            pctcp_get_lport(pc, listenport)->pid\
                         );
 
                         usleep(10000); //sleep 10ms, so output is not mangled between forks

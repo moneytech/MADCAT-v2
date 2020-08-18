@@ -41,7 +41,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 
 //Listner thread
 
-long int worker_tcp(char* dst_addr, int dst_port, char* src_addr, int src_port, double timeout, char* data_path, int max_file_size, int s,\
+long int worker_tcp(char* dst_addr, int dest_port, char* src_addr, int src_port, double timeout, char* data_path, int max_file_size, int s,\
                   char* log_time, char* log_time_unix, FILE* confifo)
 {
         //on some systems, e.g. VMs, binding to a specific address does not work as expected.
@@ -69,7 +69,7 @@ long int worker_tcp(char* dst_addr, int dst_port, char* src_addr, int src_port, 
         gettimeofday(&begin, NULL);
         
         //Log connection to STDERR in readeable format
-        fprintf(stderr, "%s [PID %d] CONNECTION to %s:%d from %s:%d\n", log_time, getpid(), dst_addr , dst_port, src_addr, src_port);
+        fprintf(stderr, "%s [PID %d] CONNECTION to %s:%d from %s:%d\n", log_time, getpid(), dst_addr , dest_port, src_addr, src_port);
         
         //Begin new global JSON output and...
         json_do(true, "");
@@ -85,7 +85,7 @@ long int worker_tcp(char* dst_addr, int dst_port, char* src_addr, int src_port, 
 \"unixtime\": %s, \
 ",\
 src_addr, \
-dst_port, \
+dest_port, \
 log_time, \
 dst_addr, \
 src_port, \
@@ -93,7 +93,7 @@ log_time_unix\
 );
 
         //Generate connection tag to identify connection. Maximum is 28 Bytes, e.g. "123.456.789.012_43210_98765\0"
-        snprintf(con_status.tag, 28, "%s_%d_%d", src_addr, dst_port, src_port);
+        snprintf(con_status.tag, 28, "%s_%d_%d", src_addr, dest_port, src_port);
         //initialize connection state for connection con_status by postprocessor
         snprintf(con_status.state, 16, "%s", "open");
         snprintf(con_status.reason, 16, "%s", "n/a");
@@ -141,7 +141,7 @@ log_time_unix\
                     if (file == 0) //if somthing had been received and no file is open yet...
                     {
                         //...generate filename LinuxTimeStamp-milisecends_destinationAddress-destinationPort_sourceAddress-sourcePort.tpm
-                        sprintf(file_name, "%s%s_%s-%d_%s-%d.tpm", data_path, log_time, dst_addr , dst_port, src_addr, src_port);
+                        sprintf(file_name, "%s%s_%s-%d_%s-%d.tpm", data_path, log_time, dst_addr , dest_port, src_addr, src_port);
                         file_name[PATH_LEN-1] = 0; //Enforcing PATH_LEN
                         fprintf(stderr, "%s [PID %d] FILENAME: %s\n",log_time, getpid(), file_name);
                         file = fopen(file_name,"wb"); //Open File
@@ -220,7 +220,7 @@ payload_sha1_str
         fprintf(stdout,"{\"CONNECTION\": %s}\n", json_do(false, "")); //print json output for logging
         fflush(stdout);
 
-        fprintf(stderr, "%s [PID %d] END of %s:%d from %s:%d started %s\n",now_time, getpid(), dst_addr , dst_port, src_addr, src_port, log_time);
+        fprintf(stderr, "%s [PID %d] END of %s:%d from %s:%d started %s\n",now_time, getpid(), dst_addr , dest_port, src_addr, src_port, log_time);
 
         free(payload_sha1_str);
         free(payload_str);

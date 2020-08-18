@@ -207,8 +207,8 @@ struct ipv4icmp_t {
     uint8_t  proto;
     uint32_t src_ip;
     char*    src_ip_str;
-    uint32_t dst_ip;
-    char*    dst_ip_str;
+    uint32_t dest_ip;
+    char*    dest_ip_str;
     void*    icmp_hdr; //Begin of the 8Byte ICMP header
     uint8_t  type;
     uint8_t  code;

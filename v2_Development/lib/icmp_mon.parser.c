@@ -280,7 +280,7 @@ int analyze_tcp_header(const unsigned char* packet, int recv_len) //returns numb
     long int data_bytes = recv_len - (ETHERNET_HEADER_LEN + iphdr->ihl*4 + tcphdr->doff*4);
 
    //Append header JSON
-    //printf("\n\nsrc_port: %d\ndst_port: %d\nseq: %u\nack_seq: %u\nhdr_len: %d\nres1: %x\nres2: %x\nurg: %x\nack: %x\npsh: %x\nrst: %x\nsyn: %x\nfin: %x\nwindow: %d\ncheck: 0x%02x\nurg_ptr: 0x%04x\n\n",\
+    //printf("\n\nsrc_port: %d\ndest_port: %d\nseq: %u\nack_seq: %u\nhdr_len: %d\nres1: %x\nres2: %x\nurg: %x\nack: %x\npsh: %x\nrst: %x\nsyn: %x\nfin: %x\nwindow: %d\ncheck: 0x%02x\nurg_ptr: 0x%04x\n\n",\
 printf("\n\n
     json_do(0, ", \
 \"tcp\": {\

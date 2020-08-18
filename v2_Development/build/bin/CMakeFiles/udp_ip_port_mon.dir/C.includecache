@@ -97,6 +97,8 @@ udp_ip_port_mon.h
 ../include/udp_ip_port_mon.worker.h
 udp_ip_port_mon.h
 ../include/udp_ip_port_mon.h
+udp_ip_port_mon.parser.h
+../include/udp_ip_port_mon.parser.h
 
 /home/MADCAT/MADCAT-v2/v2_Development/bin/udp_ip_port_mon.c
 madcat.helper.h

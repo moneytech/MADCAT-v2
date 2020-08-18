@@ -103,12 +103,69 @@ struct ipv4udp_t {
     uint8_t  proto;
     uint32_t src_ip;
     char*    src_ip_str;
-    uint32_t dst_ip;
-    char*    dst_ip_str;
+    uint32_t dest_ip;
+    char*    dest_ip_str;
     uint16_t src_port;
-    uint16_t dst_port;
+    uint16_t dest_port;
     void*    data;
     int      data_len;
+};
+
+#define PCN_STRLEN 6 //listen- and backport string length in proxy_conf_udp_node_t
+
+struct proxy_conf_udp_node_t //linked list element to hold proxy configuration items
+{
+    struct proxy_conf_udp_node_t* next;
+
+    int   listenport;
+    char  listenport_str[PCN_STRLEN];
+    int   backendport;
+    char  backendport_str[PCN_STRLEN];
+    char* backendaddr;
+
+    int client_socket_fd; //TODO: Move to udpcon-structure
+    struct sockaddr_in* backend_socket; //TODO: Move to udpcon-structure
+};
+
+struct proxy_conf_udp_t { //proxy configuration
+    struct proxy_conf_udp_node_t* portlist; //head pointer to linked list with proxy configuration items
+    bool portmap[65536]; //map of ports used to proxy network traffic
+    int num_elemnts;
+    char proxy_ip[INET6_ADDRSTRLEN]; //Address, which is used to communicate with backends
+} *pc; //globally defined to be easly accesible inside rsp-proxy to check if root priviliges can be dropped (ports <1023)
+
+struct udpcon_data_t {
+    struct udpcon_data_node_t *list;
+} *uc;
+
+struct udpcon_data_node_t {
+    struct udpcon_data_node_t *next;
+    struct udpcon_data_node_t *prev;
+    uint_least64_t id_tobackend;
+    uint_least64_t id_fromclient;
+
+    struct sockaddr_in* backend_socket ;
+    int backend_socket_fd;
+    struct sockaddr_in* client_socket;
+    int client_socket_fd;
+
+    long long int last_seen;
+    
+    char* src_ip;
+    int   src_port;
+    char* dest_ip;
+    int   dest_port;
+    char* timestamp;
+    long long int unixtime;
+    char* start;
+    char* end;
+    long long unsigned int bytes_toserver;
+    long long unsigned int bytes_toclient;    
+    char* proxy_ip;
+    int   proxy_port;
+    char* backend_ip;
+    int   backend_port;
+    
 };
 
 #endif

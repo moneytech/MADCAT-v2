@@ -506,7 +506,7 @@ char const *info_cray = "INFO" ":" "compiler_wrapper[CrayPrgEnv]";
 # if defined(__PPC64__)
 #  define ARCHITECTURE_ID "PPC64"
 
-# elif defined(__ppc__)
+# elif defined(__ppctcp__)
 #  define ARCHITECTURE_ID "PPC"
 
 # elif defined(__ARM__)

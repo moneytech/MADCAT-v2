@@ -41,7 +41,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 
 //Connection worker:
 long int worker_tcp(char* dst_addr, \
-                  int dst_port, \
+                  int dest_port, \
                   char* src_addr, \
                   int src_port, \
                   double timeout, \

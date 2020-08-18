@@ -68,6 +68,9 @@ int main(int argc, char *argv[])
         //Display Mascott and Version
         fprintf(stderr, "\n%s%s\n", MASCOTT, VERSION);
 
+        //Structure holding proxy configuration items
+        pc = pcudp_init(pc);
+
         // Checking if number of argument is
         // 4 or 5 or not.(PROG addr port conntimeout)
         if (argc != 2  && (argc < 4 || argc > 5))
@@ -109,6 +112,19 @@ int main(int argc, char *argv[])
             }
             fprintf(stderr, "\tbufsize: %d\n", bufsize);
 
+            if (get_config_table(luaState, "udpproxy", pc) > 0)
+            {
+                strncpy(pc->proxy_ip, get_config_opt(luaState, "udpproxy_tobackend_addr"), sizeof(pc->proxy_ip)); pc->proxy_ip[sizeof(pc->proxy_ip)-1] = 0;
+                if(strlen(pc->proxy_ip) == 0)
+                {
+                    fprintf(stderr, "%s [PID %d] Error in config file %s while parsing \"udpproxy_tobackend_addr\".\n", log_time, getpid(), argv[1]);
+                    print_help_udp(argv[0]);
+                    return -1;
+                }
+                fprintf(stderr, "\tProxy client address towards backend(s): %s\n", pc->proxy_ip);
+            }
+            pcudp_print(pc);
+
             lua_close(luaState);
         }
         else //copy legacy command line arguments to variables
@@ -134,6 +150,38 @@ int main(int argc, char *argv[])
                 return -2;
         }
 
+        uc = uc_init(); //Initialize UDP Connection structure, holding connections. Defined globally for easy access inside functions, e.g. worker_udp.
+
+        /* TODO:MOVE TO WORKER
+        for (int listenport = 1; listenport<65536; listenport++) //Spawn proxy socket(s) toward backend(s) //TODO: More Clever solution thus this is brute force.
+        {
+            if(pc->portmap[listenport])
+            {
+                pcudp_get_lport(pc, listenport)->backend_socket = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
+                if ( (pcudp_get_lport(pc, listenport)->client_socket_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0 )
+                { 
+                  perror("Proxy socket creation failed");
+                  exit(1); 
+                }
+                memset(pcudp_get_lport(pc, listenport)->backend_socket, 0, sizeof(pcudp_get_lport(pc, listenport)->backend_socket)); 
+      
+                // Filling backend server information 
+                pcudp_get_lport(pc, listenport)->backend_socket->sin_family = AF_INET;
+                pcudp_get_lport(pc, listenport)->backend_socket->sin_port = htons(pcudp_get_lport(pc, listenport)->backendport);
+                //pcudp_get_lport(pc, listenport)->backend_socket->sin_addr.s_addr = INADDR_ANY; 
+                inet_pton(AF_INET, pcudp_get_lport(pc, listenport)->backendaddr, &(pcudp_get_lport(pc, listenport)->backend_socket->sin_addr));
+
+                //XXX: Usage of sockets:
+                fprintf(stderr, "%p", pcudp_get_lport(pc, listenport)->backend_socket);
+                sendto(pcudp_get_lport(pc, listenport)->client_socket_fd, "Hello", strlen("Hello"), 
+                    MSG_CONFIRM,
+                    (const struct sockaddr *) pcudp_get_lport(pc, listenport)->backend_socket,  
+                    sizeof( *pcudp_get_lport(pc, listenport)->backend_socket ));
+                
+            }
+        }
+        */
+
         fprintf(stderr, "%s Starting with hostaddress %s, bufsize is %d Byte...\n", log_time, hostaddr, bufsize);
 
         //Variables
@@ -144,7 +192,7 @@ int main(int argc, char *argv[])
         socklen_t addr_len = sizeof(addr);
         unsigned char* buffer = 0;
         int listenfd = CHECK(socket(AF_INET, SOCK_RAW, IPPROTO_UDP), != -1); //create socket filedescriptor
-        // if process is running as root, drop privileges
+        // if process is running as root, drop privileges //TODO: What about proxy?
         if (getuid() == 0) {
             fprintf(stderr, "%s Droping priviliges to user %s...", log_time, user.name);
             get_user_ids(&user); //Get traget user UDI + GID
@@ -168,21 +216,13 @@ int main(int argc, char *argv[])
                 memset(buffer ,0 , bufsize + 1); //zeroize buffer
                 int recv_len = CHECK(recvfrom(listenfd, buffer, bufsize , 0, (struct sockaddr *) &trgaddr, &trgaddr_len), != -1); //Accept Incoming data
 
-                //Begin new global JSON output and open new JSON
-                json_do(1, "{\"origin\": \"MADCAT\", ");
                 //parse buffer, log, fetch datagram, do stuff...
                 long int data_bytes = worker_udp(buffer, recv_len, hostaddr ,data_path);
                 if(data_bytes >= 0) //if nothing went wrong...                         
                 {
-                    //Analyse IP & TCP Headers and concat to global JSON
-                    json_do(0, ", \"bytes_toserver\": %ld}", data_bytes);
-                    analyze_ip_header(buffer, recv_len);
-                    analyze_udp_header(buffer, recv_len);
-                    json_do(0, "}\n"); //close JSON object
-                    fprintf(stdout,"%s\n", json_do(0,"")); //print json output for logging and further analysis
+//XXX                    //fprintf(stdout,"%s\n", json_do(0,"")); //print json output for logging and further analysis
                     fflush(stdout);
                 }
-                free(json_do(0,""));
         }
 
         return 0;

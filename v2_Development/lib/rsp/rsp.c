@@ -52,7 +52,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 
 #include "rsp.h"
 
-int rsp(struct proxy_conf_node_t *pcn, char* server_addr)
+int rsp(struct proxy_conf_tcp_node_t *pcn, char* server_addr)
 {
     // Adresses / Ports / JSON data structure globally defined for easy access while logging.
     

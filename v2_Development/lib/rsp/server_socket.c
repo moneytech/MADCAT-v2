@@ -167,7 +167,7 @@ struct proxy_data*  handle_client_connection(int client_socket_fd,
     char* port_ptr = local_address.sa_data;
     char* ip_ptr = (char*) &(local_address.sa_data) + 2;
     proxy_sock.client_port = ((uint8_t) (*port_ptr)) * 256 + ((uint8_t) (*(port_ptr+1)));
-    //proxy_sock.client_addr = inttoa(*(uint32_t*)ip_ptr);
+    proxy_sock.client_addr = inttoa(*(uint32_t*)ip_ptr);
     
     jd_get(jd, (long long unsigned int) proxy->client)->proxy_ip = inttoa(*(uint32_t*)ip_ptr);
     jd_get(jd, (long long unsigned int) proxy->client)->proxy_port = proxy_sock.client_port;
@@ -287,14 +287,14 @@ int create_and_bind(char* hostaddr, char* server_port_str)
 
     /* What the hell... must have been very tired when I wrote that...
     //Drop Priviliges, if remote ports is above 1023 and thus do not needs root privliges for backend connection
-    if(pc_get_pid(pc, getpid())->backendport < 1023 )
+    if(pctcp_get_pid(pc, getpid())->backendport < 1023 )
     {
-        fprintf(stderr, "%s [PID %d] Proxy: Priviliges CAN be dropped (backend port %d is above 1023), thus", log_time, getpid(), pc_get_lport(pc, server_port)->backendport);
+        fprintf(stderr, "%s [PID %d] Proxy: Priviliges CAN be dropped (backend port %d is above 1023), thus", log_time, getpid(), pctcp_get_lport(pc, server_port)->backendport);
         drop_root_privs(user, "");
     }
     else
     {
-        fprintf(stderr, "%s [PID %d] Proxy: Priviliges CAN NOT be dropped (backend port %d is below 1024), thus running as root\n", log_time, getpid(), pc_get_lport(pc, server_port)->backendport);
+        fprintf(stderr, "%s [PID %d] Proxy: Priviliges CAN NOT be dropped (backend port %d is below 1024), thus running as root\n", log_time, getpid(), pctcp_get_lport(pc, server_port)->backendport);
     }
     fflush(stderr);
     */

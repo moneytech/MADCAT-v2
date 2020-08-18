@@ -31,5 +31,6 @@ lib/CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.worker.c.o
  ../include/udp_ip_port_mon.h
  ../include/udp_ip_port_mon.helper.h
  ../include/udp_ip_port_mon.icmp_mon.helper.h
+ ../include/udp_ip_port_mon.parser.h
  ../include/udp_ip_port_mon.worker.h
  /home/MADCAT/MADCAT-v2/v2_Development/lib/udp_ip_port_mon.worker.c

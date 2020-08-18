@@ -173,7 +173,6 @@ int main(int argc, char *argv[])
                     fprintf(stdout,"%s\n", json_do(0, ""));
                     fflush(stdout);
                 }
-                free(json_do(0, ""));
         }
         return 0;
 }

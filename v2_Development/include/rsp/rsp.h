@@ -79,6 +79,6 @@ struct proxy_socket_t { //Adresses and ports globally defined for easy access fo
     u_int16_t client_port;
 } proxy_sock;
 
-int rsp(struct proxy_conf_node_t* pcn, char* server_addr);
+int rsp(struct proxy_conf_tcp_node_t* pcn, char* server_addr);
 
 #endif

@@ -153,8 +153,5 @@ jd_get(jd, id)->backend_port\
     fflush(stdout);
     //Remove and thereby free list element with id "id"
     jd_del(jd, id);
-    //free json
-    free(json_do(false, ""));
-
     return;
 }

@@ -35,8 +35,8 @@
 --
 
 interface = "lo" --interface to listen on
-hostaddress = "127.1.1.1" --address to listen on
-listening_port = "555" --TCP-Port to listen on
+hostaddress = "192.168.2.199" --address to listen on
+listening_port = "65535" --TCP-Port to listen on
 connection_timeout = "10" --Timout for TCP-Connections
 user = "hf" --user to drop privileges to.
 --Paths for Files containing Payload: Must end with trailing "/", will be handled as prefix otherwise.
@@ -52,4 +52,9 @@ tcpproxy = { -- [<listen port>] = { "<backend IP>", <backend Port> },
             [2222] = { "192.168.2.198", 222 },
             [80]   = { "192.168.2.198", 8080 },
             [64000]   = { "192.168.2.198", 64000 },
+           }
+--UDP Proxy configuration
+udpproxy_tobackend_addr = "192.168.2.199" --Address used to communicate with proxy backends
+udpproxy = { -- [<listen port>] = { "<backend IP>", <backend Port> },
+            [64000]   = { "192.168.2.50", 64000 },
            }

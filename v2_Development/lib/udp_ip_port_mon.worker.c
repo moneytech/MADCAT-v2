@@ -55,10 +55,15 @@ int worker_udp(unsigned char* buffer, int recv_len, char* hostaddress , char* da
         char file_name[2*PATH_LEN] = ""; //double path length for concatination purposes. PATH_LEN *MUST* be enforced when combinating path and filename!
         struct timeval begin;
         char log_time[64] = "";
+        char log_time_unix[64] ="";
         char stop_time[64] = "";
+        char stop_time_unix[64] = "";
         //beginning time
         //gettimeofday(&begin , NULL); //Get current time and...
-        time_str(NULL, 0, log_time, sizeof(log_time)); //...generate string with current time
+        time_str(log_time_unix, sizeof(log_time_unix), log_time, sizeof(log_time)); //...generate string with current time
+        //Proxy connection ID
+        uint_least64_t id = 0;
+        struct udpcon_data_node_t* uc_con = 0; //Active proxy connection matching this ID, will be 0 if none matches
 
         if (recv_len < 28) //Minimum 20 Byte IP Header + 8 Byte UDP Header. Should never happen.
         {
@@ -74,51 +79,176 @@ int worker_udp(unsigned char* buffer, int recv_len, char* hostaddress , char* da
         //Fetch IPs and convert them to strings.
         ipv4udp.src_ip = *(uint32_t*) (buffer+12);
         ipv4udp.src_ip_str = inttoa(ipv4udp.src_ip);
-        ipv4udp.dst_ip = *(uint32_t*) (buffer+16);
-        ipv4udp.dst_ip_str = inttoa(ipv4udp.dst_ip);
-        //Ignore Pakets, that have not been addressed to the IP given by the command line
-        if(strcmp(ipv4udp.dst_ip_str, hostaddress) != 0 && strcmp("0.0.0.0", hostaddress) !=0)
-        {
-            //fprintf(stderr, "Received packet for %s, instead of %s Returning from child.\n", ipv4udp.dst_ip_str, hostaddress);
-            free(ipv4udp.src_ip_str);
-            free(ipv4udp.dst_ip_str);
-            return -1;
-        }
+        ipv4udp.dest_ip = *(uint32_t*) (buffer+16);
+        ipv4udp.dest_ip_str = inttoa(ipv4udp.dest_ip);
+
         //Things that should never ever happen.
         if( ipv4udp.type != 4 || ipv4udp.ihl < 20 || ipv4udp.ihl > 60 || (ipv4udp.ihl + UDP_HEADER_LEN) > recv_len  || ipv4udp.proto != 17 ) 
         {
             fprintf(stderr, "%s ALERT: Malformed Paket. Dumping %d Bytes of data:\n", log_time, recv_len);
             print_hex(stderr, buffer, recv_len);
             free(ipv4udp.src_ip_str);
-            free(ipv4udp.dst_ip_str);
+            free(ipv4udp.dest_ip_str);
             return -1;
         }
         //Fetch ports by using the value from IP Header Length-Field, which has been check by the if statement above, so it should be save to use for addressing
         ipv4udp.src_port = ntohs(*(uint16_t*) (buffer + ipv4udp.ihl));
-        ipv4udp.dst_port = ntohs(*(uint16_t*) (buffer + ipv4udp.ihl + sizeof(uint16_t)));
+        ipv4udp.dest_port = ntohs(*(uint16_t*) (buffer + ipv4udp.ihl + sizeof(uint16_t)));
         ipv4udp.data_len = recv_len - (ipv4udp.ihl + UDP_HEADER_LEN);
         ipv4udp.data = buffer + ipv4udp.ihl + UDP_HEADER_LEN;
-        //Log connection
-        fprintf(stderr, "%s Received packet from %s:%u to %s:%u with %d Bytes of DATA.\n", log_time, \
-ipv4udp.src_ip_str, ipv4udp.src_port, ipv4udp.dst_ip_str, ipv4udp.dst_port, ipv4udp.data_len);
-        
-        if(ipv4udp.data_len > 0) //if some date has been received, save the content of the datagram in a file
+
+        id = uc_genid(ipv4udp.src_ip_str, ipv4udp.src_port, ipv4udp.dest_ip_str, ipv4udp.dest_port); //Proxy connection ID
+        uc_con = uc_get(uc, id); //Active proxy connection matching this ID, will be 0 if none matches
+
+        //Ignore Pakets, that have not been addressed to an IP given by config (host or proxy backend)
+        //if(strcmp(ipv4udp.dest_ip_str, hostaddress) != 0 && strcmp("0.0.0.0", hostaddress) !=0 && uc_con == 0)
+        if(strcmp(ipv4udp.dest_ip_str, hostaddress) != 0 && strcmp("0.0.0.0", hostaddress) !=0 && uc_con == 0 && strcmp("192.168.2.131", hostaddress) && strcmp("192.168.2.50", hostaddress))
         {
-                    //Generate filename LinuxTimeStamp-milisecends_destinationAddress-destinationPort_sourceAddress-sourcePort.tpm
-                    sprintf(file_name, "%s%s_%s-%u_%s-%u.upm", data_path, log_time, ipv4udp.dst_ip_str, ipv4udp.dst_port, ipv4udp.src_ip_str, ipv4udp.src_port);
-                    file_name[PATH_LEN-1] = 0; //Enforcing PATH_LEN
-                    file = fopen(file_name,"wb"); //Open File
-                    //Write when -and only WHEN - nothing went wrong data to file
-                    if (file != 0) {
-                        fprintf(stderr, "%s FILENAME: %s\n", log_time, file_name);
-                        fwrite(ipv4udp.data, ipv4udp.data_len, 1, file);
-                        CHECK(fflush(file), == 0);
-                        fclose(file);
-                    }
-                    else 
-                    { //if somthing went wrong, log it.
-                        fprintf(stderr, "%s ERROR: Could not write to file %s\n", log_time, file_name);
-                    }
+            //fprintf(stderr, "Received packet for %s, instead of %s Returning from worker.\n", ipv4udp.dest_ip_str, hostaddress);
+            free(ipv4udp.src_ip_str);
+            free(ipv4udp.dest_ip_str);
+            return -1;
+        }
+
+        //Log connection
+        fprintf(stderr, "\nID GENERATION: src: %s:%d dest:%s:%d id: %jx\n",\
+            ipv4udp.src_ip_str, ipv4udp.src_port, ipv4udp.dest_ip_str, ipv4udp.dest_port, id);
+
+        fprintf(stderr, "%s Received packet from %s:%u to %s:%u with %d Bytes of DATA.\n", log_time, \
+            ipv4udp.src_ip_str, ipv4udp.src_port, ipv4udp.dest_ip_str, ipv4udp.dest_port, ipv4udp.data_len);
+
+        if(pc->portmap[ipv4udp.dest_port] || uc_con != 0) //if proxy is active for this port or active proxy connection to backend exists //TODO
+        {
+            fprintf(stderr, "\nProxy exists: src: %s:%d dest:%s:%d id: %jx\n",\
+                    ipv4udp.src_ip_str, ipv4udp.src_port, ipv4udp.dest_ip_str, ipv4udp.dest_port, id);
+            struct proxy_conf_udp_node_t* pc_con = pcudp_get_lport(pc, ipv4udp.dest_port); //get proxy configuration for this connection
+            if(uc_con == 0 ) //if connection does not exist, make new connection to backend
+            {
+                fprintf(stderr, "Connection does not exists\n");
+                
+                uc_con = uc_push(uc, id);
+                
+                //Fill udpcon node structure with data
+                uc_con->src_ip = strncpy(malloc(strlen(ipv4udp.src_ip_str +1 )), ipv4udp.src_ip_str, strlen(ipv4udp.src_ip_str) +1 );
+                uc_con->src_port = ipv4udp.src_port;
+                uc_con->dest_ip =  strncpy(malloc(strlen(ipv4udp.dest_ip_str +1 )), ipv4udp.dest_ip_str, strlen(ipv4udp.dest_ip_str) +1 );
+                uc_con->dest_port =  ipv4udp.dest_port;
+                uc_con->timestamp =  strncpy(malloc(strlen(log_time_unix +1 )), log_time_unix, strlen(log_time_unix) +1 );
+                uc_con->unixtime =  atoi(log_time_unix);
+                uc_con->start =  strncpy(malloc(strlen(log_time_unix +1 )), log_time_unix, strlen(log_time_unix) +1 );
+                uc_con->end =  strncpy(malloc(strlen(log_time_unix +1 )), log_time_unix, strlen(log_time_unix) +1 );
+                uc_con->last_seen =  atoi(log_time_unix);
+                uc_con->bytes_toserver =  ipv4udp.data_len;
+                uc_con->bytes_toclient =  0;
+
+                uc_con->backend_ip =  strncpy(malloc(strlen(pc_con->backendaddr) +1 ), pc_con->backendaddr, strlen(pc_con->backendaddr) +1 );
+                uc_con->backend_port =  pc_con->backendport;
+                uc_con->proxy_ip =  strncpy(malloc(strlen(ipv4udp.src_ip_str +1 )), ipv4udp.src_ip_str, strlen(ipv4udp.src_ip_str) +1 );
+                uc_con->proxy_port =  ipv4udp.src_port;
+                
+                //Make socket towards backend
+                uc_con->backend_socket = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
+                if ( (uc_con->backend_socket_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0 )
+                { 
+                  fprintf(stderr, "Proxy backend socket creation failed");
+                  exit(1); 
+                }
+                memset(uc_con->backend_socket, 0, sizeof(uc_con->backend_socket)); 
+      
+                // Filling backend server information 
+                uc_con->backend_socket->sin_family = AF_INET;
+                uc_con->backend_socket->sin_port = htons(uc_con->backend_port);
+                //uc_con->backend_socket->sin_addr.s_addr = INADDR_ANY; 
+                inet_pton(AF_INET, uc_con->backend_ip, &(uc_con->backend_socket->sin_addr));
+
+                //Send received data to backend via backend-socket:
+                sendto(uc_con->backend_socket_fd, ipv4udp.data, ipv4udp.data_len, 
+                    MSG_CONFIRM,
+                    (const struct sockaddr *) uc_con->backend_socket,  
+                    sizeof( *uc_con->backend_socket ));
+
+                //Get local proxy-client port for backend ID
+                struct sockaddr local_address;
+                int addr_size = sizeof(local_address);
+                getsockname(uc_con->backend_socket_fd, &local_address, &addr_size);
+                char* port_ptr = local_address.sa_data;
+
+                // Get backend ID
+                uc_con->id_tobackend = uc_genid(pc->proxy_ip, ((uint8_t) (*port_ptr)) * 256 + ((uint8_t) (*(port_ptr+1))), uc_con->backend_ip, uc_con->backend_port);
+                fprintf(stderr, "\nBACKEND ID GENERATION: src: %s:%d dest:%s:%d id: %jx\n",\
+                    uc_con->proxy_ip, uc_con->proxy_port, uc_con->backend_ip, uc_con->backend_port, uc_con->id_tobackend);
+
+                //Make socket towards client
+                uc_con->client_socket = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
+                if ( (uc_con->client_socket_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0 )
+                { 
+                fprintf(stderr, "Proxy client socket creation failed");
+                exit(1); 
+                }
+                memset(uc_con->client_socket, 0, sizeof(uc_con->client_socket)); 
+
+                //Filling proxy-to-client information
+                uc_con->client_socket->sin_family = AF_INET;
+                uc_con->client_socket->sin_addr.s_addr = inet_addr(uc_con->proxy_ip); //destination IP for incoming packets
+                uc_con->client_socket->sin_port = htons(uc_con->proxy_port); //destination port for incoming packets
+
+                struct sockaddr_in cliaddr;
+                cliaddr.sin_family = AF_INET;
+                cliaddr.sin_addr.s_addr= htonl(INADDR_ANY);
+                cliaddr.sin_port=htons(uc_con->dest_port); //source port for outgoing packets
+                CHECK(bind(uc_con->client_socket_fd,(struct sockaddr *)&cliaddr,sizeof(cliaddr)), == 0);
+
+                //fprintf(stderr, "\n########### PROXY: IP %s, PORT %d\n\n", uc_con->proxy_ip, uc_con->proxy_port); //XXX
+            }
+            else //if connection exists...
+            {
+                fprintf(stderr, "Connection exists\n");
+                if (uc_con->id_fromclient == id ) //...and connections comes from client, forward it to backend
+                {
+                    fprintf(stderr, "Connection from client\n");
+                    //Send received data to backend via backend-socket:
+                    sendto(uc_con->backend_socket_fd, ipv4udp.data, ipv4udp.data_len, 
+                    MSG_CONFIRM,
+                    (const struct sockaddr *) uc_con->backend_socket,  
+                    sizeof( *uc_con->backend_socket ));
+
+                    uc_con->end =  strncpy(malloc(strlen(log_time_unix +1 )), log_time_unix, strlen(log_time_unix) +1 );
+                    uc_con->last_seen =  atoi(log_time_unix);
+                }
+
+                if (uc_con->id_tobackend == id ) //...and connections comes from backend, forward it to client
+                {
+                    fprintf(stderr, "Connection from backend\n");
+                    //Send received data to client via client-socket:
+                    sendto(uc_con->client_socket_fd, ipv4udp.data, ipv4udp.data_len, 
+                        MSG_CONFIRM,
+                        (const struct sockaddr *) uc_con->client_socket,  
+                        sizeof( *uc_con->client_socket ));
+                    
+                    uc_con->end =  strncpy(malloc(strlen(log_time_unix +1 )), log_time_unix, strlen(log_time_unix) +1 );
+                    uc_con->last_seen =  atoi(log_time_unix);                    
+                }
+                
+            }
+            
+        }
+        else if(ipv4udp.data_len > 0) //if destination port is not configured for proxy and some data has been received, save the content of the datagram in a file
+        {
+            //Generate filename LinuxTimeStamp-milisecends_destinationAddress-destinationPort_sourceAddress-sourcePort.tpm
+            sprintf(file_name, "%s%s_%s-%u_%s-%u.upm", data_path, log_time, ipv4udp.dest_ip_str, ipv4udp.dest_port, ipv4udp.src_ip_str, ipv4udp.src_port);
+            file_name[PATH_LEN-1] = 0; //Enforcing PATH_LEN
+            file = fopen(file_name,"wb"); //Open File
+            //Write when -and only WHEN - nothing went wrong data to file
+            if (file != 0) {
+                fprintf(stderr, "%s FILENAME: %s\n", log_time, file_name);
+                fwrite(ipv4udp.data, ipv4udp.data_len, 1, file);
+                CHECK(fflush(file), == 0);
+                fclose(file);
+            }
+            else 
+            { //if somthing went wrong, log it.
+                fprintf(stderr, "%s ERROR: Could not write to file %s\n", log_time, file_name);
+            }
         }
 
         //Get current time and...
@@ -129,11 +259,13 @@ ipv4udp.src_ip_str, ipv4udp.src_port, ipv4udp.dst_ip_str, ipv4udp.dst_port, ipv4
         //Make HexDump output out of binary payload
         payload_hd_str = hex_dump(ipv4udp.data, ipv4udp.data_len, true); //Do not forget to free! 
         payload_str = print_hex_string(ipv4udp.data, ipv4udp.data_len); //Do not forget to free!
+        //Begin new global JSON output and open new JSON
         //Log connection to STDOUT in json-format (Suricata-like)
-        json_do(0, "\
+        json_do(true, "{\"origin\": \"MADCAT\", \
 \"src_ip\": \"%s\", \
 \"dest_port\": %d, \
 \"timestamp\": \"%s\", \
+\"unixtime\": %s, \
 \"dest_ip\": \"%s\", \
 \"src_port\": %d, \
 \"proto\": \"UDP\", \
@@ -144,10 +276,12 @@ ipv4udp.src_ip_str, ipv4udp.src_port, ipv4udp.dst_ip_str, ipv4udp.dst_port, ipv4
 \"payload_hd\": \"%s\",\
 \"payload_str\": \"%s\",\
 \"payload_sha1\": \"%s\"\
-", ipv4udp.src_ip_str,\
-ipv4udp.dst_port,\
+",\
+ipv4udp.src_ip_str,\
+ipv4udp.dest_port,\
 log_time,\
-ipv4udp.dst_ip_str,\
+log_time_unix,\
+ipv4udp.dest_ip_str,\
 ipv4udp.src_port,\
 log_time,\
 stop_time,\
@@ -155,9 +289,15 @@ payload_hd_str,\
 payload_str,\
 payload_sha1_str);
 
+        //Analyse IP & TCP Headers and concat to global JSON
+        json_do(0, ", \"bytes_toserver\": %ld}", ipv4udp.data_len);
+        analyze_ip_header(buffer, recv_len);
+        analyze_udp_header(buffer, recv_len);
+        json_do(0, "}\n"); //close JSON object
+
         //free str allocated by strndup() in function char *inttoa(uint32_t i_addr)
         free(ipv4udp.src_ip_str);
-        free(ipv4udp.dst_ip_str);
+        free(ipv4udp.dest_ip_str);
         free(payload_sha1_str);
         free(payload_str);
         free(payload_hd_str);

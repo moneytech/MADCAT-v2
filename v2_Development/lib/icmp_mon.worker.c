@@ -76,14 +76,14 @@ int worker_icmp(unsigned char* buffer, int recv_len, char* hostaddress , char* d
         //Fetch IPs and convert them to strings.
         ipv4icmp.src_ip = *(uint32_t*) (buffer+12);
         ipv4icmp.src_ip_str = inttoa(ipv4icmp.src_ip);
-        ipv4icmp.dst_ip = *(uint32_t*) (buffer+16);
-        ipv4icmp.dst_ip_str = inttoa(ipv4icmp.dst_ip);
+        ipv4icmp.dest_ip = *(uint32_t*) (buffer+16);
+        ipv4icmp.dest_ip_str = inttoa(ipv4icmp.dest_ip);
         //Ignore Pakets, that have not been addressed to the IP given by the command line
-        if(strcmp(ipv4icmp.dst_ip_str, hostaddress) != 0 && strcmp("0.0.0.0", hostaddress) !=0)
+        if(strcmp(ipv4icmp.dest_ip_str, hostaddress) != 0 && strcmp("0.0.0.0", hostaddress) !=0)
         {
-            //fprintf(stderr, "Received packet for %s, instead of %s Returning.\n", ipv4icmp.dst_ip_str, hostaddress);
+            //fprintf(stderr, "Received packet for %s, instead of %s Returning.\n", ipv4icmp.dest_ip_str, hostaddress);
             free(ipv4icmp.src_ip_str);
-            free(ipv4icmp.dst_ip_str);
+            free(ipv4icmp.dest_ip_str);
             return -1;
         }
         //Things that should never ever happen.
@@ -92,7 +92,7 @@ int worker_icmp(unsigned char* buffer, int recv_len, char* hostaddress , char* d
             fprintf(stderr, "%s ALERT: Malformed Paket. Dumping %d Bytes of data:\n", log_time, recv_len);
             print_hex(stderr, buffer, recv_len);
             free(ipv4icmp.src_ip_str);
-            free(ipv4icmp.dst_ip_str);
+            free(ipv4icmp.dest_ip_str);
             return -1;
         }
 
@@ -108,7 +108,7 @@ int worker_icmp(unsigned char* buffer, int recv_len, char* hostaddress , char* d
         //print_hex(stderr, buffer, recv_len); //Debug
         //Log connection
         fprintf(stderr, "%s Received packet from %s to %s, type %u, code %u, with %ld Bytes of DATA.\n", log_time, \
-ipv4icmp.src_ip_str, ipv4icmp.dst_ip_str, ipv4icmp.type, ipv4icmp.code, ipv4icmp.data_len);
+ipv4icmp.src_ip_str, ipv4icmp.dest_ip_str, ipv4icmp.type, ipv4icmp.code, ipv4icmp.data_len);
         //Compute SHA1 of payload
         SHA1(ipv4icmp.data, ipv4icmp.data_len, payload_sha1);
         payload_sha1_str = print_hex_string(payload_sha1, SHA_DIGEST_LENGTH);
@@ -128,7 +128,7 @@ ipv4icmp.src_ip_str, ipv4icmp.dst_ip_str, ipv4icmp.type, ipv4icmp.code, ipv4icmp
 \"event_type\": \"flow\"", \
 log_time, \
 ipv4icmp.src_ip_str, \
-ipv4icmp.dst_ip_str, \
+ipv4icmp.dest_ip_str, \
 ipv4icmp.type, \
 ipv4icmp.code);
 
@@ -327,7 +327,7 @@ ntohs(*(uint16_t*) (ipv4icmp.icmp_hdr + 3*sizeof(uint16_t))));
         if(ipv4icmp.data_len - data_offset > 0 || tainted) //data_offset is left = 0 if tainted
         {
                     //Generate filename LinuxTimeStamp-milisecends_destinationAddress-destinationPort_sourceAddress-sourcePort.tpm
-                    sprintf(file_name, "%s%s_%s_%s-%u_%u.ipm", data_path, log_time, ipv4icmp.dst_ip_str, ipv4icmp.src_ip_str, ipv4icmp.type, ipv4icmp.code);
+                    sprintf(file_name, "%s%s_%s_%s-%u_%u.ipm", data_path, log_time, ipv4icmp.dest_ip_str, ipv4icmp.src_ip_str, ipv4icmp.type, ipv4icmp.code);
                     file_name[PATH_LEN-1] = 0; //Enforcing PATH_LEN
                     file = fopen(file_name,"wb"); //Open File
                     //Write when -and only WHEN - nothing went wrong data to file
@@ -366,7 +366,7 @@ payload_str,\
 payload_sha1_str);
         //free str allocated by strndup() in function char *inttoa(uint32_t) and char *print_hex_string(const unsigned char*, unsigned int)
         free(ipv4icmp.src_ip_str);
-        free(ipv4icmp.dst_ip_str);
+        free(ipv4icmp.dest_ip_str);
         free(payload_hd_str);
         free(payload_str);
         free(payload_sha1_str);
