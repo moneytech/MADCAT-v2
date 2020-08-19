@@ -49,7 +49,7 @@ void* saved_buffer(void * buffer)
     return saved_buffer;
 }
 
-//Signal Handler for gracefull shutdown
+//Generic Signal Handler for gracefull shutdown
 void sig_handler(int signo)
 {
     char stop_time[64] = ""; //Human readable stop time (actual time zone)

@@ -38,7 +38,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include "madcat.common.h"
 
 #define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nICMP Monitor v2.0 alpha-0\nHeiko Folkerts, BSI 2018-2020\n"
-#define PATH_LEN 256
+
 #define ICMP_HEADER_LEN 8
 #define UDP_HEADER_LEN 8
 #define IP_OR_TCP_HEADER_MINLEN 20 // Minimum Length of an IP-Header or a TCP-Header is 20 Bytes

@@ -37,7 +37,6 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #define UDP_IP_PORT_MON_WORKER_H
 
 #include "udp_ip_port_mon.h"
-#include "udp_ip_port_mon.parser.h"
 
 //Connection worker:
 int worker_udp(unsigned char* buffer, int recv_len, char* hostaddress , char* data_path);

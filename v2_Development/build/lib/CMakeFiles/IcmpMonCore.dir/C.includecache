@@ -89,6 +89,8 @@ sys/wait.h
 -
 sys/prctl.h
 -
+pthread.h
+-
 
 ../include/madcat.helper.h
 madcat.common.h
@@ -119,6 +121,10 @@ icmp_mon.helper.h
 /home/MADCAT/MADCAT-v2/v2_Development/lib/icmp_mon.helper.h
 icmp_mon.parser.h
 /home/MADCAT/MADCAT-v2/v2_Development/lib/icmp_mon.parser.h
+
+/home/MADCAT/MADCAT-v2/v2_Development/lib/madcat.helper.c
+madcat.helper.h
+/home/MADCAT/MADCAT-v2/v2_Development/lib/madcat.helper.h
 
 /home/MADCAT/MADCAT-v2/v2_Development/lib/udp_ip_port_mon.icmp_mon.helper.c
 udp_ip_port_mon.icmp_mon.helper.h

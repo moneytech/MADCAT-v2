@@ -116,7 +116,7 @@ ipv4icmp.src_ip_str, ipv4icmp.dest_ip_str, ipv4icmp.type, ipv4icmp.code, ipv4icm
         payload_hd_str = hex_dump(ipv4icmp.data, ipv4icmp.data_len, true);  //Do not forget to free!
         payload_str = print_hex_string(ipv4icmp.data, ipv4icmp.data_len); //Do not forget to free!
         //Open new JSON and log connection to STDOUT in json-format (Suricata-like)
-        json_do(0, "\
+        json_do(false, "\
 {\
 \"origin\": \"MADCAT\", \
 \"timestamp\": \"%s\", \
@@ -148,7 +148,7 @@ ipv4icmp.code);
         //Analyze IP Header
         analyze_ip_header(buffer, recv_len);
         //Analyze ICMP Header
-        json_do(0, ", \"icmp\": {\
+        json_do(false, ", \"icmp\": {\
 \"type\": %d, \
 \"code\": %d, \
 \"checksum\": \"0x%04x\"", \
@@ -159,76 +159,76 @@ ipv4icmp.icmp_check);
         switch(ipv4icmp.type)
         {
             case MY_ICMP_ECHOREPLY: //print type_str, identifier and sequence
-                json_do(0, ", \"type_str\": \"echoreply\", \
+                json_do(false, ", \"type_str\": \"echoreply\", \
 \"id\": \"0x%04x\", \
 \"seq\": %d", \
 ntohs(*(uint16_t*) (ipv4icmp.icmp_hdr + 2*sizeof(uint16_t))), \
 ntohs(*(uint16_t*) (ipv4icmp.icmp_hdr + 3*sizeof(uint16_t))));
                 break;
             case MY_ICMP_ECHO:  //print type_str, identifier and sequence
-                json_do(0, ", \"type_str\": \"echo\", \
+                json_do(false, ", \"type_str\": \"echo\", \
 \"id\": \"0x%04x\", \
 \"seq\": %d", \
 ntohs(*(uint16_t*) (ipv4icmp.icmp_hdr + 2*sizeof(uint16_t))), \
 ntohs(*(uint16_t*) (ipv4icmp.icmp_hdr + 3*sizeof(uint16_t))));
                 break;
             case MY_ICMP_UNREACH:
-                json_do(0, ", \
+                json_do(false, ", \
 \"type_str\": \"unreach\", \
 \"unused\": \"%08x\"", \
 *(uint32_t*) (ipv4icmp.icmp_hdr + 2*sizeof(uint16_t)));
                 switch(ipv4icmp.code)
                 {
                     case MY_ICMP_NET_UNREACH:
-                        json_do(0, ", \"code_str\": \"net_unreach\"");
+                        json_do(false, ", \"code_str\": \"net_unreach\"");
                         break;
                     case MY_ICMP_HOST_UNREACH:
-                        json_do(0, ", \"code_str\": \"host_unreach\"");
+                        json_do(false, ", \"code_str\": \"host_unreach\"");
                         break;
                     case MY_ICMP_PROT_UNREACH:
-                        json_do(0, ", \"code_str\": \"prot_unreach\"");
+                        json_do(false, ", \"code_str\": \"prot_unreach\"");
                         break;
                     case MY_ICMP_PORT_UNREACH:
-                        json_do(0, ", \"code_str\": \"port_unreach\"");
+                        json_do(false, ", \"code_str\": \"port_unreach\"");
                         break;
                     case MY_ICMP_FRAG_NEEDED:
-                        json_do(0, ", \"code_str\": \"frag_needed\"");
+                        json_do(false, ", \"code_str\": \"frag_needed\"");
                         break;
                     case MY_ICMP_SR_FAILED:
-                        json_do(0, ", \"code_str\": \"sr_failed\"");
+                        json_do(false, ", \"code_str\": \"sr_failed\"");
                         break;
                     case MY_ICMP_NET_UNKNOWN:
-                        json_do(0, ", \"code_str\": \"net_unknown\"");
+                        json_do(false, ", \"code_str\": \"net_unknown\"");
                         break;
                     case MY_ICMP_HOST_UNKNOWN:
-                        json_do(0, ", \"code_str\": \"host_unknown\"");
+                        json_do(false, ", \"code_str\": \"host_unknown\"");
                         break;
                     case MY_ICMP_HOST_ISOLATED:
-                        json_do(0, ", \"code_str\": \"host_isolated\"");
+                        json_do(false, ", \"code_str\": \"host_isolated\"");
                         break;
                     case MY_ICMP_NET_ANO:
-                        json_do(0, ", \"code_str\": \"net_ano\"");
+                        json_do(false, ", \"code_str\": \"net_ano\"");
                         break;
                     case MY_ICMP_HOST_ANO:
-                        json_do(0, ", \"code_str\": \"host_ano\"");
+                        json_do(false, ", \"code_str\": \"host_ano\"");
                         break;
                     case MY_ICMP_NET_UNR_TOS:
-                        json_do(0, ", \"code_str\": \"net_unr_tos\"");
+                        json_do(false, ", \"code_str\": \"net_unr_tos\"");
                         break;
                     case MY_ICMP_HOST_UNR_TOS:
-                        json_do(0, ", \"code_str\": \"host_unr_tos\"");
+                        json_do(false, ", \"code_str\": \"host_unr_tos\"");
                         break;
                     case MY_ICMP_PKT_FILTERED:
-                        json_do(0, ", \"code_str\": \"pkt_filtered\"");
+                        json_do(false, ", \"code_str\": \"pkt_filtered\"");
                         break;
                     case MY_ICMP_PREC_VIOLATION:
-                        json_do(0, ", \"code_str\": \"prec_vioalation\"");
+                        json_do(false, ", \"code_str\": \"prec_vioalation\"");
                         break;
                     case MY_ICMP_PREC_CUTOFF:
-                        json_do(0, ", \"code_str\": \"prec_cutoff\"");
+                        json_do(false, ", \"code_str\": \"prec_cutoff\"");
                         break;
                     default:
-                        json_do(0, ", \"code_str\": \"tainted/unkown\"");
+                        json_do(false, ", \"code_str\": \"tainted/unkown\"");
                         tainted = true;
                         break;
                 } //End of switch(ipv4icmp.code)
@@ -268,55 +268,55 @@ ntohs(*(uint16_t*) (ipv4icmp.icmp_hdr + 3*sizeof(uint16_t))));
                 }                           
                 break;
             case MY_ICMP_SOURCEQUENCH:
-                json_do(0, ", \"type_str\": \"sourcequench\"");
+                json_do(false, ", \"type_str\": \"sourcequench\"");
                 break;
             case MY_ICMP_REDIRECT:
-                json_do(0, ", \"type_str\": \"redirect\"");
+                json_do(false, ", \"type_str\": \"redirect\"");
                 break;
             case MY_ICMP_ALTHOST:
-                json_do(0, ", \"type_str\": \"althost\"");
+                json_do(false, ", \"type_str\": \"althost\"");
                 break;
             case MY_ICMP_RTRADVERT:
-                json_do(0, ", \"type_str\": \"rtradvert\"");
+                json_do(false, ", \"type_str\": \"rtradvert\"");
                 break;
             case MY_ICMP_RTRSOLICIT:
-                json_do(0, ", \"type_str\": \"rtrsolicit\"");
+                json_do(false, ", \"type_str\": \"rtrsolicit\"");
                 break;
             case MY_ICMP_TIMXCEED:
-                json_do(0, ", \"type_str\": \"timxceed\"");
+                json_do(false, ", \"type_str\": \"timxceed\"");
                 break;
             case MY_ICMP_PARAMPROB:
-                json_do(0, ", \"type_str\": \"paramprob\"");
+                json_do(false, ", \"type_str\": \"paramprob\"");
                 break;
             case MY_ICMP_TSTAMP:
-                json_do(0, ", \"type_str\": \"tstamp\"");
+                json_do(false, ", \"type_str\": \"tstamp\"");
                 break;
             case MY_ICMP_TSTAMPREPLY:
-                json_do(0, ", \"type_str\": \"tstampreply\"");
+                json_do(false, ", \"type_str\": \"tstampreply\"");
                 break;
             case MY_ICMP_IREQ:
-                json_do(0, ", \"type_str\": \"ireq\"");
+                json_do(false, ", \"type_str\": \"ireq\"");
                 break;
             case MY_ICMP_IREQREPLY:
-                json_do(0, ", \"type_str\": \"ireqreply\"");
+                json_do(false, ", \"type_str\": \"ireqreply\"");
                 break;
             case MY_ICMP_MASKREQ:
-                json_do(0, ", \"type_str\": \"maskreq\"");
+                json_do(false, ", \"type_str\": \"maskreq\"");
                 break;
             case MY_ICMP_MASKREPLY:
-                json_do(0, ", \"type_str\": \"maskreply\"");
+                json_do(false, ", \"type_str\": \"maskreply\"");
                 break;
             case MY_ICMP_PHOTURIS:
-                json_do(0, ", \"type_str\": \"photuris\"");
+                json_do(false, ", \"type_str\": \"photuris\"");
                 break;
             case MY_ICMP_EXTECHO:
-                json_do(0, ", \"type_str\": \"extecho\"");
+                json_do(false, ", \"type_str\": \"extecho\"");
                 break;
             case MY_ICMP_EXTECHOREPLY:
-                json_do(0, ", \"type_str\": \"extechoreply\"");
+                json_do(false, ", \"type_str\": \"extechoreply\"");
                 break;
             default:
-                json_do(0, ", \"type_str\": \"tainted/unknown\"");
+                json_do(false, ", \"type_str\": \"tainted/unknown\"");
                 tainted = true;
                 break;
         } //End of switch(ipv4icmp.type)
@@ -347,7 +347,7 @@ ntohs(*(uint16_t*) (ipv4icmp.icmp_hdr + 3*sizeof(uint16_t))));
         gettimeofday(&begin , NULL); //Get current time and...
         time_str(NULL, 0, stop_time, sizeof(stop_time)); //...generate string with current time
         //Close ICMP JSON object with tainted status and "flow" part
-        json_do(0, ", \
+        json_do(false, ", \
 \"tainted\": %s}, \
 \"flow\": {\
 \"start\": \"%s\", \

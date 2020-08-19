@@ -10,6 +10,7 @@ lib/CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.helper.c.o: ../include/madca
 lib/CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.helper.c.o: ../include/udp_ip_port_mon.h
 lib/CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.helper.c.o: ../include/udp_ip_port_mon.helper.h
 lib/CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.helper.c.o: ../include/udp_ip_port_mon.icmp_mon.helper.h
+lib/CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.helper.c.o: ../include/udp_ip_port_mon.parser.h
 lib/CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.helper.c.o: ../lib/udp_ip_port_mon.helper.c
 
 lib/CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.icmp_mon.helper.c.o: ../include/madcat.common.h
@@ -30,7 +31,6 @@ lib/CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.worker.c.o: ../include/madca
 lib/CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.worker.c.o: ../include/udp_ip_port_mon.h
 lib/CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.worker.c.o: ../include/udp_ip_port_mon.helper.h
 lib/CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.worker.c.o: ../include/udp_ip_port_mon.icmp_mon.helper.h
-lib/CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.worker.c.o: ../include/udp_ip_port_mon.parser.h
 lib/CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.worker.c.o: ../include/udp_ip_port_mon.worker.h
 lib/CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.worker.c.o: ../lib/udp_ip_port_mon.worker.c
 

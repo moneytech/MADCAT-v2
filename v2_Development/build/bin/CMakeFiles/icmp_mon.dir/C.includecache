@@ -89,6 +89,8 @@ sys/wait.h
 -
 sys/prctl.h
 -
+pthread.h
+-
 
 ../include/madcat.helper.h
 madcat.common.h

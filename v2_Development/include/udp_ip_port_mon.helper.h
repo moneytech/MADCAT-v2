@@ -42,6 +42,8 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 
 //Helper Functions:
 void print_help_udp(char* progname); //print UDP help message
+void json_out(struct udpcon_data_node_t* uc_node);
+void sig_handler_udp(int signo);
 //Helper functions for proxy configuration:
 int get_config_table(lua_State* L, char* name, struct proxy_conf_udp_t* pc); //read proxy configuration from parsed LUA-File by luaL_dofile(...). Returns number of read elements.
 struct proxy_conf_udp_t* pcudp_init(); //initialize proxy configuration
@@ -54,6 +56,7 @@ uint_least64_t uc_genid(char* src_ip, uint_least64_t src_port, char* dest_ip, ui
 struct udpcon_data_node_t* uc_push(struct udpcon_data_t* uc, uint_least64_t id);
 struct udpcon_data_node_t* uc_get(struct udpcon_data_t* uc, uint_least64_t id);
 bool uc_del(struct udpcon_data_t* uc, uint_least64_t id);
+int uc_cleanup(struct udpcon_data_t* uc, long long int timeout);
 void uc_print_list(struct udpcon_data_t* uc);
 
 #endif

@@ -49,7 +49,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nTCP-IP Port Monitor v2.0 beta-1\nHeiko Folkerts, BSI 2018-2020\n" //Version string
 
 #define CHUNK_SIZE 512 //Chunks for receiving
-#define PATH_LEN 256 //Minium of maximum path lengths of Linux common file systems
+ //Minium of maximum path lengths of Linux common file systems
 #define DEFAULT_BUFSIZE 9000 //Ethernet jumbo frame limit
 #define ETHERNET_HEADER_LEN 14 //Length of an Ethernet Header
 #define IP_OR_TCP_HEADER_MINLEN 20 // Minimum Length of an IP-Header or a TCP-Header is 20 Bytes

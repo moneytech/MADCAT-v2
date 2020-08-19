@@ -39,25 +39,12 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 
 #define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nUDP-IP Port Monitor v2.0 alpha-0\nHeiko Folkerts, BSI 2018-2020\n"
 
-#define PATH_LEN 256
+
 #define UDP_HEADER_LEN 8
 #define IP_OR_TCP_HEADER_MINLEN 20 // Minimum Length of an IP-Header or a TCP-Header is 20 Bytes
 #define DEFAULT_BUFSIZE 9000 //Ethernet jumbo frame limit
 #define ETHERNET_HEADER_LEN 14 //Length of an Ethernet Header
-
-/*
-// Macro to check if an error occured, translate it, report it to STDERR, calling shutdown callback function to exit with error and dump core.
-#define CHECK(result, check)                                                            \
-        ({                                                                 \
-                typeof(result) retval = (result);                                           \
-                if (!(retval check)) {                                                      \
-                        fprintf(stderr, "ERROR: Return value from function call '%s' is NOT %s at %s:%d.\n\tERRNO(%d): %s\n",          \
-                                        #result, #check, __FILE__, __LINE__, errno, strerror(errno)); \
-                        kill(getpid(), SIGUSR1);                                            \
-                }                                                                       \
-                retval;                                                                     \
-        })
-*/
+#define PCN_STRLEN 6 //listen- and backend-port string length in proxy_conf_udp_node_t
 
 /* IP options as definde in Wireshark*/
 //Original names cause redifinition warnings, so prefix "MY" has been added
@@ -97,6 +84,8 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #define MY_IPOPT_QS        (25|MY_IPOPT_CONTROL)                  /* RFC 4782 */
 #define MY_IPOPT_EXP       (30|MY_IPOPT_CONTROL) /* RFC 4727 */
 
+sem_t *conlistsem; //Semaphore for thread safe list operations on struct udpcon_data_t udpcon_data_t->list, used in uc_push(...) and uc_del(...).
+
 struct ipv4udp_t {
     uint8_t  type;
     uint8_t  ihl;
@@ -110,8 +99,6 @@ struct ipv4udp_t {
     void*    data;
     int      data_len;
 };
-
-#define PCN_STRLEN 6 //listen- and backport string length in proxy_conf_udp_node_t
 
 struct proxy_conf_udp_node_t //linked list element to hold proxy configuration items
 {
@@ -130,8 +117,9 @@ struct proxy_conf_udp_node_t //linked list element to hold proxy configuration i
 struct proxy_conf_udp_t { //proxy configuration
     struct proxy_conf_udp_node_t* portlist; //head pointer to linked list with proxy configuration items
     bool portmap[65536]; //map of ports used to proxy network traffic
-    int num_elemnts;
-    char proxy_ip[INET6_ADDRSTRLEN]; //Address, which is used to communicate with backends
+    int  num_elemnts;
+    char proxy_ip[INET6_ADDRSTRLEN]; //IP used to communicate with backends
+    int  proxy_timeout; //timout of UDP "Connections"
 } *pc; //globally defined to be easly accesible inside rsp-proxy to check if root priviliges can be dropped (ports <1023)
 
 struct udpcon_data_t {
@@ -148,8 +136,10 @@ struct udpcon_data_node_t {
     int backend_socket_fd;
     struct sockaddr_in* client_socket;
     int client_socket_fd;
+    struct sockaddr_in client_localport;
 
     long long int last_seen;
+    bool proxied;
     
     char* src_ip;
     int   src_port;
@@ -165,6 +155,11 @@ struct udpcon_data_node_t {
     int   proxy_port;
     char* backend_ip;
     int   backend_port;
+
+    unsigned char* payload;
+    long long unsigned int payload_len;
+    unsigned char* first_dgram;
+    long unsigned int first_dgram_len;
     
 };
 

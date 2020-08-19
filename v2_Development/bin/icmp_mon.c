@@ -165,12 +165,12 @@ int main(int argc, char *argv[])
                 memset(buffer ,0 , bufsize + 1); //zeroize buffer
                 int recv_len = CHECK(recvfrom(listenfd, buffer, bufsize , 0, (struct sockaddr *) &trgaddr, &trgaddr_len), != -1); //Accept Incoming data
 
-                json_do(1, ""); //Begin new global JSON output
+                json_do(true, ""); //Begin new global JSON output
                 //parse buffer, log, assemble JSON, parse IP/TCP/UDP headers, do stuff...
                 worker_icmp(buffer, recv_len, hostaddr ,data_path);
                  //print JSON output for logging and further analysis, if JSON-Object is not empty (happens if e.g. UDP is seen by ICMP Raw Socket)
-                if(strlen(json_do(0, "")) > 2) {
-                    fprintf(stdout,"%s\n", json_do(0, ""));
+                if(strlen(json_do(false, "")) > 2) {
+                    fprintf(stdout,"%s\n", json_do(false, ""));
                     fflush(stdout);
                 }
         }

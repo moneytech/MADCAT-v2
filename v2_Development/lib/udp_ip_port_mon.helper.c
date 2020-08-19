@@ -42,6 +42,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include "madcat.helper.h"
 #include "udp_ip_port_mon.icmp_mon.helper.h"
 #include "udp_ip_port_mon.helper.h"
+#include "udp_ip_port_mon.parser.h"
 
 void print_help_udp(char* progname) //print help message
 {
@@ -51,6 +52,14 @@ void print_help_udp(char* progname) //print help message
             \tuser = \"hf\"\n\
             \tpath_to_save_udp_data = \"./upm/\" --Must end with trailing \"/\", will be handled as prefix otherwise\n\
             \t--bufsize = \"1024\" --optional\n\
+            \t--UDP Proxy configuration\n\
+            \tudpproxy_tobackend_addr = \"192.168.2.199\" --Local address to communicate to backends with. Mandatory, if \"udpproxy\" is configured.\n\
+            \tudpproxy_connection_timeout = \"3\" --Timeout for UDP \"Connections\". Optional, but only usefull if \"udpproxy\" is configured.\n\
+            \tudpproxy = { -- [<listen port>] = { \"<backend IP>\", <backend Port> },\n\
+            \t            [64000] = { \"192.168.2.50\", 64000 },\n\
+            \t            [533]   = { \"8.8.8.8\", 53},\n\
+            \t            [534]   = { \"8.8.8.8\", 53},\n\
+            \t            }\n\
         ", progname);
 
     fprintf(stderr, "\nLEGACY SYNTAX (pre v1.1.5)t: %s hostaddress path_to_save_udp-data user [buffer_size]\n\tBuffer Size defaults to %d Bytes.\n \
@@ -59,6 +68,21 @@ Netfilter should be configured to block outgoing ICMP Destination unreachable (P
 \tiptables -I OUTPUT -p icmp --icmp-type destination-unreachable -j DROP\n\n \
 \tMust be run as root, but the priviliges will be droped to user after the socket has been opened.\n", progname, DEFAULT_BUFSIZE);
     
+    return;
+}
+
+//Signal Handler for gracefull shutdown
+void sig_handler_udp(int signo)
+{
+    char stop_time[64] = ""; //Human readable stop time (actual time zone)
+    time_str(NULL, 0, stop_time, sizeof(stop_time)); //Get Human readable string only
+    fprintf(stderr, "\n%s Received Signal %s, shutting down...\n", stop_time, strsignal(signo));
+    //close sempahore
+    CHECK(sem_close(conlistsem), == 0);
+    // Free receiving buffer
+    free(saved_buffer(0));
+    //exit parent process
+    exit(signo);
     return;
 }
 
@@ -187,12 +211,13 @@ struct udpcon_data_node_t* uc_push(struct udpcon_data_t* uc, uint_least64_t id)
     uc_node->id_tobackend = 0;
 
     
-    uc_node->backend_socket = 0;
+    uc_node->backend_socket = NULL;
     uc_node->backend_socket_fd = 0;
-    uc_node->client_socket = 0;
+    uc_node->client_socket = NULL;
     uc_node->client_socket_fd = 0;
 
     uc_node->last_seen = 0;
+    uc_node->proxied = false;
 
     uc_node->src_ip =  EMPTY_STR;
     uc_node->src_port = 0;
@@ -204,15 +229,23 @@ struct udpcon_data_node_t* uc_push(struct udpcon_data_t* uc, uint_least64_t id)
     uc_node->end =  EMPTY_STR;
     uc_node->bytes_toserver =  0;
     uc_node->bytes_toclient =  0;
-    uc_node->proxy_ip =  EMPTY_STR;
+    uc_node->proxy_ip = EMPTY_STR;
     uc_node->proxy_port =  0;
     uc_node->backend_ip =  EMPTY_STR;
     uc_node->backend_port =  0;
 
-    if(uc->list != 0) uc->list->prev=uc_node;
-    uc_node->next = uc->list;
-    uc->list = uc_node;
-    uc_node->prev = 0;
+    uc_node->payload = NULL;
+    uc_node->payload_len = 0;
+    uc_node->first_dgram = NULL;
+    uc_node->first_dgram_len = 0;
+
+    sem_wait(conlistsem); //Acquire lock
+        if(uc->list != NULL) uc->list->prev=uc_node;
+        uc_node->next = uc->list;
+        uc->list = uc_node;
+        uc_node->prev = NULL;
+    sem_post(conlistsem); //release lock
+
 
     return uc_node;
 }
@@ -225,31 +258,72 @@ struct udpcon_data_node_t* uc_get(struct udpcon_data_t* uc, uint_least64_t id)
         if(result->id_fromclient == id || result->id_tobackend == id) return result;
         result = result->next;
     }
-    return 0;
+    return result;
 }
 
 bool uc_del(struct udpcon_data_t* uc, uint_least64_t id)
 {
-    struct udpcon_data_node_t* uc_node = uc_get(uc, id);
-    if (uc_node == 0) return false;
+    //fprintf(stderr, "*** DEBUG [PID %d] Acquire lock for uc_del...\n", getpid()); fflush(stderr);
+    sem_wait(conlistsem); //Acquire lock
+    
+        //re-implentation of uc_get to archive thread safeness
+        struct udpcon_data_node_t* uc_node = uc->list;
+        while ( uc_node != 0)
+        {
+            if(uc_node->id_fromclient == id || uc_node->id_tobackend == id) break;
+            uc_node = uc_node->next;
+        }
+        if (uc_node == 0) return false;
 
-    if (uc_node->backend_socket != 0) free(uc_node->backend_socket);
-    if (uc_node->client_socket != 0) free(uc_node->client_socket);
-    if (uc_node->src_ip != EMPTY_STR) free(uc_node->src_ip);
-    if (uc_node->dest_ip !=  EMPTY_STR) free(uc_node->dest_ip);
-    if (uc_node->timestamp !=  EMPTY_STR) free(uc_node->timestamp);
-    if (uc_node->start !=  EMPTY_STR) free(uc_node->start);
-    if (uc_node->end !=  EMPTY_STR) free(uc_node->end);
-    if (uc_node->proxy_ip !=  EMPTY_STR) free(uc_node->proxy_ip);
-    if (uc_node->backend_ip !=  EMPTY_STR) free(uc_node->backend_ip);
+        if(uc_node->client_socket_fd != 0) close(uc_node->client_socket_fd);
+        if(uc_node->backend_socket_fd != 0) close(uc_node->backend_socket_fd);
 
-    if (uc_node == uc->list) uc->list = uc_node->next;
-    if (uc_node->prev != 0) uc_node->prev->next = uc_node->next;
-    if (uc_node->next != 0) uc_node->next->prev = uc_node->prev;
+        if (uc_node->backend_socket != NULL) free(uc_node->backend_socket);
+        if (uc_node->client_socket != NULL) free(uc_node->client_socket);
+        if (uc_node->src_ip != EMPTY_STR) free(uc_node->src_ip);
+        if (uc_node->dest_ip !=  EMPTY_STR) free(uc_node->dest_ip);
+        if (uc_node->timestamp !=  EMPTY_STR) free(uc_node->timestamp);
+        if (uc_node->start !=  EMPTY_STR) free(uc_node->start);
+        if (uc_node->end !=  EMPTY_STR) free(uc_node->end);
+        if (uc_node->proxy_ip !=  EMPTY_STR) free(uc_node->proxy_ip);
+        if (uc_node->backend_ip !=  EMPTY_STR) free(uc_node->backend_ip);
 
-    free(uc_node);
+        if (uc_node == uc->list) uc->list = uc_node->next;
+        if (uc_node->prev != NULL) uc_node->prev->next = uc_node->next;
+        if (uc_node->next != NULL) uc_node->next->prev = uc_node->prev;
 
+        if (uc_node->payload != NULL) free(uc_node->payload);
+        if (uc_node->first_dgram != NULL) free(uc_node->first_dgram);
+
+        free(uc_node);
+    
+    sem_post(conlistsem); //release lock
     return true;
+}
+
+int uc_cleanup(struct udpcon_data_t* uc, long long int timeout)
+{
+    //fprintf(stderr, "*** UC_Cleanup...");
+    struct udpcon_data_node_t* uc_node = uc->list;
+    char unix_time_str[64] = "";
+    time_str(unix_time_str, sizeof(unix_time_str), NULL, 0); ///Get urrent time and generate string with current time
+    long long int unix_time = atoll(unix_time_str);
+    int num_removed = 0;
+    struct udpcon_data_node_t* next = NULL;
+
+    while ( uc_node != NULL )
+    {
+        //fprintf(stderr, "*** ...iterate %p\n", uc_node);
+        if(uc_node->last_seen + timeout < unix_time)
+        {
+            json_out(uc_node);
+            next = uc_node->next;
+            if(uc_del(uc, uc_node->id_fromclient)) num_removed++;
+            else return -1;
+        }
+        uc_node = next;
+    }
+    return num_removed;
 }
 
 void uc_print_list(struct udpcon_data_t* uc)
@@ -266,6 +340,7 @@ uint_least64_t id int id_tobackend: %p\n\
 void* uc_node: %p\n\
 struct udpcon_data_node_t *next: %p\n\
 struct udpcon_data_node_t *prev: %p\n\
+bool proxied: %s\n\
 long long int last_seen: %llu\n\
 char* src_ip: %s\n\
 int   src_port: %d\n\
@@ -287,6 +362,7 @@ char* backend_port: %d\n\
 uc_node,
 uc_node->next,\
 uc_node->prev,\
+uc_node->proxied ? "true" : "false",\
 uc_node->last_seen,\
 uc_node->src_ip,\
 uc_node->src_port,\
@@ -308,5 +384,98 @@ uc_node->backend_port\
     }
 
     fprintf(stderr, "<END>\n\n");
+    return;
+}
+
+void json_out(struct udpcon_data_node_t* uc_node)
+{
+    char* payload_hd_str = "NONE"; //Payload as string in HexDump Format
+    char* payload_str = "NONE"; //Payload as string
+    char * payload_sha1_str = "NONE"; //Paylod SHA1 hash
+    unsigned char payload_sha1[SHA_DIGEST_LENGTH]; //SHA1 of payload
+    char log_time[64] = "";
+
+    time_str(NULL, 0, log_time, sizeof(log_time)); //Generate string with current time
+
+    //Begin JSON output and open new JSON
+    //Log connection to STDOUT in json-format (Suricata-like)
+    json_do(true, "{\"origin\": \"MADCAT\", \
+\"src_ip\": \"%s\", \
+\"dest_port\": %d, \
+\"timestamp\": \"%s\", \
+\"unixtime\": %lld, \
+\"dest_ip\": \"%s\", \
+\"src_port\": %d, \
+\"proto\": \"%s\", \
+\"event_type\": \"%s\", \
+\"flow\": { \
+\"start\": \"%s\", \
+\"end\": \"%s\", \
+\"bytes_toserver\": %lld, \
+\"bytes_toclient\": %lld\
+",\
+uc_node->src_ip,\
+uc_node->dest_port,\
+uc_node->start,\
+uc_node->unixtime,\
+uc_node->dest_ip,\
+uc_node->src_port,\
+"UDP",\
+uc_node->proxied ? "proxy_flow" : "flow",\
+uc_node->start,\
+uc_node->end,\
+uc_node->bytes_toserver,\
+uc_node->bytes_toclient\
+);
+
+    if( uc_node->proxied ) //Proxy specific JSON output
+    {
+        json_do(false, ",\
+\"proxy_ip\": \"%s\", \
+\"proxy_port\": %d, \
+\"backend_ip\": \"%s\",\
+\"backend_port\": %d\
+",\
+uc_node->proxy_ip,\
+uc_node->proxy_port,\
+uc_node->backend_ip,\
+uc_node->backend_port\
+);
+    }
+    //Do only include payload and compute sha1, if this was not a connection handled by proxy.
+    //Overhead might easily become too large and it is intended to be logged and processed by backend, anyway.
+    else
+    {
+        //Compute SHA1 of payload
+        SHA1(uc_node->payload, uc_node->payload_len, payload_sha1);
+        payload_sha1_str = print_hex_string(payload_sha1, SHA_DIGEST_LENGTH);
+        //Make HexDump output out of binary payload
+        payload_hd_str = hex_dump(uc_node->payload, uc_node->payload_len, true); //Do not forget to free! 
+        payload_str = print_hex_string(uc_node->payload, uc_node->payload_len); //Do not forget to free!
+
+        json_do(false, ",\
+\"payload_hd\": \"%s\", \
+\"payload_str\": \"%s\", \
+\"payload_sha1\": \"%s\"\
+",\
+payload_hd_str,\
+payload_str,\
+payload_sha1_str\
+);
+
+    //free
+    free(payload_sha1_str);
+    free(payload_str);
+    free(payload_hd_str);
+    }
+
+    json_do(false, "} "); //close this JSON part
+    //Analyse IP & TCP Headers and concat to global JSON (done inside functions with json_do(...))
+    analyze_ip_header(uc_node->first_dgram, uc_node->first_dgram_len);
+    analyze_udp_header(uc_node->first_dgram, uc_node->first_dgram_len);
+    //close JSON object and print it to stdout for logging
+    fprintf(stdout,"%s\n", json_do(false, "}\n")); //print json output for logging and further analysis
+    fflush(stdout);
+
     return;
 }

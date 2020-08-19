@@ -220,7 +220,7 @@ char* json_do(bool reset, const char* format, ...)
     
     if (reset) //should the json_struct be reseted?
     {
-        if (!first_run && json.str != 0) free(json.str);
+        if (!first_run && json.str != NULL) free(json.str);
         first_run = false;
         CHECK(json.str = malloc(1), != 0);
         *json.str = 0;  //add trailing \0 (empty string)                

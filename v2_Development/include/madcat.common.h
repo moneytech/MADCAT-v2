@@ -69,6 +69,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include <semaphore.h>
 #include <sys/wait.h>
 #include <sys/prctl.h>
+#include <pthread.h> 
 
 // Macro to check if an error occured, translate it, report it to STDERR, calling shutdown callback function to exit with error and dump core.
 #define CHECK(result, check)                                                            \
@@ -85,6 +86,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 //#define	__USE_MISC //make struct_tm.h, included from time.h, provide "long int tm_gmtoff" and  "const char *tm_zone"
 
 #define MASCOTT "                             ▄▄▄               ▄▄▄▄▄▄\n                 ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀\n                    ▀▄▄▄▓█▓██   █▓█▌         █▓   ▓████████▀\n                       ▀███▓▓(o)██▓▌       ▐█▓█(o)█▓█████▀\n                         ▀▀██▓█▓▓█         ████▓███▀▀\n                  ▄            ▀▀▀▀                          ▄\n                ▀▀█                                         ▐██▌\n                  ██▄     ____------▐██████▌------___     ▄▄██\n                 __█ █▄▄--   ___------▀▓▓▀-----___   --▄▄█ █▀__\n             __--   ▀█  ██▄▄▄▄    __--▄▓▓▄--__   ▄▄▄▄██  ██▀   --__\n         __--     __--▀█ ██  █▀▀█████▄▄▄▄▄▄███████  ██ █▀--__      --__\n     __--     __--    __▀▀█  █  ██  ██▀▀██▀▀██  ██  █▀▀__    --__      --__\n         __--     __--     ▀███ ██  ██  ██  ██ ████▀     --__    --__\n hfo   --     __--             ▀▀▀▀▀██▄▄██▄▄██▀▀▀▀           --__    --\n         __ --                                                   --__\n"
+#define PATH_LEN 4097 //Maximum Linux path lenght of 4096 + 1 for \0
 
  //pseudo constant empty string e.g. for initialization of json_data_node_t and checks. Not used #define here, because this would lead to several instances of an empty constant string with different addresses.
 char EMPTY_STR[1];
