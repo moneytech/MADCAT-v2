@@ -84,7 +84,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #define MY_IPOPT_QS        (25|MY_IPOPT_CONTROL)                  /* RFC 4782 */
 #define MY_IPOPT_EXP       (30|MY_IPOPT_CONTROL) /* RFC 4727 */
 
-sem_t *conlistsem; //Semaphore for thread safe list operations on struct udpcon_data_t udpcon_data_t->list, used in uc_push(...) and uc_del(...).
+sem_t *conlistsem; //Semaphore for thread safe list operations on struct udpcon_data_t udpcon_data_t->list.
 
 struct ipv4udp_t {
     uint8_t  type;

@@ -55,9 +55,9 @@ tcpproxy = { -- [<listen port>] = { "<backend IP>", <backend Port> },
            }
 --UDP Proxy configuration
 udpproxy_tobackend_addr = "192.168.2.199" --Local address to communicate to backends with. Mandatory, if "udpproxy" is configured.
-udpproxy_connection_timeout = "3" --Timeout for UDP "Connections". Optional, but only usefull if "udpproxy" is configured.
+udpproxy_connection_timeout = "5" --Timeout for UDP "Connections". Optional, but only usefull if "udpproxy" is configured.
 udpproxy = { -- [<listen port>] = { "<backend IP>", <backend Port> },
             [64000] = { "192.168.2.50", 64000 },
-            [533]   = { "8.8.8.8", 53},
+--            [533]   = { "127.0.0.53", 53},
             [534]   = { "8.8.8.8", 53},
            }

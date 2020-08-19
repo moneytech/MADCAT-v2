@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
         EMPTY_STR[0] = 0;
 
         pthread_t cleanup_t_id = 0; //Cleanup thread ID.
-        //Semaphore for thread safe list operations on struct udpcon_data_t udpcon_data_t->list, used in uc_push(...) and uc_del(...).
+        //Semaphore for thread safe list operations on struct udpcon_data_t udpcon_data_t->list.
         sem_unlink ("conlistsem");
         conlistsem = CHECK(sem_open ("conlistsem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED); //defined globally
 
@@ -225,7 +225,9 @@ int main(int argc, char *argv[])
             int recv_len = CHECK(recvfrom(listenfd, buffer, bufsize , 0, (struct sockaddr *) &trgaddr, &trgaddr_len), != -1); //Accept Incoming data
            
             //parse buffer, log, fetch datagram, do stuff...
-            worker_udp(buffer, recv_len, hostaddr ,data_path);
+            sem_wait(conlistsem); //lock linked list with UDP "Connections"
+                worker_udp(buffer, recv_len, hostaddr ,data_path);
+            sem_post(conlistsem);
         }
 
         return 0;

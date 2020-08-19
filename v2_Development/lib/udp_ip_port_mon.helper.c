@@ -239,13 +239,10 @@ struct udpcon_data_node_t* uc_push(struct udpcon_data_t* uc, uint_least64_t id)
     uc_node->first_dgram = NULL;
     uc_node->first_dgram_len = 0;
 
-    sem_wait(conlistsem); //Acquire lock
-        if(uc->list != NULL) uc->list->prev=uc_node;
-        uc_node->next = uc->list;
-        uc->list = uc_node;
-        uc_node->prev = NULL;
-    sem_post(conlistsem); //release lock
-
+    if(uc->list != NULL) uc->list->prev=uc_node;
+    uc_node->next = uc->list;
+    uc->list = uc_node;
+    uc_node->prev = NULL;
 
     return uc_node;
 }
@@ -263,66 +260,78 @@ struct udpcon_data_node_t* uc_get(struct udpcon_data_t* uc, uint_least64_t id)
 
 bool uc_del(struct udpcon_data_t* uc, uint_least64_t id)
 {
-    //fprintf(stderr, "*** DEBUG [PID %d] Acquire lock for uc_del...\n", getpid()); fflush(stderr);
-    sem_wait(conlistsem); //Acquire lock
+    //fprintf(stderr, "*** DEBUG [PID %d] uc_del...", getpid()); fflush(stderr);
     
-        //re-implentation of uc_get to archive thread safeness
-        struct udpcon_data_node_t* uc_node = uc->list;
-        while ( uc_node != 0)
-        {
-            if(uc_node->id_fromclient == id || uc_node->id_tobackend == id) break;
-            uc_node = uc_node->next;
-        }
-        if (uc_node == 0) return false;
+    //re-implentation of uc_get to archive thread safeness (may not be needed in every case, but saves a function call anyway)
+    struct udpcon_data_node_t* uc_node = uc->list;
+    while ( uc_node != 0)
+    {
+        if(uc_node->id_fromclient == id || uc_node->id_tobackend == id) break;
+        uc_node = uc_node->next;
+    }
+    if (uc_node == 0) return false;
 
-        if(uc_node->client_socket_fd != 0) close(uc_node->client_socket_fd);
-        if(uc_node->backend_socket_fd != 0) close(uc_node->backend_socket_fd);
+    //Close sockets
+    if(uc_node->client_socket_fd != 0) close(uc_node->client_socket_fd);
+    if(uc_node->backend_socket_fd != 0) close(uc_node->backend_socket_fd);
 
-        if (uc_node->backend_socket != NULL) free(uc_node->backend_socket);
-        if (uc_node->client_socket != NULL) free(uc_node->client_socket);
-        if (uc_node->src_ip != EMPTY_STR) free(uc_node->src_ip);
-        if (uc_node->dest_ip !=  EMPTY_STR) free(uc_node->dest_ip);
-        if (uc_node->timestamp !=  EMPTY_STR) free(uc_node->timestamp);
-        if (uc_node->start !=  EMPTY_STR) free(uc_node->start);
-        if (uc_node->end !=  EMPTY_STR) free(uc_node->end);
-        if (uc_node->proxy_ip !=  EMPTY_STR) free(uc_node->proxy_ip);
-        if (uc_node->backend_ip !=  EMPTY_STR) free(uc_node->backend_ip);
+    //Free
+    if (uc_node->backend_socket != NULL) free(uc_node->backend_socket);
+    if (uc_node->client_socket != NULL) free(uc_node->client_socket);
+    if (uc_node->src_ip != EMPTY_STR) free(uc_node->src_ip);
+    if (uc_node->dest_ip !=  EMPTY_STR) free(uc_node->dest_ip);
+    if (uc_node->timestamp !=  EMPTY_STR) free(uc_node->timestamp);
+    if (uc_node->start !=  EMPTY_STR) free(uc_node->start);
+    if (uc_node->end !=  EMPTY_STR) free(uc_node->end);
+    if (uc_node->proxy_ip !=  EMPTY_STR) free(uc_node->proxy_ip);
+    if (uc_node->backend_ip !=  EMPTY_STR) free(uc_node->backend_ip);
+    if (uc_node->payload != NULL) free(uc_node->payload);
+    if (uc_node->first_dgram != NULL) free(uc_node->first_dgram);
 
-        if (uc_node == uc->list) uc->list = uc_node->next;
-        if (uc_node->prev != NULL) uc_node->prev->next = uc_node->next;
-        if (uc_node->next != NULL) uc_node->next->prev = uc_node->prev;
+    //Rearange pointers
+    if (uc_node == uc->list) uc->list = uc_node->next;
+    if (uc_node->prev != NULL) uc_node->prev->next = uc_node->next;
+    if (uc_node->next != NULL) uc_node->next->prev = uc_node->prev;
 
-        if (uc_node->payload != NULL) free(uc_node->payload);
-        if (uc_node->first_dgram != NULL) free(uc_node->first_dgram);
-
-        free(uc_node);
-    
-    sem_post(conlistsem); //release lock
+    //Free the list element itself
+    free(uc_node);
+    //fprintf(stderr, "*** DEBUG [PID %d] ....uc_del.", getpid()); fflush(stderr);
     return true;
 }
 
 int uc_cleanup(struct udpcon_data_t* uc, long long int timeout)
 {
-    //fprintf(stderr, "*** UC_Cleanup...");
-    struct udpcon_data_node_t* uc_node = uc->list;
-    char unix_time_str[64] = "";
-    time_str(unix_time_str, sizeof(unix_time_str), NULL, 0); ///Get urrent time and generate string with current time
-    long long int unix_time = atoll(unix_time_str);
-    int num_removed = 0;
-    struct udpcon_data_node_t* next = NULL;
+    sem_wait(conlistsem);
+        //fprintf(stderr, "*** UC_Cleanup...");
+        struct udpcon_data_node_t* uc_node = uc->list;
+        char unix_time_str[64] = "";
+        time_str(unix_time_str, sizeof(unix_time_str), NULL, 0); ///Get urrent time and generate string with current time
+        long long int unix_time = atoll(unix_time_str);
+        int num_removed = 0;
+        struct udpcon_data_node_t* next = NULL;
 
-    while ( uc_node != NULL )
-    {
-        //fprintf(stderr, "*** ...iterate %p\n", uc_node);
-        if(uc_node->last_seen + timeout < unix_time)
+        while ( uc_node != NULL )
         {
-            json_out(uc_node);
-            next = uc_node->next;
-            if(uc_del(uc, uc_node->id_fromclient)) num_removed++;
-            else return -1;
+            next = uc_node->next; //save next pointer, because the element might be deleted.
+            //fprintf(stderr, "*** ...iterate %p\n", uc_node);
+            if(uc_node->last_seen + timeout < unix_time)
+            {
+                sem_post(conlistsem); //spare out the call to json_out, calculation of SHA1 over payloads may take quite some time.
+                    json_out(uc_node);
+                sem_wait(conlistsem);
+                if(uc_del(uc, uc_node->id_fromclient))
+                {
+                    num_removed++;
+                }
+                else
+                {
+                    sem_post(conlistsem);
+                    return -1;
+                }
+            }
+            uc_node = next; //Next pointer always contains an element, regardless of main thread, because only here in this function uc_del is called
         }
-        uc_node = next;
-    }
+    sem_post(conlistsem);
     return num_removed;
 }
 
