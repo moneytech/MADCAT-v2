@@ -225,7 +225,7 @@ void sig_handler_listnerchild(int signo)
     sig_handler_common();
     if (signo == SIGUSR2) //Gracefull shutdown
     {
-        fprintf(stderr, "%s [PID %d] Listner is done. Bye.\n", stop_time, getpid(), strsignal(signo));
+        fprintf(stderr, "%s [PID %d] Listner is done. Bye.\n", stop_time, getpid());
         exit(0); //Success
     }
     else

@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
         //Start time
         char log_time[64] = ""; //Human readable start time (actual time zone)
         char log_time_unix[64] = ""; //Unix timestamp (UTC)
-        struct timeval begin , now;
+        struct timeval begin;
         gettimeofday(&begin , NULL);
         time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only
 
@@ -77,7 +77,6 @@ int main(int argc, char *argv[])
         double timeout = 30;
         char data_path[PATH_LEN] = "";
         int max_file_size = -1;
-        int max_conn = 0;
 
         //Structure holding proxy configuration items
         pc = pctcp_init(pc);
@@ -175,7 +174,6 @@ int main(int argc, char *argv[])
         const unsigned char* packet; //The Packet from pcap
         pcap_pid = 0; //PID of the Child doing the PCAP-Sniffing. Globally defined, cause it's used in CHECK-Makro callback function.
         listner_pid = 0; //PID of the Child doing the TCP Connection handling. Globally defined, cause it's used in CHECK-Makro callback function.
-        int parent_pid = getpid();
 
         //Make FIFO for connection discribing JSON Output
         unlink(CONNECT_FIFO);
@@ -312,7 +310,7 @@ int main(int argc, char *argv[])
 	                        #if DEBUG >= 2
 	                            fprintf(stderr, "*** DEBUG [PID %d] Accept-Child entering Worker\n", getpid());
 	                        #endif
-                            long int data_bytes = worker_tcp(inet_ntoa(trgaddr.sin_addr), ntohs(trgaddr.sin_port), clientaddr, ntohs(s->sin_port),\
+                            worker_tcp(inet_ntoa(trgaddr.sin_addr), ntohs(trgaddr.sin_port), clientaddr, ntohs(s->sin_port),\
                                                            timeout, data_path, max_file_size, openfd, log_time, log_time_unix, confifo);
 	                        #if DEBUG >= 2
 	                            fprintf(stderr, "*** DEBUG [PID %d] Accept-Child left Worker\n", getpid());

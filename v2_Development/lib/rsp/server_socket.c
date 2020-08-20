@@ -161,7 +161,7 @@ struct proxy_data*  handle_client_connection(int client_socket_fd,
     
     //Get local client address and port
     struct sockaddr local_address;
-    int addr_size = sizeof(local_address);
+    socklen_t addr_size = sizeof(local_address);
     getsockname(backend_socket_fd, &local_address, &addr_size);
 
     char* port_ptr = local_address.sa_data;
@@ -249,14 +249,9 @@ int create_and_bind(char* hostaddr, char* server_port_str)
 {
     //Variables for listning socket
     struct sockaddr_in addr; //Hostaddress
-    struct sockaddr_in trgaddr; //Storage for original destination port
-    struct sockaddr_storage claddr; //Clientaddress
-    char clientaddr[INET6_ADDRSTRLEN] = "";
     
     int server_port = atoi(server_port_str);
 
-    socklen_t trgaddr_len = sizeof(trgaddr);
-    socklen_t claddr_len = sizeof(claddr);
     socklen_t addr_len = sizeof(addr);
     int server_socket_fd = CHECK(socket(AF_INET, SOCK_STREAM, IPPROTO_TCP), != -1); //create socket filedescriptor
 

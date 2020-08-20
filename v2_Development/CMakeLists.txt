@@ -37,7 +37,7 @@ set(PACKAGE_BUGREPORT "heiko.folkerts@bsi.bund.de")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(UNINSTALL_SCRIPT "uninstall.sh")
-set(GCC_FLAGS "-gdwarf-2" "-fno-strict-aliasing")
+set(GCC_FLAGS "-Wall" "-gdwarf-2" "-fno-strict-aliasing")
 
 # Common C_FLAG option
 # TODO

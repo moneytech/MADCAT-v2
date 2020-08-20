@@ -71,6 +71,10 @@
 				},
 				{
 					"backtrace" : 4,
+					"fragment" : "-Wall"
+				},
+				{
+					"backtrace" : 4,
 					"fragment" : "-gdwarf-2"
 				},
 				{

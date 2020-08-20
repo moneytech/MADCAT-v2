@@ -68,7 +68,6 @@ void* cleanup_t()
 int main(int argc, char *argv[])
 {
         //get start time
-        struct timeval begin;
         char log_time[64] = "";
         char unix_time[64] = "";
         time_str(unix_time, sizeof(unix_time), log_time, sizeof(log_time)); ///Get urrent time and generate string with current time
@@ -79,7 +78,7 @@ int main(int argc, char *argv[])
         //Semaphore for thread safe list operations on struct udpcon_data_t udpcon_data_t->list.
         sem_unlink ("conlistsem");
         conlistsem = CHECK(sem_open ("conlistsem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED); //defined globally
-        cleanup_t_id; //Cleanup thread ID, defined globally
+        cleanup_t_id = 0; //Cleanup thread ID, defined globally
 
         //Parse command line
         char hostaddr[INET6_ADDRSTRLEN] = "";
