@@ -34,10 +34,10 @@
 -- Values, which are unique to at least one module, like "path_to_save_udp-data", are ignored by other modules.
 --
 
-interface = "lo" --interface to listen on
+interface = "wlp8s0" --interface to listen on
 hostaddress = "192.168.2.199" --address to listen on
-listening_port = "65535" --TCP-Port to listen on
-connection_timeout = "10" --Timout for TCP-Connections
+tcp_listening_port = "65535" --TCP-Port to listen on
+tcp_connection_timeout = "5" --Timout for TCP-Connections
 user = "hf" --user to drop privileges to.
 --Paths for Files containing Payload: Must end with trailing "/", will be handled as prefix otherwise.
 path_to_save_tcp_streams = "./tpm/"
@@ -58,6 +58,6 @@ udpproxy_tobackend_addr = "192.168.2.199" --Local address to communicate to back
 udpproxy_connection_timeout = "5" --Timeout for UDP "Connections". Optional, but only usefull if "udpproxy" is configured.
 udpproxy = { -- [<listen port>] = { "<backend IP>", <backend Port> },
             [64000] = { "192.168.2.50", 64000 },
---            [533]   = { "127.0.0.53", 53},
+            [533]   = { "8.8.4.4", 53},
             [534]   = { "8.8.8.8", 53},
            }

@@ -61,6 +61,15 @@ struct epoll_event_handler {
     void* closure;
 };
 
+struct free_list_entry {
+    void* block;
+    struct free_list_entry* next;
+};
+
+struct free_list_entry* free_list;
+
+struct epoll_event_handler* epoll_server_hdl; //global epoll event handler epoll server socket
+
 extern void epoll_init();
 
 extern void epoll_add_handler(struct epoll_event_handler* handler, uint32_t event_mask);

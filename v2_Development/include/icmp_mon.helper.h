@@ -42,5 +42,6 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 
 //Helper Functions:
 void print_help_icmp(char* progname); //print ICMP help message
+void sig_handler_icmp(int signo); //Generic Signal Handler for gracefull shutdown
 
 #endif

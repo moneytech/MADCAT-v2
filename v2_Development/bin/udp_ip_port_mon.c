@@ -47,6 +47,8 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 
 void* cleanup_t()
 {
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
     while ( true )
     {
             //Scheduled Cleanup connections //TODO: Make this a thread before main loop
@@ -61,7 +63,6 @@ void* cleanup_t()
     return NULL;
 }
 
-
 //Main
 
 int main(int argc, char *argv[])
@@ -75,10 +76,10 @@ int main(int argc, char *argv[])
         //pseudo constant empty string e.g. for initialization of json_data_node_t and checks. Not used define here, because this would lead to several instances of an empty constant string with different addresses.
         EMPTY_STR[0] = 0;
 
-        pthread_t cleanup_t_id = 0; //Cleanup thread ID.
         //Semaphore for thread safe list operations on struct udpcon_data_t udpcon_data_t->list.
         sem_unlink ("conlistsem");
         conlistsem = CHECK(sem_open ("conlistsem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED); //defined globally
+        cleanup_t_id; //Cleanup thread ID, defined globally
 
         //Parse command line
         char hostaddr[INET6_ADDRSTRLEN] = "";
@@ -86,7 +87,7 @@ int main(int argc, char *argv[])
         //struct user_t user; //globally defined, used to drop priviliges in arbitrarry functions. May become local, if not needed.
         int bufsize = DEFAULT_BUFSIZE;
 
-        signal(SIGUSR1, sig_handler); //register handler as callback function used by CHECK-Macro
+        signal(SIGUSR1, sig_handler_udp); //register handler as callback function used by CHECK-Macro
         CHECK(signal(SIGINT, sig_handler_udp), != SIG_ERR); //register handler for SIGINT
         CHECK(signal(SIGTERM, sig_handler_udp), != SIG_ERR); //register handler for SIGTERM
 
@@ -184,7 +185,7 @@ int main(int argc, char *argv[])
 
         uc = uc_init(); //Initialize UDP Connection structure, holding connections. Defined globally for easy access inside functions, e.g. worker_udp.
 
-        fprintf(stderr, "%s Starting with hostaddress %s, bufsize is %d Byte...\n", log_time, hostaddr, bufsize);
+        fprintf(stderr, "%s Starting with PID %d, hostaddress %s, bufsize is %d Byte...\n", log_time, getpid(), hostaddr, bufsize);
 
         //Variables
         struct sockaddr_in addr; //Hostaddress
@@ -195,7 +196,7 @@ int main(int argc, char *argv[])
         unsigned char* buffer = 0;
         int listenfd = CHECK(socket(AF_INET, SOCK_RAW, IPPROTO_UDP), != -1); //create socket filedescriptor
         // if process is running as root, drop privileges
-        /* XXX TODO: Do not drop, if proxy local ports are below 1024
+        /* //XXX TODO: Do not drop, if proxy local ports are below 1024
         if (getuid() == 0) {
             fprintf(stderr, "%s Droping priviliges to user %s...", log_time, user.name);
             get_user_ids(&user); //Get traget user UDI + GID

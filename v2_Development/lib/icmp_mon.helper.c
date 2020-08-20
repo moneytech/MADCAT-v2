@@ -60,3 +60,18 @@ void print_help_icmp(char* progname) //print help message
     return;
 }
 
+//Generic Signal Handler for gracefull shutdown
+void sig_handler_icmp(int signo)
+{
+    char stop_time[64] = ""; //Human readable stop time (actual time zone)
+    time_str(NULL, 0, stop_time, sizeof(stop_time)); //Get Human readable string only
+    fprintf(stderr, "\n%s Received Signal %s, shutting down...\n", stop_time, strsignal(signo));
+    // Free
+    free(saved_buffer(0));
+    free(json_do(true, ""));
+    //exit parent process
+    exit(signo);
+    return;
+}
+
+

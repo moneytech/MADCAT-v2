@@ -152,25 +152,11 @@ madcat.common.h
 tcp_ip_port_mon.h
 ../include/tcp_ip_port_mon.h
 
-/home/MADCAT/MADCAT-v2/v2_Development/lib/madcat.helper.c
-madcat.helper.h
-/home/MADCAT/MADCAT-v2/v2_Development/lib/madcat.helper.h
-
 /home/MADCAT/MADCAT-v2/v2_Development/lib/tcp_ip_port_mon.helper.c
 tcp_ip_port_mon.helper.h
 /home/MADCAT/MADCAT-v2/v2_Development/lib/tcp_ip_port_mon.helper.h
+epollinterface.h
+/home/MADCAT/MADCAT-v2/v2_Development/lib/epollinterface.h
 madcat.helper.h
 /home/MADCAT/MADCAT-v2/v2_Development/lib/madcat.helper.h
-
-/home/MADCAT/MADCAT-v2/v2_Development/lib/tcp_ip_port_mon.parser.c
-tcp_ip_port_mon.helper.h
-/home/MADCAT/MADCAT-v2/v2_Development/lib/tcp_ip_port_mon.helper.h
-tcp_ip_port_mon.parser.h
-/home/MADCAT/MADCAT-v2/v2_Development/lib/tcp_ip_port_mon.parser.h
-
-/home/MADCAT/MADCAT-v2/v2_Development/lib/tcp_ip_port_mon.worker.c
-tcp_ip_port_mon.worker.h
-/home/MADCAT/MADCAT-v2/v2_Development/lib/tcp_ip_port_mon.worker.h
-tcp_ip_port_mon.helper.h
-/home/MADCAT/MADCAT-v2/v2_Development/lib/tcp_ip_port_mon.helper.h
 

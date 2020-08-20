@@ -93,14 +93,6 @@ void epoll_remove_handler(struct epoll_event_handler* handler)
 }
 
 
-struct free_list_entry {
-    void* block;
-    struct free_list_entry* next;
-};
-
-struct free_list_entry* free_list = NULL;
-
-
 void epoll_add_to_free_list(void* block) 
 {
     struct free_list_entry* entry = malloc(sizeof(struct free_list_entry));

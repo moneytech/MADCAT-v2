@@ -58,9 +58,9 @@ int main(int argc, char *argv[])
         //struct user_t user; //globally defined, used to drop priviliges in arbitrarry functions. May become local, if not needed.
         int bufsize = DEFAULT_BUFSIZE;
 
-        signal(SIGUSR1, sig_handler); //register handler as callback function used by CHECK-Macro
-        CHECK(signal(SIGINT, sig_handler), != SIG_ERR); //register handler for SIGINT
-        CHECK(signal(SIGTERM, sig_handler), != SIG_ERR); //register handler for SIGTERM
+        signal(SIGUSR1, sig_handler_icmp); //register handler as callback function used by CHECK-Macro
+        CHECK(signal(SIGINT, sig_handler_icmp), != SIG_ERR); //register handler for SIGINT
+        CHECK(signal(SIGTERM, sig_handler_icmp), != SIG_ERR); //register handler for SIGTERM
 
         //Display Mascott and Version
         fprintf(stderr, "\n%s%s\n", MASCOTT, VERSION);
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
                 return -2;
         }
 
-        fprintf(stderr, "%s Starting with hostaddress %s, bufsize is %d Byte...\n", log_time, hostaddr, bufsize);
+        fprintf(stderr, "%s Starting with PID %d, hostaddress %s, bufsize is %d Byte...\n", log_time, getpid(), hostaddr, bufsize);
 
         //Variables
         struct sockaddr_in addr; //Hostaddress

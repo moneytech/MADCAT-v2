@@ -44,11 +44,14 @@ char hostaddr[INET6_ADDRSTRLEN]; //Hostaddress to bind to. Globally defined to m
 //char* global_json;  //JSON Output defined global, to make all information visibel to functions for concatination and output.
 //char* json_ptr; //Pointer to actuall JSON output End, to concatinate strings with sprintf().
 int pcap_pid; //PID of the Child doing the PCAP-Sniffing. Globally defined, cause it's used in CHECK-Makro.
-int accept_pid; //PID of the Child doing the TCP Connection handling. Globally defined, cause it's used in CHECK-Makro.
+int listner_pid; //PID of the Child doing the TCP Connection handling. Globally defined, cause it's used in CHECK-Makro.
 //semaphores for output globally defined for easy access inside functions
 sem_t *hdrsem; //Semaphore for named pipe containing TCP/IP data
 sem_t *consem; //Semaphore for named pipe containing connection data
-FILE* confifo; //FILE* confifo is globally defined to be reachabel for both proxy-childs and accept-childs
+FILE* confifo; //FILE* confifo is globally defined to be reachabel for proxy-childs and listner-childs and signal handlers
+FILE* hdrfifo; //FILE* confifo is globally defined to be reachabel for pcap-childs and signal handlers
+int openfd; //Socket FD is globally defined to be reachabel for listner-childs and signal handlers
+pcap_t *handle; //pcap Session handle 
 
 struct con_status_t{    //Connection status
     char tag[80];       //The connection tag is a buffer with a min. size of 80 Bytes.

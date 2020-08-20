@@ -167,7 +167,7 @@ struct proxy_data*  handle_client_connection(int client_socket_fd,
     char* port_ptr = local_address.sa_data;
     char* ip_ptr = (char*) &(local_address.sa_data) + 2;
     proxy_sock.client_port = ((uint8_t) (*port_ptr)) * 256 + ((uint8_t) (*(port_ptr+1)));
-    proxy_sock.client_addr = inttoa(*(uint32_t*)ip_ptr); //TODO: Was commented out, what was my thought?
+    //proxy_sock.client_addr = inttoa(*(uint32_t*)ip_ptr); //TODO: Commented out, what was my thought?
     
     jd_get(jd, (long long unsigned int) proxy->client)->proxy_ip = inttoa(*(uint32_t*)ip_ptr);
     jd_get(jd, (long long unsigned int) proxy->client)->proxy_port = proxy_sock.client_port;
@@ -254,12 +254,6 @@ int create_and_bind(char* hostaddr, char* server_port_str)
     char clientaddr[INET6_ADDRSTRLEN] = "";
     
     int server_port = atoi(server_port_str);
-
-    prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
-    CHECK(signal(SIGTERM, sig_handler_child), != SIG_ERR); //re-register handler for SIGTERM for child process
-    CHECK(signal(SIGCHLD, sig_handler_sigchld), != SIG_ERR); //register handler for parents to prevent childs becoming Zombies
-
-    accept_pid = getpid();
 
     socklen_t trgaddr_len = sizeof(trgaddr);
     socklen_t claddr_len = sizeof(claddr);

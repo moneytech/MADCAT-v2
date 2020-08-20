@@ -79,8 +79,17 @@ void sig_handler_udp(int signo)
     fprintf(stderr, "\n%s Received Signal %s, shutting down...\n", stop_time, strsignal(signo));
     //close sempahore
     CHECK(sem_close(conlistsem), == 0);
-    // Free receiving buffer
+    // Free buffers
     free(saved_buffer(0));
+    free(json_do(true,""));
+    //Chancel Threads
+    pthread_cancel(cleanup_t_id);
+    pthread_join(cleanup_t_id, NULL);
+    //free linked lists
+    uc_free_list(uc->list);
+    free(uc);
+    pcudp_free_list(pc->portlist);
+    free(pc);
     //exit parent process
     exit(signo);
     return;
@@ -147,7 +156,7 @@ void pcudp_push(struct proxy_conf_udp_t* pc, int listenport, char* backendaddr, 
     
     pcudp_node->listenport = listenport;
      snprintf(pcudp_node->listenport_str, PCN_STRLEN, "%d", listenport);
-    //pcudp_node->backendaddr = backendaddr; //Make copy instead, to get full control over data and circumvent data corruption by free(backendaddr), etc.
+    //Make copy to gain full control over data and circumvent data corruption by e.g. free(backendaddr) in calling function.
     pcudp_node->backendaddr = malloc(strlen(backendaddr)+1);
      strncpy(pcudp_node->backendaddr, backendaddr, strlen(backendaddr)+1);
     pcudp_node->backendport = backendport;
@@ -170,6 +179,17 @@ struct proxy_conf_udp_node_t* pcudp_get_lport(struct proxy_conf_udp_t* pc, int l
     return 0;
 }
 
+void pcudp_free_list(struct proxy_conf_udp_node_t* pcudp_node)
+{
+    if (pcudp_node != NULL)
+    {
+        pcudp_free_list(pcudp_node->next);
+        free(pcudp_node->backendaddr);
+        free(pcudp_node);
+    }
+    return;
+}
+
 void pcudp_print(struct proxy_conf_udp_t* pc) //print proxy configuration
 {
     struct proxy_conf_udp_node_t* pcudp_node = pc->portlist;
@@ -188,6 +208,16 @@ struct udpcon_data_t* uc_init()
     struct udpcon_data_t* uc = malloc (sizeof(struct udpcon_data_t));
     uc->list = 0;
     return uc;
+}
+
+void uc_free_list(struct udpcon_data_node_t* uc_node)
+{
+    if (uc_node != NULL)
+    {
+        uc_free_list(uc_node->next);
+        uc_del(uc, uc_node->id_fromclient);
+    }
+    return;
 }
 
 uint_least64_t uc_genid(char* src_ip, uint64_t src_port, char* dest_ip, uint64_t dest_port)

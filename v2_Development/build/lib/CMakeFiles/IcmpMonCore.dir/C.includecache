@@ -18,14 +18,6 @@ madcat.helper.h
 udp_ip_port_mon.icmp_mon.helper.h
 ../include/udp_ip_port_mon.icmp_mon.helper.h
 
-../include/icmp_mon.parser.h
-icmp_mon.h
-../include/icmp_mon.h
-
-../include/icmp_mon.worker.h
-icmp_mon.h
-../include/icmp_mon.h
-
 ../include/madcat.common.h
 errno.h
 -
@@ -107,28 +99,4 @@ madcat.helper.h
 /home/MADCAT/MADCAT-v2/v2_Development/lib/madcat.helper.h
 udp_ip_port_mon.icmp_mon.helper.h
 /home/MADCAT/MADCAT-v2/v2_Development/lib/udp_ip_port_mon.icmp_mon.helper.h
-
-/home/MADCAT/MADCAT-v2/v2_Development/lib/icmp_mon.parser.c
-icmp_mon.parser.h
-/home/MADCAT/MADCAT-v2/v2_Development/lib/icmp_mon.parser.h
-icmp_mon.helper.h
-/home/MADCAT/MADCAT-v2/v2_Development/lib/icmp_mon.helper.h
-
-/home/MADCAT/MADCAT-v2/v2_Development/lib/icmp_mon.worker.c
-icmp_mon.worker.h
-/home/MADCAT/MADCAT-v2/v2_Development/lib/icmp_mon.worker.h
-icmp_mon.helper.h
-/home/MADCAT/MADCAT-v2/v2_Development/lib/icmp_mon.helper.h
-icmp_mon.parser.h
-/home/MADCAT/MADCAT-v2/v2_Development/lib/icmp_mon.parser.h
-
-/home/MADCAT/MADCAT-v2/v2_Development/lib/madcat.helper.c
-madcat.helper.h
-/home/MADCAT/MADCAT-v2/v2_Development/lib/madcat.helper.h
-
-/home/MADCAT/MADCAT-v2/v2_Development/lib/udp_ip_port_mon.icmp_mon.helper.c
-udp_ip_port_mon.icmp_mon.helper.h
-/home/MADCAT/MADCAT-v2/v2_Development/lib/udp_ip_port_mon.icmp_mon.helper.h
-madcat.common.h
-/home/MADCAT/MADCAT-v2/v2_Development/lib/madcat.common.h
 

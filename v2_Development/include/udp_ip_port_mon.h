@@ -85,6 +85,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #define MY_IPOPT_EXP       (30|MY_IPOPT_CONTROL) /* RFC 4727 */
 
 sem_t *conlistsem; //Semaphore for thread safe list operations on struct udpcon_data_t udpcon_data_t->list.
+pthread_t cleanup_t_id; //Cleanup thread ID.
 
 struct ipv4udp_t {
     uint8_t  type;
@@ -109,9 +110,6 @@ struct proxy_conf_udp_node_t //linked list element to hold proxy configuration i
     int   backendport;
     char  backendport_str[PCN_STRLEN];
     char* backendaddr;
-
-    int client_socket_fd; //TODO: Move to udpcon-structure
-    struct sockaddr_in* backend_socket; //TODO: Move to udpcon-structure
 };
 
 struct proxy_conf_udp_t { //proxy configuration

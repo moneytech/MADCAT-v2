@@ -99,22 +99,27 @@ void print_help_tcp(char* progname); //print TCP help message
 int init_pcap(char* dev, char* dev_addr, pcap_t **handle);
 void drop_root_privs(struct user_t user, const char* entity);
 //Signal Handler:
+void sig_handler_common(); //Signal handler helper functioin with common frees, etc. for parents and childs
 void sig_handler_parent(int signo); //Signal Handler for parent watchdog
 void sig_handler_sigchld(int signo); //Signal Handler for Listner Parent to prevent childs becoming Zombies
-void sig_handler_child(int signo); //Signal Handler for childs
-void sig_handler_shutdown(int signo); //Signal Handler for SIGUSR1 to initiate gracefull shutdown, e.g. by CHECK-Macro
+void sig_handler_pcapchild(int signo); //Signal Handler for PCAP childs
+void sig_handler_listnerchild(int signo); //Signal Handler for listner childs
+void sig_handler_proxychild(int signo); //Signal Handler for proxy childs
+void sig_handler_shutdown(int signo); //Debug Signal Handler for SIGUSR1 to initiate gracefull shutdown, e.g. by CHECK-Macro
 //Helper functions for proxy configuration:
 int get_config_table(lua_State* L, char* name, struct proxy_conf_tcp_t* pc); //read proxy configuration from parsed LUA-File by luaL_dofile(...). Returns number of read elements.
 struct proxy_conf_tcp_t* pctcp_init(); //initialize proxy configuration
 void pctcp_push(struct proxy_conf_tcp_t* pc, int listenport, char* backendaddr, int backendport); //push new proxy configuration item to linked list
 struct proxy_conf_tcp_node_t* pctcp_get_lport(struct proxy_conf_tcp_t* pc, int listenport); //get proxy configuration for listenport
 struct proxy_conf_tcp_node_t* pctcp_get_pid(struct proxy_conf_tcp_t* pc, pid_t pid); //get proxy configuration for proxy with Process ID "pid"
+void pctcp_free_list(struct proxy_conf_tcp_node_t* pctcp_node); //free list with proxy configuration(s)
 void pctcp_print(struct proxy_conf_tcp_t* pc); //print proxy configuration
-//Helper functions for json data structure and double linked list //TODO: Make list thread-safe?
+//Helper functions for json data structure and double linked list (the List does not need to be thread-safe, because every process has it's own copy):
 struct json_data_t* jd_init();  //initialize json data structure
 void jd_push(struct json_data_t* jd, long long unsigned int id); //push new json data list node wit id "id" to list
 struct json_data_node_t* jd_get(struct json_data_t* jd, long long int id); //get json data node by id
 bool jd_del(struct json_data_t* jd, long long int id);  //remove json data node by id
+void jd_free_list(struct json_data_node_t* jd_node); //free list with json data
 void jd_print_list(struct json_data_t* jd); //print complete json data list
 
 #endif

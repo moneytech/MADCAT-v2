@@ -49,9 +49,11 @@ int get_config_table(lua_State* L, char* name, struct proxy_conf_udp_t* pc); //r
 struct proxy_conf_udp_t* pcudp_init(); //initialize proxy configuration
 void pcudp_push(struct proxy_conf_udp_t* pc, int listenport, char* backendaddr, int backendport); //push new proxy configuration item to linked list
 struct proxy_conf_udp_node_t* pcudp_get_lport(struct proxy_conf_udp_t* pc, int listenport); //get proxy configuration for listenport
+void pcudp_free_list(struct proxy_conf_udp_node_t* pcudp_node);
 void pcudp_print(struct proxy_conf_udp_t* pc); //print proxy configuration
 //udp connection structures and double linked list
 struct udpcon_data_t* uc_init();
+void uc_free_list(struct udpcon_data_node_t* uc_node);
 uint_least64_t uc_genid(char* src_ip, uint_least64_t src_port, char* dest_ip, uint_least64_t dest_port);
 struct udpcon_data_node_t* uc_push(struct udpcon_data_t* uc, uint_least64_t id);
 struct udpcon_data_node_t* uc_get(struct udpcon_data_t* uc, uint_least64_t id);

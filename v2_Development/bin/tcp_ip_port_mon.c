@@ -46,6 +46,8 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 int main(int argc, char *argv[])
 {
         fflush(stdout); fflush(stderr);
+        //pseudo constant empty string e.g. for initialization of json_data_node_t and checks. Not used #define here, because this would lead to several instances of an empty constant string with different addresses.
+        EMPTY_STR[0] = 0;
         //Start time
         char log_time[64] = ""; //Human readable start time (actual time zone)
         char log_time_unix[64] = ""; //Unix timestamp (UTC)
@@ -53,16 +55,14 @@ int main(int argc, char *argv[])
         gettimeofday(&begin , NULL);
         time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only
 
-        signal(SIGUSR1, sig_handler_shutdown); //register handler as callback function used by CHECK-Macro
+        signal(SIGUSR1, sig_handler_parent); //register handler as callback function used by CHECK-Macro
         CHECK(signal(SIGINT, sig_handler_parent), != SIG_ERR); //register handler for SIGINT for parent process
         CHECK(signal(SIGTERM, sig_handler_parent), != SIG_ERR); //register handler for SIGTERM for parent process
 
-        //pseudo constant empty string e.g. for initialization of json_data_node_t and checks. Not used #define here, because this would lead to several instances of an empty constant string with different addresses.
-        EMPTY_STR[0] = 0;
-
         //semaphores for output globally defined for easy access inside functions
-        //sem_t *hdrsem; //Semaphore for named pipe containing TCP/IP data
-        //sem_t *consem; //Semaphore for named pipe containing connection data
+        hdrsem = CHECK(sem_open ("hdrsem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED);  //open semaphore for named pipe containing TCP/IP data
+        //Semaphore for named pipe containing connection data
+        consem = CHECK(sem_open ("consem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED);
 
         sem_unlink ("hdrsem");
         sem_unlink ("consem");
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "\n%s%s\n", MASCOTT, VERSION);
 
         //Parse command line. 
-        //char hostaddr[INET6_ADDRSTRLEN] = ""; Hostaddress to bind to. Globally defined to make it visible to functions for filtering.
+        hostaddr[INET6_ADDRSTRLEN] = 0; //Hostaddress to bind to. Globally defined to make it visible to functions for filtering.
         int port = 65535;
         char interface[16]= "";
         double timeout = 30;
@@ -106,10 +106,10 @@ int main(int argc, char *argv[])
             strncpy(hostaddr, get_config_opt(luaState, "hostaddress"), sizeof(hostaddr)); hostaddr[sizeof(hostaddr)-1] = 0;
             fprintf(stderr, "\tHostaddress: %s\n", hostaddr);
 
-            port = atoi(get_config_opt(luaState, "listening_port")); //convert string type to integer type (port)
+            port = atoi(get_config_opt(luaState, "tcp_listening_port")); //convert string type to integer type (port)
             fprintf(stderr, "\tlistening Port: %d\n", port);
 
-            timeout = (double) atof(get_config_opt(luaState, "connection_timeout")); //set timeout and convert to integer type.
+            timeout = (double) atof(get_config_opt(luaState, "tcp_connection_timeout")); //set timeout and convert to integer type.
             fprintf(stderr, "\ttimeout: %lf\n", timeout);
 
             strncpy(user.name, get_config_opt(luaState, "user"), sizeof(user.name)); user.name[sizeof(user.name)-1] = 0;
@@ -171,11 +171,10 @@ int main(int argc, char *argv[])
 
         //Variabels for PCAP sniffing
 
-        pcap_t *handle; //pcap Session handle 
         struct pcap_pkthdr header; // The pcap header it gives back
         const unsigned char* packet; //The Packet from pcap
-        //int pcap_pid = 0; //PID of the Child doing the PCAP-Sniffing. Globally defined, cause it's used in CHECK-Makro callback function.
-        //int accept_pid = 0; //PID of the Child doing the TCP Connection handling. Globally defined, cause it's used in CHECK-Makro callback function.
+        pcap_pid = 0; //PID of the Child doing the PCAP-Sniffing. Globally defined, cause it's used in CHECK-Makro callback function.
+        listner_pid = 0; //PID of the Child doing the TCP Connection handling. Globally defined, cause it's used in CHECK-Makro callback function.
         int parent_pid = getpid();
 
         //Make FIFO for connection discribing JSON Output
@@ -183,8 +182,6 @@ int main(int argc, char *argv[])
         CHECK(mkfifo(CONNECT_FIFO, 0660), == 0);
         confifo = fopen(CONNECT_FIFO, "r+"); //FILE* confifo is globally defined to be reachabel for both proxy-childs and accept-childs
         fprintf(stderr, "%s [PID %d] FIFO for connection json: %s\n", log_time, getpid(), CONNECT_FIFO);
-
-        consem = CHECK(sem_open ("consem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED);
 
         //Start proxys.
         for (int listenport = 1; listenport<65536; listenport++) //TODO: More Clever solution thus this is brute force.
@@ -196,7 +193,9 @@ int main(int argc, char *argv[])
                     pctcp_get_lport(pc, listenport)->pid = getpid(); //update copy of listelemnt in this (forked) copy with own PID, to be able to find own config.
                     //fprintf(stderr, "%s [PID %d] Starting Proxy on Port %d...\n", log_time, getpid(), listenport);
                     prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
-                    CHECK(signal(SIGTERM, sig_handler_child), != SIG_ERR); //re-register handler for SIGTERM for child process
+                    CHECK(signal(SIGTERM, sig_handler_proxychild), != SIG_ERR); //re-register handler for SIGTERM for child process
+                    CHECK(signal(SIGINT, sig_handler_proxychild), != SIG_ERR); //re-register handler for SIGINT for child process
+                    CHECK(signal(SIGCHLD, sig_handler_sigchld), != SIG_ERR); //register handler for parents to prevent childs becoming Zombies
                     CHECK(rsp(pctcp_get_lport(pc, listenport), hostaddr), != 0); //start proxy           
                 }
                 usleep(10000); //sleep 10ms, so output is not mangled between forks
@@ -207,13 +206,13 @@ int main(int argc, char *argv[])
         if( !(pcap_pid=fork()) )
         {
             prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
-            CHECK(signal(SIGTERM, sig_handler_child), != SIG_ERR); //re-register handler for SIGTERM for child process
+            CHECK(signal(SIGTERM, sig_handler_pcapchild), != SIG_ERR); //re-register handler for SIGTERM for child process
+            CHECK(signal(SIGINT, sig_handler_pcapchild), != SIG_ERR); //re-register handler for SIGINT for child process
+            CHECK(signal(SIGCHLD, sig_handler_sigchld), != SIG_ERR); //register handler for parents to prevent childs becoming Zombies
             #if DEBUG >= 2
                 fprintf(stderr, "*** DEBUG [PID %d] Initialize PCAP\n", getpid());
             #endif
             CHECK(init_pcap(interface, hostaddr, &handle), == 0); //Init libpcap
-
-            hdrsem = CHECK(sem_open ("hdrsem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED);  //open semaphore for named pipe containing TCP/IP data
 
             fprintf(stderr, "%s [PID %d] ", log_time, getpid());
             drop_root_privs(user, "Sniffer"); //drop priviliges
@@ -221,7 +220,7 @@ int main(int argc, char *argv[])
             //Make FIFO for header discribing JSON Output
             unlink(HEADER_FIFO);
             CHECK(mkfifo(HEADER_FIFO, 0660), == 0);
-            FILE* hdrfifo = fopen(HEADER_FIFO, "r+");
+            hdrfifo = fopen(HEADER_FIFO, "r+");
             fprintf(stderr, "%s [PID %d] FIFO for header JSON: %s\n", log_time, getpid(), HEADER_FIFO);
 
             int data_bytes = 0; //eventually exisiting data bytes in SYN (yes, this would be akward)
@@ -250,7 +249,7 @@ int main(int argc, char *argv[])
         }
 
         usleep(10000); //sleep 10ms, so output is not mangled between forks
-        if ( !(accept_pid=fork()) ) { //Create listening child process
+        if ( !(listner_pid=fork()) ) { //Create listening child process
             //Variables for listning socket
             struct sockaddr_in addr; //Hostaddress
             struct sockaddr_in trgaddr; //Storage for original destination port
@@ -258,10 +257,11 @@ int main(int argc, char *argv[])
             char clientaddr[INET6_ADDRSTRLEN] = "";
 
             prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
-            CHECK(signal(SIGTERM, sig_handler_child), != SIG_ERR); //re-register handler for SIGTERM for child process
+            CHECK(signal(SIGTERM, sig_handler_listnerchild), != SIG_ERR); //re-register handler for SIGTERM for child process
+            CHECK(signal(SIGINT, sig_handler_listnerchild), != SIG_ERR); //re-register handler for SIGINT for child process
             CHECK(signal(SIGCHLD, sig_handler_sigchld), != SIG_ERR); //register handler for parents to prevent childs becoming Zombies
 
-            accept_pid = getpid();
+            listner_pid = getpid();
 
             socklen_t trgaddr_len = sizeof(trgaddr);
             socklen_t claddr_len = sizeof(claddr);
@@ -293,13 +293,15 @@ int main(int argc, char *argv[])
 	                    fprintf(stderr, "*** DEBUG [PID %d] Listner Loop\n", getpid());
 	                #endif
 
-                    int openfd = CHECK(accept(listenfd, (struct sockaddr*)&claddr, &claddr_len), != -1);  //Accept incoming connection
+                    openfd = CHECK(accept(listenfd, (struct sockaddr*)&claddr, &claddr_len), != -1);  //Accept incoming connection
                     if (!fork()) { //Create stream accepting child process
 	                        #if DEBUG >= 2
 	                            fprintf(stderr, "*** DEBUG [PID %d] Accept-Child forked\n", getpid());
 	                        #endif	
                             prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
-                            CHECK(signal(SIGTERM, sig_handler_child), != SIG_ERR); //register handler for SIGTERM for child process
+                            CHECK(signal(SIGTERM, sig_handler_listnerchild), != SIG_ERR); //register handler for SIGTERM for child process
+                            CHECK(signal(SIGINT, sig_handler_listnerchild), != SIG_ERR); //re-register handler for SIGINT for child process
+                            CHECK(signal(SIGUSR2, sig_handler_listnerchild), != SIG_ERR); //Register handler for SIGUSR2 for child process for gracefull shutdown
                             //Preserve actual start time of connection attempt.
                             time_str(log_time_unix, sizeof(log_time_unix), log_time, sizeof(log_time));
                             CHECK(getsockopt(openfd, SOL_IP, SO_ORIGINAL_DST, (struct sockaddr*)&trgaddr, &trgaddr_len), != -1); //Read original dst. port from NAT-table
@@ -320,6 +322,8 @@ int main(int argc, char *argv[])
 	                        #if DEBUG >= 2
 	                            fprintf(stderr, "*** DEBUG [PID %d] Accept-Child openfd closed, returning.\n", getpid());
 	                        #endif
+                            //Kill to Free remains in memory. Because it looks cleaner.
+                            kill(getpid(), SIGUSR2);
                             exit(0); //kill child process
                     }
                     close(openfd); //Close connection
@@ -341,15 +345,15 @@ int main(int argc, char *argv[])
             while (1) {
                 gettimeofday(&begin , NULL);
                 time_str(NULL, 0, log_time, sizeof(log_time)); //Get Human readable string only for this watchdog cycle
-                if (firstrun) fprintf(stderr, "\tSniffer\t\t\t: %d\n\tListner\t\t\t: %d\n", pcap_pid, accept_pid);
+                if (firstrun) fprintf(stderr, "\tSniffer\t\t\t: %d\n\tListner\t\t\t: %d\n", pcap_pid, listner_pid);
 
                 if ( waitpid(pcap_pid, &stat_pcap, WNOHANG) ) {
                     fprintf(stderr, "%s [PID %d] Sniffer (PID %d) crashed. ARE YOU ROOT?", log_time, getpid(), pcap_pid);
                     sig_handler_parent(SIGTERM);
                     break;
                 }
-                if ( waitpid(accept_pid, &stat_accept, WNOHANG) ) {
-                    fprintf(stderr, "%s [PID %d] Listner (PID %d) crashed. ARE YOU ROOT?", log_time, getpid(), accept_pid);
+                if ( waitpid(listner_pid, &stat_accept, WNOHANG) ) {
+                    fprintf(stderr, "%s [PID %d] Listner (PID %d) crashed. ARE YOU ROOT?", log_time, getpid(), listner_pid);
                     sig_handler_parent(SIGTERM);
                     break;
                 }
@@ -366,7 +370,9 @@ int main(int argc, char *argv[])
                             pctcp_get_lport(pc, listenport)->pid = getpid(); //update copy of listelemnt in this (forked) copy with own PID, to be able to find own config.
                             //fprintf(stderr, "%s [PID %d] Starting Proxy on Port %d...\n", log_time, getpid(), listenport);
                             prctl(PR_SET_PDEATHSIG, SIGTERM); //request SIGTERM if parent dies.
-                            CHECK(signal(SIGTERM, sig_handler_child), != SIG_ERR); //re-register handler for SIGTERM for child process
+                            CHECK(signal(SIGTERM, sig_handler_proxychild), != SIG_ERR); //re-register handler for SIGTERM for child process
+                            CHECK(signal(SIGINT, sig_handler_proxychild), != SIG_ERR); //re-register handler for SIGINT for child process
+                            CHECK(signal(SIGCHLD, sig_handler_sigchld), != SIG_ERR); //register handler for parents to prevent childs becoming Zombies
                             CHECK(rsp(pctcp_get_lport(pc, listenport), hostaddr), != 0); //start proxy
                         }
 

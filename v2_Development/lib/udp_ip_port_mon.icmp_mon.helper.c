@@ -49,15 +49,7 @@ void* saved_buffer(void * buffer)
     return saved_buffer;
 }
 
-//Generic Signal Handler for gracefull shutdown
-void sig_handler(int signo)
+void sig_handler_abort(int signo) //Generic signal handler for not-so-gracefull shutdown
 {
-    char stop_time[64] = ""; //Human readable stop time (actual time zone)
-    time_str(NULL, 0, stop_time, sizeof(stop_time)); //Get Human readable string only
-    fprintf(stderr, "\n%s Received Signal %s, shutting down...\n", stop_time, strsignal(signo));
-    // Free receiving buffer
-    free(saved_buffer(0));
-    //exit parent process
     exit(signo);
-    return;
 }

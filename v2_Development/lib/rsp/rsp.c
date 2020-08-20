@@ -68,12 +68,14 @@ int rsp(struct proxy_conf_tcp_node_t *pcn, char* server_addr)
     
     signal(SIGPIPE, SIG_IGN);
 
+    free_list = NULL;
+
     epoll_init();
 
-    create_server_socket_handler(proxy_sock.server_addr,
-                                 proxy_sock.server_port_str,
-                                 proxy_sock.backend_addr,
-                                 proxy_sock.backend_port_str);
+    epoll_server_hdl = create_server_socket_handler(proxy_sock.server_addr,
+                                                   proxy_sock.server_port_str,
+                                                   proxy_sock.backend_addr,
+                                                   proxy_sock.backend_port_str);
 
    
     epoll_do_reactor_loop();

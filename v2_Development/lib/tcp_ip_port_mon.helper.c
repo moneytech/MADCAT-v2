@@ -37,6 +37,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 */
 
 #include "tcp_ip_port_mon.helper.h"
+#include "epollinterface.h" //struct free list and epoll_server_hdl for proxy signal handler
 
 //Helper functions
 
@@ -78,7 +79,7 @@ void print_help_tcp(char* progname) //print help message
 int init_pcap(char* dev, char* dev_addr, pcap_t **handle)
 {
     char errbuf[PCAP_ERRBUF_SIZE];// Error string 
-    struct bpf_program fp;    // The compiled filter 
+    struct bpf_program fp;    // The compiled filter, global to get freed. //TODO: Free here?
     char filter_exp[ strlen(PCAP_FILTER) + strlen(dev_addr) + 1 ]; //The filter expression
     bpf_u_int32 mask;    // Our netmask 
     bpf_u_int32 net;    // Our IP 
@@ -106,6 +107,8 @@ int init_pcap(char* dev, char* dev_addr, pcap_t **handle)
     if (pcap_setfilter(*handle, &fp) == -1)
         return -4;
 
+    free(fp.bf_insns);
+
     return 0;
 }
 
@@ -127,30 +130,40 @@ void drop_root_privs(struct user_t user, const char* entity) // if process is ru
 
 //Handler
 
+//Signal handler helper functioin with common frees, etc. for parents and childs
+void sig_handler_common()
+{
+    //Free copies of proxy conf list
+    pctcp_free_list(pc->portlist);
+    free(pc);
+    //Close Semaphores
+    sem_close(consem);
+    sem_close(hdrsem);
+    //free JSON output
+    free(json_do(true,""));
+    //close FIFOs
+    fclose(confifo);
+    return;
+}
+
 //Signal Handler for parent watchdog
 void sig_handler_parent(int signo)
 {
-    int stat_pcap = 0;
-    int stat_accept = 0;
+    sleep(1); //Give childs a chance to exit first
 
     char stop_time[64] = ""; //Human readable stop time (actual time zone)
     time_str(NULL, 0, stop_time, sizeof(stop_time)); //Get Human readable string only
-    fprintf(stderr, "\n%s [PID %d] Received Signal %s, shutting down...\n", stop_time, getpid(), strsignal(signo));
+    fprintf(stderr, "\n%s [PID %d] Parent Watchdog received Signal %s, shutting down...\n", stop_time, getpid(), strsignal(signo));
 
-    sleep(1); //Let childs exit first
+    int stat_pcap = 0;
+    int stat_accept = 0;
 
-    //Unlink and close semaphores
-    sem_close(hdrsem);
-    sem_unlink ("hdrsem");
-    sem_close(consem);
-    sem_unlink ("consem");
-    
     //Family drama: Check if they are still alive and kill childs
     //TODO: Kill Proxys
-    if ( !waitpid(accept_pid, &stat_accept, WNOHANG) )
-        kill(accept_pid, SIGTERM);
+    if ( !waitpid(listner_pid, &stat_accept, WNOHANG) )
+        kill(listner_pid, SIGTERM);
 
-    if ( !waitpid(accept_pid, &stat_accept, WNOHANG) )
+    if ( !waitpid(listner_pid, &stat_accept, WNOHANG) )
         kill(pcap_pid, SIGTERM);
 
     for (int listenport = 1; listenport <65536; listenport++)
@@ -159,6 +172,7 @@ void sig_handler_parent(int signo)
             kill(pctcp_get_lport(pc, listenport)->pid, SIGTERM);
     }
 
+    sig_handler_common();
     //exit parent process
     exit(signo);
     return;
@@ -188,12 +202,69 @@ void sig_handler_sigchld(int signo)
 }
 
 //Signal Handler for childs
-void sig_handler_child(int signo)
+void sig_handler_pcapchild(int signo)
 {
+    char stop_time[64] = ""; //Human readable stop time (actual time zone)
+    time_str(NULL, 0, stop_time, sizeof(stop_time)); //Get Human readable string only
+    fprintf(stderr, "\n%s [PID %d] Sniffer received Signal %s, shutting down...\n", stop_time, getpid(), strsignal(signo));
+
+    fclose(hdrfifo);
+    pcap_close(handle); //Close PCAP Session handle 
     #if DEBUG >= 2
         fprintf(stderr, "*** DEBUG [PID %d] Parent died, aborting.\n", getpid());
     #endif
-    abort();
+    sig_handler_common();
+    exit(signo);
+    return;
+}
+
+void sig_handler_listnerchild(int signo)
+{
+    char stop_time[64] = ""; //Human readable stop time (actual time zone)
+    time_str(NULL, 0, stop_time, sizeof(stop_time)); //Get Human readable string only
+    sig_handler_common();
+    if (signo == SIGUSR2) //Gracefull shutdown
+    {
+        fprintf(stderr, "%s [PID %d] Listner is done. Bye.\n", stop_time, getpid(), strsignal(signo));
+        exit(0); //Success
+    }
+    else
+    {
+        fprintf(stderr, "\n%s [PID %d] Listner received Signal %s, shutting down...\n", stop_time, getpid(), strsignal(signo));
+        #if DEBUG >= 2
+            fprintf(stderr, "*** DEBUG [PID %d] Parent died, aborting.\n", getpid());
+        #endif
+        exit(signo);
+    }
+
+    return;
+}
+
+void sig_handler_proxychild(int signo)
+{
+    char stop_time[64] = ""; //Human readable stop time (actual time zone)
+    time_str(NULL, 0, stop_time, sizeof(stop_time)); //Get Human readable string only    
+    fprintf(stderr, "\n%s [PID %d] Proxy received Signal %s, shutting down...\n", stop_time, getpid(), strsignal(signo));
+    jd_free_list(jd->list);
+    free(jd);
+
+    //free connections left in free list
+    struct free_list_entry* temp;
+    while (free_list != NULL) {
+        free(free_list->block);
+        temp = free_list->next;
+        free(free_list);
+        free_list = temp;
+    }
+    //free global epoll server socket handler
+    free(epoll_server_hdl->closure);
+    free(epoll_server_hdl);
+
+    #if DEBUG >= 2
+        fprintf(stderr, "*** DEBUG [PID %d] Parent died, aborting.\n", getpid());
+    #endif
+    sig_handler_common();
+    exit(signo);
     return;
 }
 
@@ -206,7 +277,7 @@ void sig_handler_shutdown(int signo)
         fprintf(stderr, "\n%s [PID %d] Received Signal %s, shutting down...\n", stop_time, getpid(), strsignal(signo));
     #endif
     if ( pcap_pid != 0 ) kill(pcap_pid, SIGINT);
-    if ( accept_pid != 0 ) kill(accept_pid, SIGINT);
+    if ( listner_pid != 0 ) kill(listner_pid, SIGINT);
     abort();
     return;
 }
@@ -308,11 +379,21 @@ struct proxy_conf_tcp_node_t* pctcp_get_pid(struct proxy_conf_tcp_t* pc, pid_t p
     return 0;
 }
 
+void pctcp_free_list(struct proxy_conf_tcp_node_t* pctcp_node)
+{
+    if (pctcp_node != NULL)
+    {
+        pctcp_free_list(pctcp_node->next);
+        free(pctcp_node->backendaddr);
+        free(pctcp_node);
+    }
+    return;
+}
 
 void pctcp_print(struct proxy_conf_tcp_t* pc) //print proxy configuration
 {
     struct proxy_conf_tcp_node_t* pctcp_node = pc->portlist;
-    while ( pctcp_node != 0)
+    while ( pctcp_node != NULL)
     {
         fprintf(stderr, "\tProxy local port: %d -> Backend socket: %s:%d\n", pctcp_node->listenport, pctcp_node->backendaddr, pctcp_node->backendport);
         pctcp_node = pctcp_node->next;
@@ -396,6 +477,16 @@ bool jd_del(struct json_data_t* jd, long long int id)  //remove json data node b
     free(jd_node); //free the node element itself
 
     return true;
+}
+
+void jd_free_list(struct json_data_node_t* jd_node) //free list with json data
+{
+    if (jd_node != NULL)
+    {
+        jd_free_list(jd_node->next);
+        jd_del(jd, jd_node->id);
+    }
+    return;
 }
 
 void jd_print_list(struct json_data_t* jd) //print complete json data list
