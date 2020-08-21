@@ -42,8 +42,6 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 void* saved_buffer(void * buffer); //saves and returns address of main buffer to be freed by signal handler
 void sig_handler(int signo); //Generic Signal Handler for gracefull shutdown
 void sig_handler_abort(int signo); //Generic Signal Handler for not-so-gracefull shutdown
-//TODO?
-//char* json_do(bool reset, const char* format, ...); //Reset or initialize new JSON if first arguement is true and append formated string.
 void get_user_ids(struct user_t* user); //adapted example code from manpage getpwnam(3)
 
 #endif

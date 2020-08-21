@@ -168,9 +168,6 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 // Global Variables and Definitions
 char hostaddr[INET6_ADDRSTRLEN]; //Hostaddress to bind to. Globally defined to make it visible to functions for filtering.
 //Global Variables and definitions
-//long int JSON_BUF_SIZE; //TODO: Seriously think about necessary Buffer-Size for JSON Output
-//char* global_json;  //JSON Output defined global, to make all information visibel to functions for concatination and output.
-//char* json_ptr; //Pointer to actuall JSON output End, to concatinate strings with sprintf().
 pid_t pcap_pid; //PID of the Child doing the PCAP-Sniffing. Globally defined, cause it's used in CHECK-Makro.
 pid_t listner_pid; //PID of the Child doing the TCP Connection handling. Globally defined, cause it's used in CHECK-Makro.
 //semaphores for output globally defined for easy access inside functions

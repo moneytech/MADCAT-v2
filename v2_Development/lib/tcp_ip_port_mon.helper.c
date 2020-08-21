@@ -159,7 +159,6 @@ void sig_handler_parent(int signo)
     int stat_accept = 0;
 
     //Family drama: Check if they are still alive and kill childs
-    //TODO: Kill Proxys
     if ( !waitpid(listner_pid, &stat_accept, WNOHANG) )
         kill(listner_pid, SIGTERM);
 

@@ -115,12 +115,12 @@ int worker_udp(unsigned char* buffer, int recv_len, char* hostaddress , char* da
         fprintf(stderr, "%s Received packet from %s:%u to %s:%u with %d Bytes of DATA.\n", log_time, \
             ipv4udp.src_ip_str, ipv4udp.src_port, ipv4udp.dest_ip_str, ipv4udp.dest_port, ipv4udp.data_len);
 
-        if(pc->portmap[ipv4udp.dest_port] || (uc_con != 0 && uc_con->proxied) ) //if proxy is active for this port or active proxy connection to backend exists //TODO
+        if(pc->portmap[ipv4udp.dest_port] || (uc_con != 0 && uc_con->proxied) ) //If proxy is active for this port or active proxy connection to backend exists...
         {
             fprintf(stderr, "\tProxy configured: src: %s:%d dest:%s:%d id: %012jx\n",\
                     ipv4udp.src_ip_str, ipv4udp.src_port, ipv4udp.dest_ip_str, ipv4udp.dest_port, id);
-            struct proxy_conf_udp_node_t* pc_con = pcudp_get_lport(pc, ipv4udp.dest_port); //get proxy configuration for this connection
-            if(uc_con == 0 ) //if active connection does not exist, make new connection
+            struct proxy_conf_udp_node_t* pc_con = pcudp_get_lport(pc, ipv4udp.dest_port); //...get proxy configuration for this connection
+            if(uc_con == 0 ) //If active connection does not exist, make new connection
             {
                 //fprintf(stderr, "Proxy connection does not exists\n");
                 
@@ -203,7 +203,7 @@ int worker_udp(unsigned char* buffer, int recv_len, char* hostaddress , char* da
 
                 CHECK(bind(uc_con->client_socket_fd,(struct sockaddr *)&uc_con->client_localport,sizeof(uc_con->client_localport)), == 0);
 
-                //fprintf(stderr, "\n########### PROXY: IP %s, PORT %d\n\n", uc_con->proxy_ip, uc_con->proxy_port); //XXX
+                //fprintf(stderr, "\n########### PROXY: IP %s, PORT %d\n\n", uc_con->proxy_ip, uc_con->proxy_port);
             }
             else //if proxied and connection exists...
             {

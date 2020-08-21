@@ -51,7 +51,7 @@ void* cleanup_t()
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
     while ( true )
     {
-            //Scheduled Cleanup connections //TODO: Make this a thread before main loop
+            //Scheduled Cleanup connections
             sleep(pc->proxy_timeout + 1);
             //fprintf(stderr, "*** Cleanup...\n");
             uc_cleanup(uc, pc->proxy_timeout);
