@@ -145,8 +145,8 @@ int worker_udp(unsigned char* buffer, int recv_len, char* hostaddress , char* da
 
                 uc_con->backend_ip =  strncpy(malloc(strlen(pc_con->backendaddr) +2 ), pc_con->backendaddr, strlen(pc_con->backendaddr) +1 );
                 uc_con->backend_port =  pc_con->backendport;
-                uc_con->proxy_ip =  strncpy(malloc(strlen(ipv4udp.src_ip_str) + 2 ), ipv4udp.src_ip_str, strlen(ipv4udp.src_ip_str) +1 );
-                uc_con->proxy_port =  ipv4udp.src_port;
+                //uc_con->proxy_ip =  strncpy(malloc(strlen(ipv4udp.src_ip_str) + 2 ), ipv4udp.src_ip_str, strlen(ipv4udp.src_ip_str) +1 ); //XXX: FAIL
+                //uc_con->proxy_port =  ipv4udp.src_port; //XXX: FAIL
                 
                 //Make socket towards backend
                 uc_con->backend_socket = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
@@ -175,10 +175,14 @@ int worker_udp(unsigned char* buffer, int recv_len, char* hostaddress , char* da
                 getsockname(uc_con->backend_socket_fd, &local_address, &addr_size);
                 char* port_ptr = local_address.sa_data;
 
+                uc_con->proxy_ip =  strncpy(malloc(strlen(pc->proxy_ip) + 2 ), pc->proxy_ip, strlen(pc->proxy_ip) +1 );
+                uc_con->proxy_port =  ((uint8_t) (*port_ptr)) * 256 + ((uint8_t) (*(port_ptr+1)));
+                //fprintf(stderr, "\n########### PROXY: IP %s, PORT %d\n\n", uc_con->proxy_ip, uc_con->proxy_port);
+
                 // Get backend ID
-                uc_con->id_tobackend = uc_genid(pc->proxy_ip, ((uint8_t) (*port_ptr)) * 256 + ((uint8_t) (*(port_ptr+1))), uc_con->backend_ip, uc_con->backend_port);
+                uc_con->id_tobackend = uc_genid(uc_con->proxy_ip, uc_con->proxy_port, uc_con->backend_ip, uc_con->backend_port);
                 //fprintf(stderr, "\nBACKEND ID GENERATION: src: %s:%d dest:%s:%d id: %012jx\n",\
-                    uc_con->proxy_ip, uc_con->proxy_port, uc_con->backend_ip, uc_con->backend_port, uc_con->id_tobackend);
+                    uc_con->src_ip, uc_con->src_port, uc_con->backend_ip, uc_con->backend_port, uc_con->id_tobackend);
 
                 //Make socket towards client
                 uc_con->client_socket = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
@@ -191,8 +195,8 @@ int worker_udp(unsigned char* buffer, int recv_len, char* hostaddress , char* da
 
                 //Filling proxy-to-client information
                 uc_con->client_socket->sin_family = AF_INET;
-                uc_con->client_socket->sin_addr.s_addr = inet_addr(uc_con->proxy_ip); //destination IP for incoming packets
-                uc_con->client_socket->sin_port = htons(uc_con->proxy_port); //destination port for incoming packets
+                uc_con->client_socket->sin_addr.s_addr = inet_addr(uc_con->src_ip); //destination IP for incoming packets
+                uc_con->client_socket->sin_port = htons(uc_con->src_port); //destination port for incoming packets
 
                 uc_con->client_localport.sin_family = AF_INET;
                 uc_con->client_localport.sin_addr.s_addr= htonl(INADDR_ANY);
@@ -202,8 +206,6 @@ int worker_udp(unsigned char* buffer, int recv_len, char* hostaddress , char* da
                 setsockopt(uc_con->client_socket_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 
                 CHECK(bind(uc_con->client_socket_fd,(struct sockaddr *)&uc_con->client_localport,sizeof(uc_con->client_localport)), == 0);
-
-                //fprintf(stderr, "\n########### PROXY: IP %s, PORT %d\n\n", uc_con->proxy_ip, uc_con->proxy_port);
             }
             else //if proxied and connection exists...
             {
