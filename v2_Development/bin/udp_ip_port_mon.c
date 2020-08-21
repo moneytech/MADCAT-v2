@@ -194,9 +194,20 @@ int main(int argc, char *argv[])
         socklen_t addr_len = sizeof(addr);
         unsigned char* buffer = 0;
         int listenfd = CHECK(socket(AF_INET, SOCK_RAW, IPPROTO_UDP), != -1); //create socket filedescriptor
-        // if process is running as root, drop privileges
-        /* //XXX TODO: Do not drop, if proxy local ports are below 1024
-        if (getuid() == 0) {
+        //If process is running as root, drop privileges.
+        //Do not drop, if proxy local ports are below 1024. If so and not running as root, exit.
+        bool run_as_root = false;
+        for (int listenport = 1; listenport <1024; listenport++)
+        {
+            if (pc->portmap[listenport])
+            {
+                fprintf(stderr, "%s Local proxy port %d, configured for backend %s:%d is below 1024, thus can not drop privliges and must run as root!\n",\
+                                log_time, listenport, pcudp_get_lport(pc, listenport)->backendaddr, pcudp_get_lport(pc, listenport)->backendport);
+                if (getuid() != 0) exit(-1); //Not really necessary, cause opening of UDP RAW socket is going to fail before this statement is reached.
+                run_as_root = true;
+            }
+        }
+        if (getuid() == 0 && !run_as_root) {
             fprintf(stderr, "%s Droping priviliges to user %s...", log_time, user.name);
             get_user_ids(&user); //Get traget user UDI + GID
             CHECK(setgid(user.gid), == 0); // Drop GID first for security reasons!
@@ -207,7 +218,6 @@ int main(int argc, char *argv[])
                 fprintf(stderr,"SUCCESS. UID: %d\n", getuid());
             fflush(stderr);
         }
-        */
 
         //Initialize address struct (Host)
         bzero(&addr, addr_len);

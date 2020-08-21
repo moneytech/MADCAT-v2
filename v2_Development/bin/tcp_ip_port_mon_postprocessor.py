@@ -34,23 +34,29 @@
 
 from __future__ import print_function
 import sys, os, signal
+import pwd, grp
 import time
 import threading
 import json
-
-VERSION = "MADCAT - Mass Attack Detecion Connection Acceptance Tool\n TCP Connection and SYN JSON-data postprocessor\n v1.1 for TCP/IP Portmonitor v1.1.4 to v2.0 beta-1\nHeiko Folkerts, BSI 2018-2020\n"
-MASCOTT = "                             ▄▄▄               ▄▄▄▄▄▄\n                 ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀\n                    ▀▄▄▄▓█▓██   █▓█▌         █▓   ▓████████▀\n                       ▀███▓▓(o)██▓▌       ▐█▓█(o)█▓█████▀\n                         ▀▀██▓█▓▓█         ████▓███▀▀\n                  ▄            ▀▀▀▀                          ▄\n                ▀▀█                                         ▐██▌\n                  ██▄     ____------▐██████▌------___     ▄▄██\n                 __█ █▄▄--   ___------▀▓▓▀-----___   --▄▄█ █▀__\n             __--   ▀█  ██▄▄▄▄    __--▄▓▓▄--__   ▄▄▄▄██  ██▀   --__\n         __--     __--▀█ ██  █▀▀█████▄▄▄▄▄▄███████  ██ █▀--__      --__\n     __--     __--    __▀▀█  █  ██  ██▀▀██▀▀██  ██  █▀▀__    --__      --__\n         __--     __--     ▀███ ██  ██  ██  ██ ████▀     --__    --__\n hfo   --     __--             ▀▀▀▀▀██▄▄██▄▄██▀▀▀▀           --__    --\n         __ --                                                   --__"
 
 #Time before a SYN is seen as part of a SYN-Scan, if connection can not be found in con_dict.
 # Standard timeout is 63 seconds in Linux. For long connections 2*63=126sec. Seems more than reasonable.
 # If a connection lasts longer, the SYN and the connection
 #TODO: Discuss adding a general connection timeout to tcp_ip_port_mon.
 ########################## CONFIGURATION ##########################
-## Only in this section (global variables beginning with "DEF_") changes are allowed for configuration purposes ;-)
-DEF_CON_WAIT = 10 #Time to wait before a connection is processed to ensure that the matching SYN is present in sin_dict. Nothing to to with ICBMs.
-DEF_SYN_TIMEOUT =  60 + DEF_CON_WAIT #Time after which a SYN not yet matched with a connection is interpreted as SYN-SCAN
+## Only in this section (global configuration variables beginning with "DEF_"), thus changes are allowed here for configuration purposes ;-)
+DEF_CON_WAIT = 10 #Time to wait before a connection is processed to ensure that the matching SYN is present in syn_dict. Nothing to to with ICBMs. 10 + DEF_CON_WAIT is default.
+DEF_SYN_TIMEOUT =  60 + DEF_CON_WAIT #Time after which a SYN not yet matched with a connection is interpreted as SYN-SCAN. 60 + DEF_CON_WAIT is default.
+DEF_SYN_WAIT_PROXY = 30 + DEF_SYN_TIMEOUT #Time to wait before a connection proxied by TCP/IP Portmonitor is processed to ensure that the matching Connection is present in con_dict. 30 + DEF_SYN_TIMEOUT is default.
 DEF_HEADER_FIFO = "/tmp/header_json.tpm" #Named pipe with TCP-IP Header information, namely SYN
 DEF_CONNECTION_FIFO = "/tmp/connect_json.tpm" #Named pipe with connection information
+#User and Group to drop priviliges to.
+DEF_USER = "hf"
+DEF_GROUP = "hf"
+
+########################## Version and Mascott strings ##########################
+GLOBAL_VERSION = "MADCAT - Mass Attack Detecion Connection Acceptance Tool\n TCP Connection and SYN JSON-data postprocessor\n v2.0 for TCP/IP Portmonitor v2.0\nHeiko Folkerts, BSI 2018-2020\n"
+GLOBAL_MASCOTT = "                             ▄▄▄               ▄▄▄▄▄▄\n                 ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀\n                    ▀▄▄▄▓█▓██   █▓█▌         █▓   ▓████████▀\n                       ▀███▓▓(o)██▓▌       ▐█▓█(o)█▓█████▀\n                         ▀▀██▓█▓▓█         ████▓███▀▀\n                  ▄            ▀▀▀▀                          ▄\n                ▀▀█                                         ▐██▌\n                  ██▄     ____------▐██████▌------___     ▄▄██\n                 __█ █▄▄--   ___------▀▓▓▀-----___   --▄▄█ █▀__\n             __--   ▀█  ██▄▄▄▄    __--▄▓▓▄--__   ▄▄▄▄██  ██▀   --__\n         __--     __--▀█ ██  █▀▀█████▄▄▄▄▄▄███████  ██ █▀--__      --__\n     __--     __--    __▀▀█  █  ██  ██▀▀██▀▀██  ██  █▀▀__    --__      --__\n         __--     __--     ▀███ ██  ██  ██  ██ ████▀     --__    --__\n hfo   --     __--             ▀▀▀▀▀██▄▄██▄▄██▀▀▀▀           --__    --\n         __ --                                                   --__"
 
 ########################## Semaphore ##########################
 GLOBAL_SHUTDOWN = False #Semaphore to indicate shutdown
@@ -80,7 +86,7 @@ def signal_handler(signum, frame):
         #Wait for the same time, a SYN would be accepted as a SYN-Scan, to catch all SYN-Scans in line and give the connections a last chance to catch up.
         time.sleep(DEF_SYN_TIMEOUT + 0.1)
         logtime = time.strftime("%Y-%m-%dT%H:%M:%S",time.localtime(time.time())) + str(time.time()-int(time.time()))[1:8]
-        eprint(logtime + " [" + str(os.getpid()) + "]" + " ...bye!\n")
+        eprint(logtime + " [PID " + str(os.getpid()) + "]" + " ...bye!\n")
         sys.exit() #Terminate whole process including threads
     return
 
@@ -106,7 +112,7 @@ def build_syn_dict(fifo_file):
             hdrobj = json.loads(hdrjson) #unmarshal JSON from FiFo
         except ValueError:
             logtime = time.strftime("%Y-%m-%dT%H:%M:%S",time.localtime(time.time())) + str(time.time()-int(time.time()))[1:8]
-            eprint(logtime + " [" + str(os.getpid()) + "]" + " Error: " + DEF_HEADER_FIFO + " closed?") 
+            eprint(logtime + " [PID " + str(os.getpid()) + "]" + " Error: " + DEF_HEADER_FIFO + " closed?") 
             if not GLOBAL_SHUTDOWN: #prevent re-triggering
                 os.kill(os.getpid(), signal.SIGINT)
             return
@@ -135,7 +141,7 @@ def build_con_dict(fifo_file):
             conobj = json.loads(conjson) #unmarshal JSON from FiFo
         except ValueError:
             logtime = time.strftime("%Y-%m-%dT%H:%M:%S",time.localtime(time.time())) + str(time.time()-int(time.time()))[1:8]
-            eprint(logtime + " [" + str(os.getpid()) + "]" + " Error: " + DEF_CONNECTION_FIFO + " closed?") 
+            eprint(logtime + " [PID " + str(os.getpid()) + "]" + " Error: " + DEF_CONNECTION_FIFO + " closed?") 
             if not GLOBAL_SHUTDOWN: #prevent re-triggering
                 os.kill(os.getpid(), signal.SIGINT)
             return
@@ -234,14 +240,17 @@ def output_accepted_con():
     return
 
 ########################## Print SYNs as SYN-Scans after configured timeout as JSON on STDOUT ##########################
-def output_syn_scans(syn_timeout):
+def output_syn_scans(syn_timeout, proxy_timeout):
     global syn_dict, syn_dict_lock
 
     while True: #Loop checking for SYNs without connection after syn_timout
         #eprint("output_syn_scans")
         syn_dict_lock.acquire() #Aquire lock on SYN dictonary
         for synid in syn_dict.keys(): #Iterate over items in SYN dictonary
-            if syn_dict.get(synid).get("unixtime") + syn_timeout < time.time(): #Check if specific SYN exceeded timeout
+             #Check if specific SYN exceeded timeout. Check for proxied = true is ommited for backward compatibility reasons.
+             #This is possible,because proxy_timout should in any case be greater than syn_timeout.
+            if (syn_dict.get(synid).get("unixtime") + syn_timeout < time.time() and syn_dict.get(synid).get("tcp").get("proxied") == "false" ) or \
+               (syn_dict.get(synid).get("unixtime") + proxy_timeout < time.time()):
                 output = {} #Begin new JSON output
                 #Build Dionaea-like (pseudo-)Header from IP- and TCP-Header Information and append IP- and TCP-Header information
                 output.update({"origin": "MADCAT", 
@@ -273,6 +282,29 @@ def output_syn_scans(syn_timeout):
         """
     return
 
+########################## Drop root priviliges ##########################
+def drop_privileges(uid_name , gid_name):
+    logtime = time.strftime("%Y-%m-%dT%H:%M:%S",time.localtime(time.time())) + str(time.time()-int(time.time()))[1:8]
+    eprint(logtime + " [PID " + str(os.getpid()) + "]" + " ...trying to Drop root priviliges...")
+
+    if os.getuid() != 0: # if not root do nothing
+        eprint(logtime + " [PID " + str(os.getpid()) + "]" + " ...nothing to do. Running with UID: " + str(os.getuid()) + " GID: "  + str(os.getgid()))
+        return
+
+    # Get the uid/gid from the name
+    running_uid = pwd.getpwnam(uid_name).pw_uid
+    running_gid = grp.getgrnam(gid_name).gr_gid
+
+    # Remove group privileges
+    os.setgroups([])
+
+    # Try setting the new uid/gid
+    os.setgid(running_gid)
+    os.setuid(running_uid)
+    eprint(logtime + " [PID " + str(os.getpid()) + "]" + " ...done. Running with UID: "  + str(os.getuid()) + " GID: "  + str(os.getgid()))
+
+    return
+
 ########################## Configure Threads ##########################
 ##All threads are deamonized to make them exit with the parent process
 #Threads for data acquisition
@@ -281,7 +313,7 @@ syn_dict_th.setDaemon(True)
 con_dict_th = threading.Thread(target = build_con_dict, args = [DEF_CONNECTION_FIFO]) #Argument: Path to the named pipe containing connection information
 con_dict_th.setDaemon(True)
 #Threads for generating JSON and cleaning up dictonarys
-output_syn_scans_th = threading.Thread(target = output_syn_scans, args = [DEF_SYN_TIMEOUT]) #Argument: Time after which a SYN is considered a scan
+output_syn_scans_th = threading.Thread(target = output_syn_scans, args = [DEF_SYN_TIMEOUT,  DEF_SYN_WAIT_PROXY]) #Argument: Time after which a SYN is considered a scan
 output_syn_scans_th.setDaemon(True)
 output_accepted_con_th = threading.Thread(target = output_accepted_con)
 output_accepted_con_th.setDaemon(True)
@@ -291,15 +323,16 @@ def main(argv):
     global GLOBAL_SHUTDOWN
     logtime = time.strftime("%Y-%m-%dT%H:%M:%S",time.localtime(time.time())) + str(time.time()-int(time.time()))[1:8]
 
-    eprint(MASCOTT) #print mascott
-    eprint(VERSION) #print version string
-    eprint("================= Configuration [" + str(os.getpid()) + "] : =================")
+    eprint(GLOBAL_MASCOTT) #print mascott
+    eprint(GLOBAL_VERSION) #print version string
+    eprint("================= Configuration [PID " + str(os.getpid()) + "]: =================")
     eprint("Time after which a SYN not yet matched with a connection is interpreted as SYN-SCAN:\n %.1fsec " % DEF_SYN_TIMEOUT )
     eprint("Time to wait before a connection is processed to ensure that the matching SYN is present:\n %.1fsec" % DEF_CON_WAIT)
+    eprint("Time to wait before a connection proxied by TCP/IP Portmonitor is processed to ensure that the matching Connection is present:\n %.1fsec" % DEF_SYN_WAIT_PROXY)
     eprint("Named pipe with TCP/IP Header information, namely SYN:\n " + DEF_HEADER_FIFO)
     eprint("Named pipe with connection information:\n " + DEF_CONNECTION_FIFO)
     eprint("==================================================")
-    eprint("\n" + logtime + " [" + str(os.getpid()) + "]" + " Starting up...")
+    eprint("\n" + logtime + " [PID " + str(os.getpid()) + "]" + " Starting up...")
 
     signal.signal(signal.SIGINT, signal_handler) #intialize Signal Handler for gracefull shutdown (SIGINT)
 
@@ -310,25 +343,28 @@ def main(argv):
     output_accepted_con_th.start()
     output_syn_scans_th.start()
 
+    time.sleep(1)
+    drop_privileges(DEF_USER, DEF_GROUP)
+
     logtime = time.strftime("%Y-%m-%dT%H:%M:%S",time.localtime(time.time())) + str(time.time()-int(time.time()))[1:8]
-    eprint(logtime + " [" + str(os.getpid()) + "]" + " ...running.")
+    eprint(logtime + " [PID " + str(os.getpid()) + "]" + " Running.")
     #Sleep and wait for "death by signal" (unfortunetly their is no signal "CHOCOLATE")... 
     while True:
         #Check Threads every second. If one died try a graceful shutdown
-        time.sleep(1)
         logtime = time.strftime("%Y-%m-%dT%H:%M:%S",time.localtime(time.time())) + str(time.time()-int(time.time()))[1:8]
         if not syn_dict_th.isAlive():
-            eprint(logtime + " [" + str(os.getpid()) + "]" + " Thread build_syn_dict died, shutting down...")
+            eprint(logtime + " [PID " + str(os.getpid()) + "]" + " Thread build_syn_dict died, shutting down...")
             os.kill(os.getpid(), signal.SIGINT)
         if not con_dict_th.isAlive():
-            eprint(logtime + " [" + str(os.getpid()) + "]" + " Thread build_con_dict died, shutting down...")          
+            eprint(logtime + " [PID " + str(os.getpid()) + "]" + " Thread build_con_dict died, shutting down...")          
             os.kill(os.getpid(), signal.SIGINT)
         if not output_accepted_con_th.isAlive():
-            eprint(logtime + " [" + str(os.getpid()) + "]" + " Thread output_accepted_con died, shutting down...")
+            eprint(logtime + " [PID " + str(os.getpid()) + "]" + " Thread output_accepted_con died, shutting down...")
             os.kill(os.getpid(), signal.SIGINT)
         if not output_syn_scans_th.isAlive():
-            eprint(logtime + " [" + str(os.getpid()) + "]" + " Thread output_syn_scans died, shutting down...")
+            eprint(logtime + " [PID " + str(os.getpid()) + "]" + " Thread output_syn_scans died, shutting down...")
             os.kill(os.getpid(), signal.SIGINT)
+        time.sleep(1)
     return
 
 if __name__ == "__main__": #call "def main(argv) as function with command line arguments

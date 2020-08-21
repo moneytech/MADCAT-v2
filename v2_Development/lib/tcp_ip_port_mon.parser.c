@@ -260,6 +260,7 @@ int analyze_tcp_header(const unsigned char* packet, struct pcap_pkthdr header)
 \"tcp\": {\
 \"src_port\": %d, \
 \"dest_port\": %d, \
+\"proxied\": \"%s\", \
 \"seq\": %u, \
 \"ack_seq\": %u, \
 \"hdr_len\": %d, \
@@ -279,6 +280,7 @@ int analyze_tcp_header(const unsigned char* packet, struct pcap_pkthdr header)
 \"urg_ptr\": \"0x%04x\"",\
 ntohs(tcphdr->source),\
 ntohs(tcphdr->dest),\
+pc->portmap[ntohs(tcphdr->dest)] ? "true" : "false",\
 ntohl(tcphdr->seq),\
 ntohl(tcphdr->ack_seq),\
 tcphdr->doff*4,\
