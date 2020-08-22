@@ -352,7 +352,7 @@ void pctcp_push(struct proxy_conf_tcp_t* pc, int listenport, char* backendaddr, 
 
     pctcp_node->next = pc->portlist;
     pc->portlist = pctcp_node;
-    pc->num_elemnts++;
+    pc->num_elements++;
     return;
 }
 

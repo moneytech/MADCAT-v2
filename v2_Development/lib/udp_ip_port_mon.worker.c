@@ -176,7 +176,7 @@ int worker_udp(unsigned char* buffer, int recv_len, char* hostaddress , char* da
                 char* port_ptr = local_address.sa_data;
 
                 uc_con->proxy_ip =  strncpy(malloc(strlen(pc->proxy_ip) + 2 ), pc->proxy_ip, strlen(pc->proxy_ip) +1 );
-                uc_con->proxy_port =  ((uint8_t) (*port_ptr)) * 256 + ((uint8_t) (*(port_ptr+1)));
+                uc_con->proxy_port = (uint16_t) (uint16_t) ((uint8_t) (*port_ptr)) * 256 + ((uint8_t) (*(port_ptr+1)));
                 //fprintf(stderr, "\n########### PROXY: IP %s, PORT %d\n\n", uc_con->proxy_ip, uc_con->proxy_port);
 
                 // Get backend ID

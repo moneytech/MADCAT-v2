@@ -164,7 +164,7 @@ void pcudp_push(struct proxy_conf_udp_t* pc, int listenport, char* backendaddr, 
 
     pcudp_node->next = pc->portlist;
     pc->portlist = pcudp_node;
-    pc->num_elemnts++;
+    pc->num_elements++;
     return;
 }
 

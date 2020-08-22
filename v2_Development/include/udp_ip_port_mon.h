@@ -105,17 +105,17 @@ struct proxy_conf_udp_node_t //linked list element to hold proxy configuration i
 {
     struct proxy_conf_udp_node_t* next;
 
-    int   listenport;
-    char  listenport_str[PCN_STRLEN];
-    int   backendport;
-    char  backendport_str[PCN_STRLEN];
-    char* backendaddr;
+    uint16_t listenport;
+    char     listenport_str[PCN_STRLEN];
+    uint16_t backendport;
+    char     backendport_str[PCN_STRLEN];
+    char*    backendaddr;
 };
 
 struct proxy_conf_udp_t { //proxy configuration
     struct proxy_conf_udp_node_t* portlist; //head pointer to linked list with proxy configuration items
     bool portmap[65536]; //map of ports used to proxy network traffic
-    int  num_elemnts;
+    int  num_elements;
     char proxy_ip[INET6_ADDRSTRLEN]; //IP used to communicate with backends
     int  proxy_timeout; //timout of UDP "Connections"
 } *pc; //globally defined to be easly accesible inside rsp-proxy to check if root priviliges can be dropped (ports <1023)

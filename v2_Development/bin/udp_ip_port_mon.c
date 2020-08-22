@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
         {
             if (pc->portmap[listenport])
             {
-                fprintf(stderr, "%s Local proxy port %d, configured for backend %s:%d is below 1024, thus can not drop privliges and must run as root!\n",\
+                fprintf(stderr, "%s Local proxy port %d, configured for backend %s:%d is below 1024, thus can not drop privileges and must run as root!\n",\
                                 log_time, listenport, pcudp_get_lport(pc, listenport)->backendaddr, pcudp_get_lport(pc, listenport)->backendport);
                 if (getuid() != 0) exit(-1); //Not really necessary, cause opening of UDP RAW socket is going to fail before this statement is reached.
                 run_as_root = true;

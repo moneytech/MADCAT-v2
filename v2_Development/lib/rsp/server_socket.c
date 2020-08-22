@@ -166,7 +166,7 @@ struct proxy_data*  handle_client_connection(int client_socket_fd,
 
     char* port_ptr = local_address.sa_data;
     char* ip_ptr = (char*) &(local_address.sa_data) + 2;
-    proxy_sock.client_port = ((uint8_t) (*port_ptr)) * 256 + ((uint8_t) (*(port_ptr+1)));
+    proxy_sock.client_port = (uint16_t) ((uint8_t) (*port_ptr)) * 256 + ((uint8_t) (*(port_ptr+1)));
     //proxy_sock.client_addr = inttoa(*(uint32_t*)ip_ptr); //TODO: Commented out, what was my thought?
     
     jd_get(jd, (long long unsigned int) proxy->client)->proxy_ip = inttoa(*(uint32_t*)ip_ptr);

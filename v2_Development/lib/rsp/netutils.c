@@ -129,22 +129,6 @@ int connect_to_backend(char* backend_host,
         exit(1);
     }
 
-    /*
-    //MADCAT start
-    //Get local client address and port
-    struct sockaddr local_address;
-    int addr_size = sizeof(local_address);
-    getsockname(backend_socket_fd, &local_address, &addr_size);
-
-    char* port_ptr = local_address.sa_data;
-    char* ip_ptr = (char*) &(local_address.sa_data) + 2;
-    proxy_sock.client_port = ((uint8_t) (*port_ptr)) * 256 + ((uint8_t) (*(port_ptr+1)));
-    proxy_sock.client_addr = inttoa(*(uint32_t*)ip_ptr);
-    
-    //fprintf(stderr, "\n\n############### \n\tServer IP: %s\n\tServer PORT: %u\n\n", inttoa(*(uint32_t*)ip_ptr), proxy_sock.client_port);
-    //MADCAT end
-    */
-
     freeaddrinfo(addrs);
 
     return backend_socket_fd;
