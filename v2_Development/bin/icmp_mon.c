@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
                 bufsize = atoi(get_config_opt(luaState, "bufsize")); //convert string type to integer type (bufsize)
             }
             fprintf(stderr, "\tbufsize: %d\n", bufsize);
-            
+            fflush(stderr);
             lua_close(luaState);        
         }
         else //copy legacy command line arguments to variables

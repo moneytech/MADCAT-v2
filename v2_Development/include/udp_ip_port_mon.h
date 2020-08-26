@@ -37,7 +37,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 
 #include "madcat.common.h"
 
-#define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nUDP-IP Port Monitor v2.0.1\nHeiko Folkerts, BSI 2018-2020\n"
+#define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nUDP-IP Port Monitor v2.0.2\nHeiko Folkerts, BSI 2018-2020\n"
 
 
 #define UDP_HEADER_LEN 8

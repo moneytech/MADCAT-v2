@@ -6,9 +6,11 @@ extern "C" {
 }
 
 TEST(test1, ok) {
+  
+
   ASSERT_EQ(1, 1);
 }
 
-/*TEST(test1, not_ok) {
+TEST(FehlerDummy, not_ok) {
   ASSERT_EQ(1, 0);
-}*/
+}

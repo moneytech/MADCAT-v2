@@ -157,6 +157,7 @@ int main(int argc, char *argv[])
             }
 
             pcudp_print(pc);
+            fflush(stderr);
             lua_close(luaState);
         }
         else //copy legacy command line arguments to variables

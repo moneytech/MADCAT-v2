@@ -59,13 +59,13 @@ int main(int argc, char *argv[])
         CHECK(signal(SIGINT, sig_handler_parent), != SIG_ERR); //register handler for SIGINT for parent process
         CHECK(signal(SIGTERM, sig_handler_parent), != SIG_ERR); //register handler for SIGTERM for parent process
 
+        sem_unlink ("hdrsem");
+        sem_unlink ("consem");
+
         //semaphores for output globally defined for easy access inside functions
         hdrsem = CHECK(sem_open ("hdrsem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED);  //open semaphore for named pipe containing TCP/IP data
         //Semaphore for named pipe containing connection data
         consem = CHECK(sem_open ("consem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED);
-
-        sem_unlink ("hdrsem");
-        sem_unlink ("consem");
 
         //Display Mascott and Version
         fprintf(stderr, "\n%s%s\n", MASCOTT, VERSION);
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
         //Parse command line. 
         hostaddr[INET6_ADDRSTRLEN] = 0; //Hostaddress to bind to. Globally defined to make it visible to functions for filtering.
         int port = 65535;
-        char interface[16]= "";
+        char interface[64]= "";
         double timeout = 30;
         char data_path[PATH_LEN] = "";
         int max_file_size = -1;
@@ -141,11 +141,12 @@ int main(int argc, char *argv[])
             get_config_table(luaState, "tcpproxy", pc);
             pctcp_print(pc);
 
+            fflush(stderr);
             lua_close(luaState);
         } 
         else //copy legacy command line arguments to variables
         {
-            strncpy(interface, argv[1], sizeof(interface)); hostaddr[sizeof(interface)-1] = 0;  //copy hostaddress and ensure null termination of this string. Ugly.
+            strncpy(interface, argv[1], sizeof(interface)); interface[sizeof(interface)-1] = 0;  //copy hostaddress and ensure null termination of this string. Ugly.
             strncpy(hostaddr, argv[2], sizeof(hostaddr)); hostaddr[sizeof(hostaddr)-1] = 0;
             port = atoi(argv[3]); //convert string type to integer type (port)
             timeout = (double) atof(argv[4]); //set timeout and convert to integer type.
