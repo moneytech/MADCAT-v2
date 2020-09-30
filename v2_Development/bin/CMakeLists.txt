@@ -40,6 +40,10 @@ add_executable(udp_ip_port_mon
   udp_ip_port_mon.c
 )
 
+add_executable(raw_mon
+  raw_mon.c
+)
+
 target_link_libraries(icmp_mon
   IcmpMonCore
   ${PCAP_LIBRARY}
@@ -68,10 +72,20 @@ target_link_libraries(udp_ip_port_mon
 )
 target_compile_options (udp_ip_port_mon PRIVATE ${GCC_FLAGS})
 
+target_link_libraries(raw_mon
+  RawMonCore
+  ${PCAP_LIBRARY}
+  OpenSSL::SSL
+  pthread
+  ${LUA_LIBRARY}
+)
+target_compile_options (raw_mon PRIVATE ${GCC_FLAGS})
+
 
 install(TARGETS
           icmp_mon
           udp_ip_port_mon
           tcp_ip_port_mon
+          raw_mon
         RUNTIME DESTINATION bin
         )

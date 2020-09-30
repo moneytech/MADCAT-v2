@@ -52,11 +52,17 @@ add_library(UdpIpPortMonCore STATIC #SHARED #STATIC
   udp_ip_port_mon.icmp_mon.helper.c
 )
 
+add_library(RawMonCore STATIC #SHARED #STATIC
+  madcat.helper.c
+  raw_mon.helper.c
+)
+
 install(
   TARGETS
     IcmpMonCore
     TcpIpPortMonCore
     UdpIpPortMonCore
+    RawMonCore
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
 )
