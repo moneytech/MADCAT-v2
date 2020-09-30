@@ -48,18 +48,12 @@ void print_help_tcp(char* progname) //print help message
     fprintf(stderr, "SYNTAX:\n    %s path_to_config_file\n\
         Sample content of a config file:\n\n\
             \tinterface = \"enp0s8\"\n\
-            \thostaddress = \"10.1.2.3\"\n\
             \tlistening_port = \"65535\"\n\
-            \tconnection_timeout = \"10\"\n\
             \tuser = \"hf\"\n\
-            \tpath_to_save_tcp_streams = \"./tpm/\" --Must end with trailing \"/\", will be handled as prefix otherwise\n\
-            \t--max_file_size = \"1024\" --optional\n\
-            \t--TCP Proxy configuration\n\
-            \ttcpproxy = {\n\
-            \t-- [<listen port>] = { \"<backend IP>\", <backend Port> },\n\
-            \t\t[22]  = { \"192.168.10.222\", 22 },\n\
-            \t\t[80]  = { \"192.168.20.80\", 8080 },\n\
-            \t}\n\
+            \tmax_file_size = \"1024\" --optional: Max. size of payloads in JSON-Output\n\
+            \t--Optional filter expresion for RAW module, defaults to none (empty string).\n\
+            \t--Syntax: https://www.tcpdump.org/manpages/pcap-filter.7.html\n\
+            \traw_pcap_filter_exp = \"(not ip6 multicast) and inbound and ip6\"\n\
         ", progname);
 
     fprintf(stderr, "\nLEGACY SYNTAX (pre v1.1.5):\n    %s interface hostaddress listening_port connection_timeout user path_to_save_tcp-streams [max_file_size]\n\
