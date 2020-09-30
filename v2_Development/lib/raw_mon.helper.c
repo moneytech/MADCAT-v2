@@ -47,11 +47,14 @@ void print_help_raw(char* progname) //print help message
 {
     
     fprintf(stderr, "SYNTAX:\n    %s path_to_config_file\n\
-        TODO: Sample content of a config file:\n\n\
-            \thostaddress = \"127.1.1.1\"\n\
+        Sample content of a config file:\n\n\
+            \tinterface = \"enp0s8\"\n\
+            \tlistening_port = \"65535\"\n\
             \tuser = \"hf\"\n\
-            \tpath_to_save_icmp_data = \"./ipm/\" --Must end with trailing \"/\", will be handled as prefix otherwise\n\
-            \t--bufsize = \"1024\" --optional\n"\
+            \tmax_file_size = \"1024\" --optional: Max. size of payloads in JSON-Output\n\
+            \t--Optional filter expresion for RAW module, defaults to none (empty string).\n\
+            \t--Syntax: https://www.tcpdump.org/manpages/pcap-filter.7.html\n\
+            \traw_pcap_filter_exp = \"(not ip6 multicast) and inbound and ip6\"\n"\
         , progname);
 
     return;
