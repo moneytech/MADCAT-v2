@@ -38,6 +38,8 @@ set(PACKAGE_BUGREPORT "heiko.folkerts@bsi.bund.de")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(UNINSTALL_SCRIPT "uninstall.sh")
 
+message(STATUS "Architecture: ${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_PROCESSOR}")
+
 # Common C_FLAG option
 # TODO
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -gdwarf-2" "--no-strict-aliasing")
@@ -73,6 +75,20 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
 
 # Add CMake config files to build env
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+#Set paths for cross-compilation
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "armhf")
+  SET(OPENSSL_ROOT_DIR /usr/lib/gcc-cross/arm-linux-gnueabi/9)
+  SET(OPENSSL_CRYPTO_LIBRARY /usr/lib/gcc-cross/arm-linux-gnueabi/9/libcrypto.so)
+  SET(OPENSSL_SSL_LIBRARY /usr/lib/gcc-cross/arm-linux-gnueabi/9/libssl.so)
+  SET(PCAP_ROOT_DIR /usr/lib/gcc-cross/arm-linux-gnueabi/9)
+  SET(LUA_INCLUDE_DIR /usr/lib/gcc-cross/arm-linux-gnueabi/9)
+  SET(LUA_INCLUDE_DIR /usr/lib/gcc-cross/arm-linux-gnueabi/9)
+  SET(LUA_LIBRARIES /usr/lib/gcc-cross/arm-linux-gnueabi/9)
+  SET(LUA_LIBRARY /usr/lib/gcc-cross/arm-linux-gnueabi/9/liblua5.1.so)
+  MARK_AS_ADVANCED(LUA_LIBRARY)
+  message(${LUA_LIBRARY})
+endif()
 
 # looking for dependencies
 # OpenSSL
@@ -137,5 +153,27 @@ add_subdirectory(bin)
 if(MADCAT_TEST)
   enable_testing()
   add_subdirectory(tests)
+endif()
+
+#Set variables for cross-compilation
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "armhf")
+  if (OPENSSL_FOUND)
+    # Add the include directories for compiling
+    target_include_directories(udp_ip_port_mon PUBLIC ${OPENSSL_INCLUDE_DIR})
+    target_include_directories(tcp_ip_port_mon PUBLIC ${OPENSSL_INCLUDE_DIR})
+    target_include_directories(icmp_mon PUBLIC ${OPENSSL_INCLUDE_DIR})
+    target_include_directories(raw_mon PUBLIC ${OPENSSL_INCLUDE_DIR})
+
+    # Add the static lib for linking
+    #target_link_libraries(udp_ip_port_mon OpenSSL::SSL OpenSSL::Crypto)
+    #target_link_libraries(tcp_ip_port_mon OpenSSL::SSL OpenSSL::Crypto)
+    #target_link_libraries(icmp_mon PUBLIC OpenSSL::SSL OpenSSL::Crypto)
+    #target_link_libraries(raw_mon PUBLIC OpenSSL::SSL OpenSSL::Crypto)
+
+    message(STATUS "Found OpenSSL ${OPENSSL_VERSION} for ${CMAKE_SYSTEM_PROCESSOR} architecture")
+
+  endif()
+  SET(PCAP_LIBRARY /usr/lib/gcc-cross/arm-linux-gnueabi/9/lib/libpcap.so)
+  mark_as_advanced(PCAP_LIBRARY)
 endif()
 

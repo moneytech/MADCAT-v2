@@ -49,7 +49,6 @@ void print_help_raw(char* progname) //print help message
     fprintf(stderr, "SYNTAX:\n    %s path_to_config_file\n\
         Sample content of a config file:\n\n\
             \tinterface = \"enp0s8\"\n\
-            \tlistening_port = \"65535\"\n\
             \tuser = \"hf\"\n\
             \tmax_file_size = \"1024\" --optional: Max. size of payloads in JSON-Output\n\
             \t--Optional filter expresion for RAW module, defaults to none (empty string).\n\

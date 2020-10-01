@@ -1,0 +1,132 @@
+[
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -o CMakeFiles/RawMonCore.dir/madcat.helper.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/madcat.helper.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/madcat.helper.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -o CMakeFiles/RawMonCore.dir/raw_mon.helper.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/raw_mon.helper.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/raw_mon.helper.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -o CMakeFiles/UdpIpPortMonCore.dir/madcat.helper.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/madcat.helper.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/madcat.helper.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -o CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.helper.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/udp_ip_port_mon.helper.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/udp_ip_port_mon.helper.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -o CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.parser.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/udp_ip_port_mon.parser.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/udp_ip_port_mon.parser.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -o CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.worker.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/udp_ip_port_mon.worker.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/udp_ip_port_mon.worker.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -o CMakeFiles/UdpIpPortMonCore.dir/udp_ip_port_mon.icmp_mon.helper.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/udp_ip_port_mon.icmp_mon.helper.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/udp_ip_port_mon.icmp_mon.helper.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -o CMakeFiles/TcpIpPortMonCore.dir/madcat.helper.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/madcat.helper.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/madcat.helper.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -o CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.helper.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/tcp_ip_port_mon.helper.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/tcp_ip_port_mon.helper.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -o CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.parser.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/tcp_ip_port_mon.parser.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/tcp_ip_port_mon.parser.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -o CMakeFiles/TcpIpPortMonCore.dir/tcp_ip_port_mon.worker.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/tcp_ip_port_mon.worker.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/tcp_ip_port_mon.worker.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -o CMakeFiles/IcmpMonCore.dir/madcat.helper.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/madcat.helper.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/madcat.helper.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -o CMakeFiles/IcmpMonCore.dir/icmp_mon.helper.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/icmp_mon.helper.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/icmp_mon.helper.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -o CMakeFiles/IcmpMonCore.dir/icmp_mon.parser.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/icmp_mon.parser.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/icmp_mon.parser.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -o CMakeFiles/IcmpMonCore.dir/icmp_mon.worker.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/icmp_mon.worker.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/icmp_mon.worker.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -o CMakeFiles/IcmpMonCore.dir/udp_ip_port_mon.icmp_mon.helper.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/udp_ip_port_mon.icmp_mon.helper.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/udp_ip_port_mon.icmp_mon.helper.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib/rsp",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -Wall -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpProxyCore.dir/connection.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/rsp/connection.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/rsp/connection.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib/rsp",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -Wall -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpProxyCore.dir/epollinterface.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/rsp/epollinterface.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/rsp/epollinterface.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib/rsp",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -Wall -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpProxyCore.dir/logging.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/rsp/logging.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/rsp/logging.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib/rsp",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -Wall -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpProxyCore.dir/netutils.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/rsp/netutils.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/rsp/netutils.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib/rsp",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -Wall -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpProxyCore.dir/rsp.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/rsp/rsp.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/rsp/rsp.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/lib/rsp",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -Wall -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/TcpProxyCore.dir/server_socket.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/lib/rsp/server_socket.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/lib/rsp/server_socket.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/bin",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -Wall -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/raw_mon.dir/raw_mon.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/bin/raw_mon.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/bin/raw_mon.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/bin",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -Wall -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/udp_ip_port_mon.dir/udp_ip_port_mon.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/bin/udp_ip_port_mon.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/bin/udp_ip_port_mon.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/bin",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -Wall -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/tcp_ip_port_mon.dir/tcp_ip_port_mon.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/bin/tcp_ip_port_mon.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/bin/tcp_ip_port_mon.c"
+},
+{
+  "directory": "/home/MADCAT/MADCAT-v2/v2_Development/build-arm/bin",
+  "command": "/usr/bin/arm-linux-gnueabi-gcc  -I/home/MADCAT/MADCAT-v2/v2_Development/include -I/home/MADCAT/MADCAT-v2/v2_Development/include/rsp -I/usr/lib/gcc-cross/arm-linux-gnueabi/9    -Wall -gdwarf-2 -fno-strict-aliasing -o CMakeFiles/icmp_mon.dir/icmp_mon.c.o   -c /home/MADCAT/MADCAT-v2/v2_Development/bin/icmp_mon.c",
+  "file": "/home/MADCAT/MADCAT-v2/v2_Development/bin/icmp_mon.c"
+}
+]

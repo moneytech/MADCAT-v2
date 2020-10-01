@@ -1,0 +1,2 @@
+/usr/bin/arm-linux-gnueabi-ar qc libRawMonCore.a  CMakeFiles/RawMonCore.dir/madcat.helper.c.o CMakeFiles/RawMonCore.dir/raw_mon.helper.c.o
+/usr/bin/arm-linux-gnueabi-ranlib libRawMonCore.a

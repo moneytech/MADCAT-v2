@@ -1,0 +1,1 @@
+/usr/bin/arm-linux-gnueabi-gcc    CMakeFiles/udp_ip_port_mon.dir/udp_ip_port_mon.c.o  -o udp_ip_port_mon  -Wl,-rpath,/usr/lib/gcc-cross/arm-linux-gnueabi/9/lib: ../lib/libUdpIpPortMonCore.a /usr/lib/gcc-cross/arm-linux-gnueabi/9/lib/libpcap.so -lOpenSSL::SSL -lpthread 

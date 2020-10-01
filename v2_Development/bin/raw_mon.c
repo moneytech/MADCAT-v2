@@ -199,6 +199,9 @@ int main(int argc, char *argv[])
 \"payload_hd\": \"%s\",\
 \"payload_str\": \"%s\",\
 \"payload_sha1\": \"%s\"\
+},\
+\"raw\": { \
+\"filter\": \"%s\"\
 }}",\
 json_data.start, \
 json_data.proto == 4 ? "IPv4" : json_data.proto == 6 ? "IPv6" : proto_str,\
@@ -211,7 +214,8 @@ json_data.end,\
 json_data.bytes_toserver,\
 payload_hd_str,\
 payload_str,\
-payload_sha1_str
+payload_sha1_str,\
+filter_exp\
 );
             //JSON Ouput and close JSON object
             fprintf(stdout,"%s\n", json_do(false, "")); //print json output for logging

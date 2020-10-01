@@ -1,0 +1,2 @@
+/usr/bin/arm-linux-gnueabi-ar qc ../libTcpProxyCore.a  CMakeFiles/TcpProxyCore.dir/connection.c.o CMakeFiles/TcpProxyCore.dir/epollinterface.c.o CMakeFiles/TcpProxyCore.dir/logging.c.o CMakeFiles/TcpProxyCore.dir/netutils.c.o CMakeFiles/TcpProxyCore.dir/rsp.c.o CMakeFiles/TcpProxyCore.dir/server_socket.c.o
+/usr/bin/arm-linux-gnueabi-ranlib ../libTcpProxyCore.a
