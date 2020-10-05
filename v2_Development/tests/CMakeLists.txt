@@ -36,6 +36,8 @@ add_executable(test_helper_functions
 
 target_link_libraries(test_helper_functions
   gtest_main
+  MadCatHelper
+  ${LUA_LIBRARY}
 )
 
 add_test(NAME test_helper_functions COMMAND test_helper_functions)

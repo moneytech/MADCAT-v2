@@ -41,6 +41,7 @@ add_executable(udp_ip_port_mon
 )
 
 target_link_libraries(icmp_mon
+  MadCatHelper
   IcmpMonCore
   ${PCAP_LIBRARY}
   OpenSSL::SSL
@@ -50,6 +51,7 @@ target_link_libraries(icmp_mon
 target_compile_options (icmp_mon PRIVATE ${GCC_FLAGS})
 
 target_link_libraries(tcp_ip_port_mon
+  MadCatHelper
   TcpIpPortMonCore
   TcpProxyCore
   ${LUA_LIBRARY}
@@ -60,6 +62,7 @@ target_link_libraries(tcp_ip_port_mon
 target_compile_options (tcp_ip_port_mon PRIVATE ${GCC_FLAGS})
 
 target_link_libraries(udp_ip_port_mon
+  MadCatHelper
   UdpIpPortMonCore
   ${PCAP_LIBRARY}
   OpenSSL::SSL
