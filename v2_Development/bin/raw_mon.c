@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
 \"payload_sha1\": \"%s\"\
 },\
 \"raw\": { \
-\"filter\": \"%s\"\
+\"pcap_filter\": \"%s\"\
 }}",\
 json_data.start, \
 json_data.proto == 4 ? "IPv4" : json_data.proto == 6 ? "IPv6" : proto_str,\
