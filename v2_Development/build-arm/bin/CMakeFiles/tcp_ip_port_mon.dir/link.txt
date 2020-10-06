@@ -1,1 +1,0 @@
-/usr/bin/arm-linux-gnueabi-gcc    CMakeFiles/tcp_ip_port_mon.dir/tcp_ip_port_mon.c.o  -o tcp_ip_port_mon  -Wl,-rpath,/usr/lib/gcc-cross/arm-linux-gnueabi/9/lib: ../lib/libTcpIpPortMonCore.a ../lib/libTcpProxyCore.a /usr/lib/gcc-cross/arm-linux-gnueabi/9/lib/libpcap.so -lOpenSSL::SSL -lpthread 

@@ -20,7 +20,7 @@ class MadCatHelper : public ::testing::Test {
 
 TEST(time_str, unix_time) {
   int size = 4096;
-  char *  = (char*)malloc(size);
+  char * unix_buf = (char*)malloc(size);
   char * readable_buf = (char*)malloc(size);
 
   struct timeval tv;
@@ -34,10 +34,10 @@ TEST(time_str, unix_time) {
   time_str(unix_buf,size,readable_buf,size);
 
   if (readable_buf != NULL) {
-      snprintf(readable_buf, readable_size, "%s.%06ld%s", tmbuf, tv.tv_usec, tmzone); readable_buf[readable_size-1] = 0; //Human readable string
+      //snprintf(readable_buf, readable_size, "%s.%06ld%s", tmbuf, tv.tv_usec, tmzone); readable_buf[readable_size-1] = 0; //Human readable string
   }
   if (unix_buf != NULL) {
-      snprintf(unix_buf, unix_size, "%lu.%lu", tv.tv_sec, tv.tv_usec); unix_buf[unix_size-1] = 0; //Unix time incl. usec
+      //snprintf(unix_buf, unix_size, "%lu.%lu", tv.tv_sec, tv.tv_usec); unix_buf[unix_size-1] = 0; //Unix time incl. usec
   }
 
   ASSERT_EQ(1, 1);
