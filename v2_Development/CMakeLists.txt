@@ -28,7 +28,7 @@
 #
 
 project(MADCAT)
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.10)
 
 set(PACKAGE_NAME MADCAT)
 set(PACKAGE_VERSION 1.0)
@@ -38,12 +38,98 @@ set(PACKAGE_BUGREPORT "heiko.folkerts@bsi.bund.de")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(UNINSTALL_SCRIPT "uninstall.sh")
 
+if(CMAKE_TARGET STREQUAL "armhf")
+  message(STATUS "checking cross compile environment")
+  set(CMAKE_SYSTEM_NAME Linux)
+  set(CMAKE_SYSTEM_PROCESSOR arm)
+  #set(CMAKE_CROSSCOMPILING true)
+
+  set(CMAKE_SYSROOT /usr/arm-linux-gnueabihf)
+  set(CMAKE_C_COMPILER /usr/bin/arm-linux-gnueabihf-gcc)           
+  set(CMAKE_FIND_ROOT_PATH /usr/arm-linux-gnueabihf)                                             
+
+  set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+  set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+  set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+  set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+
+
+  set(OPENSSL_ROOT_DIR /usr/arm-linux-gnueabihf/)
+  set(OPENSSL_CRYPTO_LIBRARY /usr/arm-linux-gnueabihf/lib/libcrypto.so)
+  set(OPENSSL_SSL_LIBRARY /usr/arm-linux-gnueabihf/lib/libssl.so)
+  set(OPENSSL_INCLUDE_DIR /usr/arm-linux-gnueabihf/include)
+  
+  find_package(OpenSSL REQUIRED)
+  message(STATUS "Found OpenSSL ${OPENSSL_VERSION} for ${CMAKE_SYSTEM_PROCESSOR} architecture")
+
+  set(PCAP_ROOT_DIR /usr/arm-linux-gnueabihf )
+  set(PCAP_LIBRARY /usr/arm-linux-gnueabihf/lib/libpcap.so)
+  set(PCAP_INCLUDE_DIR /usr/arm-linux-gnueabihf/include)
+  MARK_AS_ADVANCED(PCAP_LIBRARY)
+  message(STATUS "Found PCAP ${PCAP_ROOT_DIR} for ${CMAKE_SYSTEM_PROCESSOR} architecture")
+
+  SET(LUA_INCLUDE_DIR /usr/arm-linux-gnueabihf/include)
+  SET(LUA_LIBRARIES /usr/arm-linux-gnueabihf )
+  SET(LUA_LIBRARY /usr/arm-linux-gnueabihf/lib/liblua5.1.so)
+  MARK_AS_ADVANCED(LUA_INCLUDE_DIR)
+  MARK_AS_ADVANCED(LUA_LIBRARIES)
+  MARK_AS_ADVANCED(LUA_LIBRARY)
+  message(STATUS "Found LUA ${LUA_LIBRARIES} for ${CMAKE_SYSTEM_PROCESSOR} architecture")    
+  
+  # thread library
+  set(CMAKE_THREAD_LIBS_INIT "-lpthread")
+  set(CMAKE_HAVE_THREADS_LIBRARY 1)
+  set(CMAKE_USE_WIN32_THREADS_INIT 0)
+  set(CMAKE_USE_PTHREADS_INIT 1)
+  set(THREADS_PREFER_PTHREAD_FLAG ON) 
+  find_package(Threads REQUIRED)
+
+elseif(CMAKE_TARGET STREQUAL "x86_64")
+
+  set(CMAKE_SYSTEM_NAME Linux)
+  
+  # Add CMake config files to build env
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+  # looking for dependencies
+  # OpenSSL
+  find_package(OpenSSL REQUIRED)
+  # PCAP Library
+  find_package(PCAP REQUIRED)
+  # Lua Library
+  find_package(Lua51 REQUIRED)
+  # thread library
+  set(CMAKE_THREAD_LIBS_INIT "-lpthread")
+  set(CMAKE_HAVE_THREADS_LIBRARY 1)
+  set(CMAKE_USE_WIN32_THREADS_INIT 0)
+  set(CMAKE_USE_PTHREADS_INIT 1)
+  set(THREADS_PREFER_PTHREAD_FLAG ON) 
+  find_package(Threads REQUIRED)
+
+else()
+  set(CMAKE_SYSTEM_NAME Linux)
+  set(CMAKE_TARGET "x86_64")
+  # Add CMake config files to build env
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+  # looking for dependencies
+  # OpenSSL
+  find_package(OpenSSL REQUIRED)
+  # PCAP Library
+  find_package(PCAP REQUIRED)
+  # Lua Library
+  find_package(Lua51 REQUIRED)
+  # thread library
+  set(THREADS_PREFER_PTHREAD_FLAG ON)
+  find_package(Threads REQUIRED)
+endif()
+
 message(STATUS "Architecture: ${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_PROCESSOR}")
 
 # Common C_FLAG option
 # TODO
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -gdwarf-2" "--no-strict-aliasing")
-set(GCC_FLAGS "-Wall" "-gdwarf-2" "-fno-strict-aliasing")
+set(CMAKE_C_FLAG "-Wall" "-gdwarf-2" "-fno-strict-aliasing")
 
 # Add CAMKE Compile Options
 # enable Debugging
@@ -59,7 +145,7 @@ endif()
 
 if(CMAKE_VERBOSE)
   message(STATUS "Enable more output")
-  set(CMAKE_C_FLAG "${CMAKE_C_FLAGS} -v")
+  set(CMAKE_C_FLAG "${CMAKE_C_FLAGS} -v -V")
 endif()
 
 if(CMAKE_TESTS)
@@ -67,36 +153,10 @@ if(CMAKE_TESTS)
   option(MADCAT_TEST "Enable tests building" ON)
 endif()
 
-
 # Set directory for libraries and executables
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
-
-# Add CMake config files to build env
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
-#Set paths for cross-compilation
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL "armhf")
-  SET(OPENSSL_ROOT_DIR /usr/lib/gcc-cross/arm-linux-gnueabi/9)
-  SET(OPENSSL_CRYPTO_LIBRARY /usr/lib/gcc-cross/arm-linux-gnueabi/9/libcrypto.so)
-  SET(OPENSSL_SSL_LIBRARY /usr/lib/gcc-cross/arm-linux-gnueabi/9/libssl.so)
-  SET(PCAP_ROOT_DIR /usr/lib/gcc-cross/arm-linux-gnueabi/9)
-  SET(LUA_INCLUDE_DIR /usr/lib/gcc-cross/arm-linux-gnueabi/9)
-  SET(LUA_INCLUDE_DIR /usr/lib/gcc-cross/arm-linux-gnueabi/9)
-  SET(LUA_LIBRARIES /usr/lib/gcc-cross/arm-linux-gnueabi/9)
-  SET(LUA_LIBRARY /usr/lib/gcc-cross/arm-linux-gnueabi/9/liblua5.1.so)
-  MARK_AS_ADVANCED(LUA_LIBRARY)
-  message(${LUA_LIBRARY})
-endif()
-
-# looking for dependencies
-# OpenSSL
-find_package(OpenSSL REQUIRED)
-# PCAP Library
-find_package(PCAP REQUIRED)
-# Lua Library
-find_package(Lua51 REQUIRED)
 
 # if test enable
 if(MADCAT_TEST)
@@ -140,40 +200,36 @@ execute_process(
 
 ############## FINAL PROJECT CONFIG #################
 # And the project header and library paths
-include_directories(
-  ${CMAKE_SOURCE_DIR}/include
-  ${CMAKE_SOURCE_DIR}/include/rsp
-  ${LUA_INCLUDE_DIR}
-)
+# case distinction between arm and x86 
+if(CMAKE_TARGET STREQUAL "armhf")
+  
+  include_directories(
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/rsp
+    ${LUA_INCLUDE_DIR}
+    ${OPENSSL_INCLUDE_DIR}
+    ${PCAP_INCLUDE_DIR}
+  )
+
+elseif(CMAKE_TARGET STREQUAL "x86_64")
+
+  include_directories(
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/rsp
+    ${LUA_INCLUDE_DIR}
+  )
+
+endif()
+
 
 # include folder lib, bin
 add_subdirectory(lib)
 add_subdirectory(lib/rsp)
 add_subdirectory(bin)
+
 if(MADCAT_TEST)
   enable_testing()
   add_subdirectory(tests)
 endif()
 
-#Set variables for cross-compilation
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL "armhf")
-  if (OPENSSL_FOUND)
-    # Add the include directories for compiling
-    target_include_directories(udp_ip_port_mon PUBLIC ${OPENSSL_INCLUDE_DIR})
-    target_include_directories(tcp_ip_port_mon PUBLIC ${OPENSSL_INCLUDE_DIR})
-    target_include_directories(icmp_mon PUBLIC ${OPENSSL_INCLUDE_DIR})
-    target_include_directories(raw_mon PUBLIC ${OPENSSL_INCLUDE_DIR})
-
-    # Add the static lib for linking
-    #target_link_libraries(udp_ip_port_mon OpenSSL::SSL OpenSSL::Crypto)
-    #target_link_libraries(tcp_ip_port_mon OpenSSL::SSL OpenSSL::Crypto)
-    #target_link_libraries(icmp_mon PUBLIC OpenSSL::SSL OpenSSL::Crypto)
-    #target_link_libraries(raw_mon PUBLIC OpenSSL::SSL OpenSSL::Crypto)
-
-    message(STATUS "Found OpenSSL ${OPENSSL_VERSION} for ${CMAKE_SYSTEM_PROCESSOR} architecture")
-
-  endif()
-  SET(PCAP_LIBRARY /usr/lib/gcc-cross/arm-linux-gnueabi/9/lib/libpcap.so)
-  mark_as_advanced(PCAP_LIBRARY)
-endif()
 

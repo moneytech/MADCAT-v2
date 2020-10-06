@@ -45,29 +45,32 @@ add_executable(raw_mon
 )
 
 target_link_libraries(icmp_mon
+  MadCatHelper
   IcmpMonCore
   ${PCAP_LIBRARY}
   OpenSSL::SSL
-  pthread
+  Threads::Threads
   ${LUA_LIBRARY}
 )
 target_compile_options (icmp_mon PRIVATE ${GCC_FLAGS})
 
 target_link_libraries(tcp_ip_port_mon
+  MadCatHelper
   TcpIpPortMonCore
   TcpProxyCore
   ${LUA_LIBRARY}
   ${PCAP_LIBRARY}
   OpenSSL::SSL
-  pthread
+  Threads::Threads
 )
 target_compile_options (tcp_ip_port_mon PRIVATE ${GCC_FLAGS})
 
 target_link_libraries(udp_ip_port_mon
+  MadCatHelper
   UdpIpPortMonCore
   ${PCAP_LIBRARY}
   OpenSSL::SSL
-  pthread
+  Threads::Threads
   ${LUA_LIBRARY}
 )
 target_compile_options (udp_ip_port_mon PRIVATE ${GCC_FLAGS})
@@ -76,7 +79,7 @@ target_link_libraries(raw_mon
   RawMonCore
   ${PCAP_LIBRARY}
   OpenSSL::SSL
-  pthread
+  Threads::Threads
   ${LUA_LIBRARY}
 )
 target_compile_options (raw_mon PRIVATE ${GCC_FLAGS})
