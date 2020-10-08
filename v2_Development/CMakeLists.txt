@@ -38,7 +38,53 @@ set(PACKAGE_BUGREPORT "heiko.folkerts@bsi.bund.de")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(UNINSTALL_SCRIPT "uninstall.sh")
 
-if(CMAKE_TARGET STREQUAL "armhf")
+if(CMAKE_TARGET STREQUAL "aarch64")
+
+  message(STATUS "checking cross compile environment")
+  set(CMAKE_SYSTEM_NAME Linux)
+  set(CMAKE_SYSTEM_PROCESSOR aarch64)
+  #set(CMAKE_CROSSCOMPILING true)
+
+  set(CMAKE_SYSROOT /usr/aarch64-linux-gnu)
+  set(CMAKE_C_COMPILER /usr/bin/aarch64-linux-gnu-gcc)           
+  set(CMAKE_FIND_ROOT_PATH /usr/aarch64-linux-gnu)                                             
+
+  set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+  set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+  set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+  set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+
+  set(OPENSSL_ROOT_DIR /usr/aarch64-linux-gnu)
+  set(OPENSSL_CRYPTO_LIBRARY /usr/aarch64-linux-gnu/lib/libcrypto.so)
+  set(OPENSSL_SSL_LIBRARY /usr/aarch64-linux-gnu/lib/libssl.so)
+  set(OPENSSL_INCLUDE_DIR /usr/aarch64-linux-gnu/include)
+
+  find_package(OpenSSL REQUIRED)
+  message(STATUS "Found OpenSSL ${OPENSSL_VERSION} for ${CMAKE_SYSTEM_PROCESSOR} architecture (${OPENSSL_CRYPTO_LIBRARY}, ${OPENSSL_LIBRARY})")
+
+  set(PCAP_ROOT_DIR /usr/aarch64-linux-gnu )
+  set(PCAP_LIBRARY /usr/aarch64-linux-gnu/lib/libpcap.so)
+  set(PCAP_INCLUDE_DIR /usr/aarch64-linux-gnu/include)
+  MARK_AS_ADVANCED(PCAP_LIBRARY)
+  message(STATUS "Found PCAP ${PCAP_ROOT_DIR} for ${CMAKE_SYSTEM_PROCESSOR} architecture")
+
+  SET(LUA_INCLUDE_DIR /usr/aarch64-linux-gnu/include)
+  SET(LUA_LIBRARIES /usr/aarch64-linux-gnu )
+  SET(LUA_LIBRARY /usr/aarch64-linux-gnu/lib/liblua5.1.so)
+  MARK_AS_ADVANCED(LUA_INCLUDE_DIR)
+  MARK_AS_ADVANCED(LUA_LIBRARIES)
+  MARK_AS_ADVANCED(LUA_LIBRARY)
+  message(STATUS "Found LUA ${LUA_LIBRARIES} for ${CMAKE_SYSTEM_PROCESSOR} architecture")    
+
+  # thread library
+  set(CMAKE_THREAD_LIBS_INIT "-lpthread")
+  set(CMAKE_HAVE_THREADS_LIBRARY 1)
+  set(CMAKE_USE_WIN32_THREADS_INIT 0)
+  set(CMAKE_USE_PTHREADS_INIT 1)
+  set(THREADS_PREFER_PTHREAD_FLAG ON) 
+  find_package(Threads REQUIRED)
+
+elseif(CMAKE_TARGET STREQUAL "armhf")
   message(STATUS "checking cross compile environment")
   set(CMAKE_SYSTEM_NAME Linux)
   set(CMAKE_SYSTEM_PROCESSOR arm)
@@ -200,7 +246,17 @@ execute_process(
 ############## FINAL PROJECT CONFIG #################
 # And the project header and library paths
 # case distinction between arm and x86 
-if(CMAKE_TARGET STREQUAL "armhf")
+if(CMAKE_TARGET STREQUAL "aarch64")
+ 
+  include_directories(
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/rsp
+    ${LUA_INCLUDE_DIR}
+    ${OPENSSL_INCLUDE_DIR}
+    ${PCAP_INCLUDE_DIR}
+  )
+
+elseif(CMAKE_TARGET STREQUAL "armhf")
   
   include_directories(
     ${CMAKE_SOURCE_DIR}/include
