@@ -76,7 +76,7 @@ void rsp_log_error(char* message)
     rsp_log("%s (%s)", message, error);
 }
 
-void json_out(struct json_data_t* jd, long long int id)
+void json_out(struct json_data_t* jd, uintptr_t id)
 {
     char end_time[64] = ""; //Human readable start time (actual time zone)
     time_str(NULL, 0, end_time, sizeof(end_time)); //Get Human readable string only

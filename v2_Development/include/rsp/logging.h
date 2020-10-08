@@ -66,6 +66,6 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 
 extern void rsp_log(char* format, ...);
 extern void rsp_log_error(char* message);
-void json_out(struct json_data_t* jd, long long int id);
+void json_out(struct json_data_t* jd, uintptr_t id);
 
 #endif

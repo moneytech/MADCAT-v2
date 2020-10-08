@@ -58,7 +58,7 @@ struct json_data_node_t { //json data list element
     //Data fields for future use:
     //struct json_data_node_t *next; //next element in list
     //struct json_data_node_t *prev; //prev element in list
-    //long long unsigned int id; //id, usally originating from a pointer (void*) to e.g. an epoll handler structure
+    //uintptr_t int id; //id, usally originating from a pointer (void*) to e.g. an epoll handler structure
     
     //all variables of json output, exepct constant string values e.g. "proxy_flow" or "closed"
     char* timestamp;

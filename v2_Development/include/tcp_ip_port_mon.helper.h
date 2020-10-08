@@ -74,7 +74,7 @@ struct json_data_t { //json_data structure...
 struct json_data_node_t { //json data list element
     struct json_data_node_t *next; //next element in list
     struct json_data_node_t *prev; //prev element in list
-    long long unsigned int id; //id, usally originating from a pointer (void*) to e.g. an epoll handler structure
+    uintptr_t id; //id, usally originating from a pointer (void*) to e.g. an epoll handler structure
     
     //all variables of json output, exepct constant string values e.g. "proxy_flow" or "closed"
     char* src_ip;
@@ -117,8 +117,8 @@ void pctcp_print(struct proxy_conf_tcp_t* pc); //print proxy configuration
 //Helper functions for json data structure and double linked list (the List does not need to be thread-safe, because every process has it's own copy):
 struct json_data_t* jd_init();  //initialize json data structure
 void jd_push(struct json_data_t* jd, long long unsigned int id); //push new json data list node wit id "id" to list
-struct json_data_node_t* jd_get(struct json_data_t* jd, long long int id); //get json data node by id
-bool jd_del(struct json_data_t* jd, long long int id);  //remove json data node by id
+struct json_data_node_t* jd_get(struct json_data_t* jd, uintptr_t id); //get json data node by id
+bool jd_del(struct json_data_t* jd, uintptr_t id);  //remove json data node by id
 void jd_free_list(struct json_data_node_t* jd_node); //free list with json data
 void jd_print_list(struct json_data_t* jd); //print complete json data list
 

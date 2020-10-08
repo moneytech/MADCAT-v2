@@ -374,11 +374,11 @@ void uc_print_list(struct udpcon_data_t* uc)
     while ( uc_node != 0 )
     {
         fprintf(stderr, "\n\
-uint_least64_t id int id_fromclient: %p\n\
-uint_least64_t id int id_tobackend: %p\n\
-void* uc_node: %p\n\
-struct udpcon_data_node_t *next: %p\n\
-struct udpcon_data_node_t *prev: %p\n\
+uint_least64_t id int id_fromclient: %llx\n\
+uint_least64_t id int id_tobackend: %llx\n\
+void* uc_node: %lx\n\
+struct udpcon_data_node_t *next: %lx\n\
+struct udpcon_data_node_t *prev: %lx\n\
 bool proxied: %s\n\
 long long int last_seen: %llu\n\
 char* src_ip: %s\n\
@@ -396,11 +396,11 @@ int   proxy_port: %d\n\
 char* backend_ip: %s\n\
 char* backend_port: %d\n\
 \n",\
-(void*) uc_node->id_fromclient,\
-(void*) uc_node->id_tobackend,\
-uc_node,
-uc_node->next,\
-uc_node->prev,\
+(long long unsigned int) uc_node->id_fromclient,\
+(long long unsigned int) uc_node->id_tobackend,\
+(long unsigned int) uc_node,
+(long unsigned int) uc_node->next,\
+(long unsigned int) uc_node->prev,\
 uc_node->proxied ? "true" : "false",\
 uc_node->last_seen,\
 uc_node->src_ip,\

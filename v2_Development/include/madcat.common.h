@@ -69,7 +69,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include <semaphore.h>
 #include <sys/wait.h>
 #include <sys/prctl.h>
-#include <pthread.h> 
+#include <pthread.h>
 
 // Macro to check if an error occured, translate it, report it to STDERR, calling shutdown callback function to exit with error and dump core.
 #define CHECK(result, check)                                                            \

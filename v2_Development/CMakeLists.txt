@@ -53,8 +53,7 @@ if(CMAKE_TARGET STREQUAL "armhf")
   set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
   set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
-
-  set(OPENSSL_ROOT_DIR /usr/arm-linux-gnueabihf/)
+  set(OPENSSL_ROOT_DIR /usr/arm-linux-gnueabihf )
   set(OPENSSL_CRYPTO_LIBRARY /usr/arm-linux-gnueabihf/lib/libcrypto.so)
   set(OPENSSL_SSL_LIBRARY /usr/arm-linux-gnueabihf/lib/libssl.so)
   set(OPENSSL_INCLUDE_DIR /usr/arm-linux-gnueabihf/include)

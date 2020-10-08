@@ -440,7 +440,7 @@ void jd_push(struct json_data_t* jd, long long unsigned int id) //push new json 
     return;
 }
 
-struct json_data_node_t* jd_get(struct json_data_t* jd, long long int id) //get json data node by id
+struct json_data_node_t* jd_get(struct json_data_t* jd, uintptr_t id) //get json data node by id
 {
     struct json_data_node_t* result = jd->list;
     while ( result != 0)
@@ -451,7 +451,7 @@ struct json_data_node_t* jd_get(struct json_data_t* jd, long long int id) //get 
     return 0;
 }
 
-bool jd_del(struct json_data_t* jd, long long int id)  //remove json data node by id
+bool jd_del(struct json_data_t* jd, uintptr_t id)  //remove json data node by id
 {
     struct json_data_node_t* jd_node = jd_get(jd, id);
     if (jd_node == 0) return false;
@@ -497,10 +497,10 @@ void jd_print_list(struct json_data_t* jd) //print complete json data list
     while ( jd_node != 0 )
     {
         fprintf(stderr, "\n\
-long long unsigned int id: %p\n\
-void* jd_node: %p\n\
-struct json_data_node_t *next: %p\n\
-struct json_data_node_t *prev: %p\n\
+long long unsigned int id: %lx\n\
+void* jd_node: %lx\n\
+struct json_data_node_t *next: %lx\n\
+struct json_data_node_t *prev: %lx\n\
 char* src_ip: %s\n\
 int   src_port: %d\n\
 char* dest_ip: %s\n\
@@ -516,10 +516,10 @@ int   proxy_port: %d\n\
 char* backend_ip: %s\n\
 char* backend_port: %s\n\
 \n",\
-(void*) jd_node->id,\
-jd_node,
-jd_node->next,\
-jd_node->prev,\
+(long unsigned int) jd_node->id,\
+(long unsigned int) jd_node,
+(long unsigned int) jd_node->next,\
+(long unsigned int) jd_node->prev,\
 jd_node->src_ip,\
 jd_node->src_port,\
 jd_node->dest_ip,\
