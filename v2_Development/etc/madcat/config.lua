@@ -24,12 +24,11 @@
 --    Programm erhalten haben. Wenn nicht, siehe <https://www.gnu.org/licenses/>.
 --*******************************************************************************/
 --MADCAT - Mass Attack Detecion Connection Acceptance Tool
---TCP-IP Port Monitor v1.1.5
 --Heiko Folkerts, BSI 2020
 --
 -- Config File
 --
--- This sample config file is a merged config file for all modules (TCP-, UDP- and ICMP-(Port)Monitor).
+-- This sample config file is a merged config file for all modules (TCP-, UDP-, ICMP- and RAW-(Port)Monitor).
 -- This can be done if identical parameters have identical values (e.g. "hostaddress" or "user")
 -- Values, which are unique to at least one module, like "path_to_save_udp-data", are ignored by other modules.
 --

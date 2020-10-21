@@ -44,7 +44,7 @@ This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
 #include "madcat.helper.h"
 #include "raw_mon.helper.h"
 
-#define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nRAW Monitor v2.0.0\nHeiko Folkerts, BSI 2018-2020\n" //Version string
+#define VERSION "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nRAW Monitor v2.0.1\nHeiko Folkerts, BSI 2018-2020\n" //Version string
 #define ETHERNET_HEADER_LEN 14 //Length of an Ethernet Header
 
 

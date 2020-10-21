@@ -59,15 +59,12 @@ int main(int argc, char *argv[])
         CHECK(signal(SIGINT, sig_handler_parent), != SIG_ERR); //register handler for SIGINT for parent process
         CHECK(signal(SIGTERM, sig_handler_parent), != SIG_ERR); //register handler for SIGTERM for parent process
 
-        sem_unlink ("hdrsem");
-        sem_unlink ("consem");
-
-        //semaphores for output globally defined for easy access inside functions
-        hdrsem = CHECK(sem_open ("hdrsem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED);  //open semaphore for named pipe containing TCP/IP data
-        //Semaphore for named pipe containing connection data
-        consem = CHECK(sem_open ("consem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED);
-
         //Display Mascott and Version
+        if (argc == 2 && strcmp(argv[1], "version") == 0)
+        {
+            fprintf(stdout, "\n%s%s\n", MASCOTT, VERSION);
+            exit(0);
+        }
         fprintf(stderr, "\n%s%s\n", MASCOTT, VERSION);
 
         //Parse command line. 
@@ -168,6 +165,16 @@ int main(int argc, char *argv[])
 
         fprintf(stderr, "%s [PID %d] Starting on interface %s with hostaddress %s on port %d, timeout is %lfs, data path is %s\n", \
                 log_time, getpid(), interface, hostaddr, port, timeout, data_path);
+
+
+        //Unlink possibly existing old semaphores
+        sem_unlink ("hdrsem");
+        sem_unlink ("consem");
+
+        //Semaphores for output globally defined for easy access inside functions
+        hdrsem = CHECK(sem_open ("hdrsem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED);  //open semaphore for named pipe containing TCP/IP data
+        //Semaphore for named pipe containing connection data
+        consem = CHECK(sem_open ("consem", O_CREAT | O_EXCL, 0644, 1), !=  SEM_FAILED);
 
         //Variabels for PCAP sniffing
 
@@ -273,7 +280,7 @@ int main(int argc, char *argv[])
             CHECK(inet_aton(hostaddr, &addr.sin_addr), != 0); //set and check listening address
             addr.sin_port = htons(port); //set listening port
 
-            struct linger sl = { 1, 5 };
+            struct linger sl = { 1, 0 };
             int on = 1;
 
             CHECK(setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &on, (socklen_t)sizeof(on)), != -1);
@@ -303,6 +310,7 @@ int main(int argc, char *argv[])
                             CHECK(signal(SIGUSR2, sig_handler_listnerchild), != SIG_ERR); //Register handler for SIGUSR2 for child process for gracefull shutdown
                             //Preserve actual start time of connection attempt.
                             time_str(log_time_unix, sizeof(log_time_unix), log_time, sizeof(log_time));
+                            fprintf(stderr, "%s [PID %d] Connection incoming, trying to resolve original destination port on socket fd: %d...\n", log_time, getpid(), openfd);
                             CHECK(getsockopt(openfd, SOL_IP, SO_ORIGINAL_DST, (struct sockaddr*)&trgaddr, &trgaddr_len), != -1); //Read original dst. port from NAT-table
                             struct sockaddr_in *s = (struct sockaddr_in *)&claddr; //create temporary struct to call inet_ntop() properly
                             //retrieve client target IPv4 (important when listening on ANY_ADDR)

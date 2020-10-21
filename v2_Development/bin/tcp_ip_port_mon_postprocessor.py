@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #coding=utf8
 #*******************************************************************************
 # This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
@@ -32,7 +32,7 @@
  # Heiko Folkerts, BSI 2018-2020
 ##
 
-from __future__ import print_function
+#from __future__ import print_function #Python 2 backward compatibility
 import sys, os, signal
 import pwd, grp
 import time
@@ -44,7 +44,7 @@ import json
 # If a connection lasts longer, the SYN and the connection
 #TODO: Discuss adding a general connection timeout to tcp_ip_port_mon.
 ########################## CONFIGURATION ##########################
-## Only in this section (global configuration variables beginning with "DEF_"), thus changes are allowed here for configuration purposes ;-)
+## Only in this section changes are allowed (global configuration variables beginning with "DEF_"), thus for configuration purposes ;-)
 DEF_CON_WAIT = 10 #Time to wait before a connection is processed to ensure that the matching SYN is present in syn_dict. Nothing to to with ICBMs. 10 + DEF_CON_WAIT is default.
 DEF_SYN_TIMEOUT =  60 + DEF_CON_WAIT #Time after which a SYN not yet matched with a connection is interpreted as SYN-SCAN. 60 + DEF_CON_WAIT is default.
 DEF_SYN_WAIT_PROXY = 30 + DEF_SYN_TIMEOUT #Time to wait before a connection proxied by TCP/IP Portmonitor is processed to ensure that the matching Connection is present in con_dict. 30 + DEF_SYN_TIMEOUT is default.
@@ -55,7 +55,7 @@ DEF_USER = "hf"
 DEF_GROUP = "hf"
 
 ########################## Version and Mascott strings ##########################
-GLOBAL_VERSION = "MADCAT - Mass Attack Detecion Connection Acceptance Tool\n TCP Connection and SYN JSON-data postprocessor\n v2.0 for TCP/IP Portmonitor v2.0\nHeiko Folkerts, BSI 2018-2020\n"
+GLOBAL_VERSION = "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nTCP Connection and SYN JSON-data postprocessor v2.0\n  for TCP/IP Portmonitor v2.0.x\nHeiko Folkerts, BSI 2018-2020\n"
 GLOBAL_MASCOTT = "                             ▄▄▄               ▄▄▄▄▄▄\n                 ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀\n                    ▀▄▄▄▓█▓██   █▓█▌         █▓   ▓████████▀\n                       ▀███▓▓(o)██▓▌       ▐█▓█(o)█▓█████▀\n                         ▀▀██▓█▓▓█         ████▓███▀▀\n                  ▄            ▀▀▀▀                          ▄\n                ▀▀█                                         ▐██▌\n                  ██▄     ____------▐██████▌------___     ▄▄██\n                 __█ █▄▄--   ___------▀▓▓▀-----___   --▄▄█ █▀__\n             __--   ▀█  ██▄▄▄▄    __--▄▓▓▄--__   ▄▄▄▄██  ██▀   --__\n         __--     __--▀█ ██  █▀▀█████▄▄▄▄▄▄███████  ██ █▀--__      --__\n     __--     __--    __▀▀█  █  ██  ██▀▀██▀▀██  ██  █▀▀__    --__      --__\n         __--     __--     ▀███ ██  ██  ██  ██ ████▀     --__    --__\n hfo   --     __--             ▀▀▀▀▀██▄▄██▄▄██▀▀▀▀           --__    --\n         __ --                                                   --__"
 
 ########################## Semaphore ##########################
@@ -323,6 +323,14 @@ def main(argv):
     global GLOBAL_SHUTDOWN
     logtime = time.strftime("%Y-%m-%dT%H:%M:%S",time.localtime(time.time())) + str(time.time()-int(time.time()))[1:8]
 
+    try:
+        if argv[1] == "version":
+            print(GLOBAL_MASCOTT) #print mascott
+            print(GLOBAL_VERSION) #print version string   
+            return
+    except:
+        pass
+    
     eprint(GLOBAL_MASCOTT) #print mascott
     eprint(GLOBAL_VERSION) #print version string
     eprint("================= Configuration [PID " + str(os.getpid()) + "]: =================")
@@ -331,7 +339,7 @@ def main(argv):
     eprint("Time to wait before a connection proxied by TCP/IP Portmonitor is processed to ensure that the matching Connection is present:\n %.1fsec" % DEF_SYN_WAIT_PROXY)
     eprint("Named pipe with TCP/IP Header information, namely SYN:\n " + DEF_HEADER_FIFO)
     eprint("Named pipe with connection information:\n " + DEF_CONNECTION_FIFO)
-    eprint("==================================================")
+    eprint("==============================================================")
     eprint("\n" + logtime + " [PID " + str(os.getpid()) + "]" + " Starting up...")
 
     signal.signal(signal.SIGINT, signal_handler) #intialize Signal Handler for gracefull shutdown (SIGINT)
@@ -352,21 +360,21 @@ def main(argv):
     while True:
         #Check Threads every second. If one died try a graceful shutdown
         logtime = time.strftime("%Y-%m-%dT%H:%M:%S",time.localtime(time.time())) + str(time.time()-int(time.time()))[1:8]
-        if not syn_dict_th.isAlive():
+        if not syn_dict_th.is_alive():
             eprint(logtime + " [PID " + str(os.getpid()) + "]" + " Thread build_syn_dict died, shutting down...")
             os.kill(os.getpid(), signal.SIGINT)
-        if not con_dict_th.isAlive():
+        if not con_dict_th.is_alive():
             eprint(logtime + " [PID " + str(os.getpid()) + "]" + " Thread build_con_dict died, shutting down...")          
             os.kill(os.getpid(), signal.SIGINT)
-        if not output_accepted_con_th.isAlive():
+        if not output_accepted_con_th.is_alive():
             eprint(logtime + " [PID " + str(os.getpid()) + "]" + " Thread output_accepted_con died, shutting down...")
             os.kill(os.getpid(), signal.SIGINT)
-        if not output_syn_scans_th.isAlive():
+        if not output_syn_scans_th.is_alive():
             eprint(logtime + " [PID " + str(os.getpid()) + "]" + " Thread output_syn_scans died, shutting down...")
             os.kill(os.getpid(), signal.SIGINT)
         time.sleep(1)
     return
 
-if __name__ == "__main__": #call "def main(argv) as function with command line arguments
+if __name__ == "__main__": #call "def main(argv)" as function with command line arguments
     main(sys.argv)
 

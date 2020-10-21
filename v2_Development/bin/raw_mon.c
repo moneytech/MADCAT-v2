@@ -61,6 +61,11 @@ int main(int argc, char *argv[])
         CHECK(signal(SIGTERM, sig_handler_raw), != SIG_ERR); //register handler for SIGTERM
         
         //Display Mascott and Version
+        if (argc == 2 && strcmp(argv[1], "version") == 0)
+        {
+            fprintf(stdout, "\n%s%s\n", MASCOTT, VERSION);
+            exit(0);
+        }
         fprintf(stderr, "\n%s%s\n", MASCOTT, VERSION);
 
         //Parse command line. 
