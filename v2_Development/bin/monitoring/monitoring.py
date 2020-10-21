@@ -160,9 +160,12 @@ def check_mcversions():
     output = dict()
     for binary in DEF_MCVERSION_LIST:
         output[binary] = dict()
-        version = list(str(subprocess.check_output([binary, 'version'])).split("\\n"))
-        version = list(filter(lambda x: ' v' in x, version))
-        output[binary]['version'] = str(version[0])
+        try:
+            version = list(str(subprocess.check_output([binary, 'version'])).split("\\n"))
+            version = list(filter(lambda x: ' v' in x, version))
+            output[binary]['version'] = str(version[0])
+        except:
+            output[binary]['version'] = "ERROR " + binary + " not found"
     return output
 
 def check_processes():
