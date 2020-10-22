@@ -46,17 +46,17 @@ import multiprocessing
 # Timing
 DEF_TIME_HEARTBEAT = 20
 # System
-DEF_CHECK_CPU = False
-DEF_CHECK_MEM = False
-DEF_CHECK_DISK = False
+DEF_CHECK_CPU = True
+DEF_CHECK_MEM = True
+DEF_CHECK_DISK = True
 DEF_DISK_LIST = ["/", "/home"]
-DEF_CHECK_UPDATES = False #Reads the local database, thus configure a regular cron-job for "apt-get update"!
+DEF_CHECK_UPDATES = True #Reads the local database, thus configure a regular cron-job for "apt-get update"!
 DEF_CHECK_LASTLOGIN = True
 # MADCAT
-DEF_CHECK_LASTLOG = False
+DEF_CHECK_LASTLOG = True
 DEF_LOG_LIST = ["/data/portmonitor.log",
                 "/var/log/syslog"]
-DEF_CHECK_MCVERSIONS = False
+DEF_CHECK_MCVERSIONS = True
 DEF_MCVERSION_LIST = ["/opt/portmonitor/tcp_ip_port_mon",
                     "/opt/portmonitor/udp_ip_port_mon",
                     "/opt/portmonitor/icmp_mon",
@@ -64,16 +64,16 @@ DEF_MCVERSION_LIST = ["/opt/portmonitor/tcp_ip_port_mon",
                     "/opt/portmonitor/tcp_ip_port_mon_postprocessor.py"]
 
 # General
-DEF_CHECK_PROCESSES = False
+DEF_CHECK_PROCESSES = True
 DEF_PROCESS_LIST = ["sshd", 
                     "tcp_ip_port_mon", 
                     "udp_ip_port_mon", 
                     "icmp_port_mon", 
                     "wachtdog.sh"]
-DEF_CHECK_NETWORKUSAGE = False
+DEF_CHECK_NETWORKUSAGE = True
 DEF_NETWORK_LIST = ["wlp8s0",
                     "enp9s0"]
-DEF_CHECK_LISTNERS = False
+DEF_CHECK_LISTNERS = True
 
 ########################## Version and Mascott strings ##########################
 GLOBAL_VERSION = "MADCAT - Mass Attack Detecion Connection Acceptance Tools\n Monitoring Module\n v2.0 for MADCAT v2.0.x\nHeiko Folkerts, BSI 2020\n"
@@ -250,7 +250,25 @@ def main(argv):
     eprint(GLOBAL_MASCOTT) #print mascott
     eprint(GLOBAL_VERSION) #print version string
     eprint("================= Configuration [PID " + str(os.getpid()) + "]: =================")
-    #eprint(str(globals())) #XXX: Debug
+    eprint("Heartbeat time in seconds: " + str(DEF_TIME_HEARTBEAT))
+    eprint("Checks enabled (True/False): ")
+    eprint("System:")
+    eprint("\tCPU: \t\t\t\t" + str(DEF_CHECK_CPU))
+    eprint("\tMemory: \t\t\t" + str(DEF_CHECK_MEM))
+    eprint("\tDiskspace: \t\t\t" + str(DEF_CHECK_DISK))
+    eprint("\t\tDisks to check: " + str(DEF_DISK_LIST))
+    eprint("\tAvaible updates: \t\t" + str(DEF_CHECK_UPDATES) + "\n\t\tReads the local database, thus configure a regular cron-job for \"apt-get update\"!")
+    eprint("\tLast logins: \t\t\t" + str(DEF_CHECK_LASTLOGIN))
+    eprint("\tRunning processes: \t\t" + str(DEF_CHECK_PROCESSES))
+    eprint("\t\tProcesses to check: " + str(DEF_PROCESS_LIST))
+    eprint("\tNetwork usage: \t\t\t" + str(DEF_CHECK_NETWORKUSAGE))
+    eprint("\t\tNetwork interface list: " + str(DEF_NETWORK_LIST))
+    eprint("\tNetwork listners: \t\t" + str(DEF_CHECK_LISTNERS))
+    eprint("\tLast time log(s) changed: \t" + str(DEF_CHECK_LASTLOG))
+    eprint("\t\tLogs to check: " + str(DEF_LOG_LIST))
+    eprint("MADCAT: " )
+    eprint("\tMADCAT binaries version: \t" + str(DEF_CHECK_MCVERSIONS))
+    eprint("\t\tMADCAT binary list: " + str(DEF_MCVERSION_LIST))
     eprint("==============================================================")
     logtime = time.strftime("%Y-%m-%dT%H:%M:%S",time.localtime(time.time())) + str(time.time()-int(time.time()))[1:8]
     eprint("\n" + logtime + " [PID " + str(os.getpid()) + "]" + " Starting up...")
