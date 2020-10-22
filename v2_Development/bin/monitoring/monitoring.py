@@ -44,19 +44,27 @@ import multiprocessing
 ########################## CONFIGURATION ##########################
 ## Only in this section changes are allowed (global configuration variables beginning with "DEF_"), thus for configuration purposes ;-)
 # Timing
-DEF_TIME_HEARTBEAT = 20
+DEF_TIME_HEARTBEAT = 2
 # System
 DEF_CHECK_CPU = True
+CPU_LOAD_ALERT = 80
+
 DEF_CHECK_MEM = True
+MEM_USED_ALERT = 80
+
 DEF_CHECK_DISK = True
+DISK_USED_ALERT = 80
 DEF_DISK_LIST = ["/", "/home"]
-DEF_CHECK_UPDATES = True #Reads the local database, thus configure a regular cron-job for "apt-get update"!
-DEF_CHECK_LASTLOGIN = True
+#Reads the local database, thus configure a regular cron-job for "apt-get update"!
+DEF_CHECK_UPDATES = True #Alerts, when security Updates are avaible
+DEF_CHECK_LASTLOGIN = True #Alerts, when a login is active
 # MADCAT
-DEF_CHECK_LASTLOG = True
+DEF_CHECK_LASTLOG = True #Alerst, when log has not been written since DEF_LOGTIME_ALERT seconds
+DEF_LOGTIME_ALERT = 86400
 DEF_LOG_LIST = ["/data/portmonitor.log",
                 "/var/log/syslog"]
-DEF_CHECK_MCVERSIONS = True
+
+DEF_CHECK_MCVERSIONS = True #Does not alert, just informational
 DEF_MCVERSION_LIST = ["/opt/portmonitor/tcp_ip_port_mon",
                     "/opt/portmonitor/udp_ip_port_mon",
                     "/opt/portmonitor/icmp_mon",
@@ -64,16 +72,23 @@ DEF_MCVERSION_LIST = ["/opt/portmonitor/tcp_ip_port_mon",
                     "/opt/portmonitor/tcp_ip_port_mon_postprocessor.py"]
 
 # General
-DEF_CHECK_PROCESSES = True
+DEF_CHECK_PROCESSES = True #Alerts, when process is not running
 DEF_PROCESS_LIST = ["sshd", 
                     "tcp_ip_port_mon", 
                     "udp_ip_port_mon", 
                     "icmp_port_mon", 
                     "wachtdog.sh"]
-DEF_CHECK_NETWORKUSAGE = True
+
+DEF_CHECK_NETWORKUSAGE = True #Alerts, when network usage exceeds the avarage of DEF_NETUSAGE_ALERT Bytes per second, measured in DEF_TIME_HEARTBEAT seconds
+DEF_NETUSAGE_ALERT = 1000000
 DEF_NETWORK_LIST = ["wlp8s0",
                     "enp9s0"]
+
 DEF_CHECK_LISTNERS = True
+#Whitelist of ports on which listners are allowed, empty to prevent alerts and set it to informational ("None")
+DEF_WHITELISTED_PORTS = [22,
+                         65353,
+                         53]
 
 ########################## Version and Mascott strings ##########################
 GLOBAL_VERSION = "MADCAT - Mass Attack Detecion Connection Acceptance Tools\n Monitoring Module\n v2.0 for MADCAT v2.0.x\nHeiko Folkerts, BSI 2020\n"
@@ -104,29 +119,59 @@ def signal_handler(signum, frame):
 
 from package_updates_check import *
 
+alerts = dict()
+
 def check_cpu():
     if not DEF_CHECK_CPU: return {"INFO" : "check disabled"}
-    return dict(zip(range(0,multiprocessing.cpu_count()), psutil.cpu_percent(interval=None, percpu=True)))
+    output = dict(zip(range(0,multiprocessing.cpu_count()), psutil.cpu_percent(interval=None, percpu=True)))
+    sumload = 0.0
+    for key, value in output.items():
+            sumload += value
+    avarage = sumload / multiprocessing.cpu_count()
+    output['avarage'] = avarage
+    if  avarage > CPU_LOAD_ALERT:
+        alerts['cpuload'] = True
+    else:
+        alerts['cpuload'] = False
+    return output
 
 def check_mem():
     if not DEF_CHECK_MEM: return {"INFO" : "check disabled"}
-    return psutil.virtual_memory()._asdict()
+    output = psutil.virtual_memory()._asdict()
+    used_percent = output['used'] / output['total'] * 100
+    output['used_percent'] = used_percent
+    if  used_percent > MEM_USED_ALERT:
+        alerts['memused'] = True
+    else:
+        alerts['memused'] = False
+    return output
 
 def check_disk():
     if not DEF_CHECK_DISK: return {"INFO" : "check disabled"}
     output = dict()
+    alerts['diskused'] = False
     for disk in DEF_DISK_LIST:
         output[disk] = dict()
         output[disk]['status'] = dict(zip(["total", "used", "free"], psutil.disk_usage(disk)))
+        used_percent = output[disk]['status']['used'] / output[disk]['status']['total'] * 100
+        output[disk]['status']['used_percent'] = used_percent
+        if  used_percent > DISK_USED_ALERT:
+            alerts['diskused'] = True
     return output
 
 def check_updates():
     if not DEF_CHECK_UPDATES: return {"INFO" : "check disabled"}
-    return print_result(get_update_packages())
+    output = print_result(get_update_packages())
+    if  output['security updates']['avaible'] > 0:
+        alerts['secupdates'] = True
+    else:
+        alerts['secupdates'] = False
+    return output
 
 def check_lastlogin():
     if not DEF_CHECK_LASTLOGIN: return {"INFO" : "check disabled"}
     output = dict()
+    alerts['unknownentry'] = False
     lastlog = list(str(subprocess.check_output(['lastlog'])).split("\\n"))[1::] #Put output in list conaining rows and discard header
     for row in lastlog:
         collum = list(filter(None, row.split("  ")))
@@ -149,14 +194,24 @@ def check_lastlogin():
             output[collum[0]]['time'] = collum[3].lstrip()
             continue
         output["UNRECOGNIZED ENTRY " + collum[0]] = str(collum)
+        alerts['unknownentry'] = True
+    who = list(str(subprocess.check_output(['who'])).split("\\n"))
+    if  len(who) > 0:
+        alerts['activelogin'] = True
+    else:eprint("\t\tMADCAT binary list: " + str(DEF_MCVERSION_LIST))
+        alerts['activelogin'] = False
     return output
 
 def check_lastlog():
     if not DEF_CHECK_LASTLOG: return {"INFO" : "check disabled"}
     output = dict()
+    alerts['lastlogtime'] = False
     for file in DEF_LOG_LIST:
         output[file] = dict()
-        output[file]['time'] = datetime.fromtimestamp(os.path.getmtime(file)).strftime("%Y-%m-%dT%H:%M:%S")
+        lastaccess = datetime.fromtimestamp(os.path.getmtime(file))
+        output[file]['time'] = lastaccess.strftime("%Y-%m-%dT%H:%M:%S")
+        if time.time() - time.mktime(lastaccess.timetuple()) > DEF_LOGTIME_ALERT:
+            alerts['lastlogtime'] = True
     return output
 
 def check_mcversions():
@@ -175,14 +230,15 @@ def check_mcversions():
 def check_processes():
     if not DEF_CHECK_PROCESSES: return {"INFO" : "check disabled"}
     output = dict()
+    alerts['processdown'] = False
     #Iterate over the all the running process
     for processName in DEF_PROCESS_LIST:
         output[processName] = dict()
-        output[processName]['running'] = "False"
+        output[processName]['running'] = False
         for proc in psutil.process_iter():
             try:
                 if processName.lower() in proc.name().lower(): # Check if process name contains the given name string.
-                    output[processName]['running'] = "True"
+                    output[processName]['running'] = True
                     pidof = str(list(str(subprocess.check_output(["pidof",processName]).decode('ascii')).split("\n"))[0]).split()
                     pidof = dict(zip(range(0, len(pidof)), pidof))
                     for pid in pidof:
@@ -192,11 +248,18 @@ def check_processes():
                     pass
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 pass
+        if output[processName]['running'] == False:
+            alerts['processdown'] = True
     return output
 
+net_tx_prev = {}
+net_rx_prev = {}
 def check_netusage():
     if not DEF_CHECK_NETWORKUSAGE: return {"INFO" : "check disabled"}
     output = dict()
+    global net_tx_prev
+    global net_rx_prev
+    alerts['netusage'] = False
     for nic in DEF_NETWORK_LIST:
         net_io = psutil.net_io_counters(pernic=True, nowrap=True)[nic]
         net_tx = net_io.bytes_sent
@@ -204,17 +267,35 @@ def check_netusage():
         output[nic] = dict()
         output[nic]["tx_bytes"] = net_tx
         output[nic]["rx_bytes"] = net_rx
+
+        if not bool(net_tx_prev) or not bool(net_rx_prev): ##First run?: Empty dictonarys evaluate to "False"...
+            for newnic in DEF_NETWORK_LIST: #Fill them with sub-dicts named "newnic"
+                #initialiaze with actuall values
+                net_tx_prev[newnic] = net_tx
+                net_rx_prev[newnic] = net_rx
+
+        output[nic]["tx_bytes_sec"] = (net_tx - net_tx_prev[nic]) / DEF_TIME_HEARTBEAT
+        output[nic]["rx_bytes_sec"] = (net_rx - net_rx_prev[nic]) / DEF_TIME_HEARTBEAT
+       
+        if output[nic]["tx_bytes_sec"] > DEF_NETUSAGE_ALERT:
+            alerts['netusage'] = True
+        if output[nic]["rx_bytes_sec"] > DEF_NETUSAGE_ALERT:
+            alerts['netusage'] = True
+
+        #Save values
+        net_tx_prev[nic] = net_tx
+        net_rx_prev[nic] = net_rx
     return output
 
 def check_listners():
     if not DEF_CHECK_LISTNERS: return {"INFO" : "check disabled"}
     output = dict()
-    #netstat = list(str(subprocess.check_output(['netstat', '-tulpne']).decode('ascii')).split("\\n"))[1::] #Put output in list conaining rows and discard header
+    alerts['listner'] = False
     netstat = list(str(subprocess.check_output(['netstat', '-tulpne']).decode('ascii')).split("\n"))[2::]  #Put output in list conaining rows and discard header
     i = 0
     for row in netstat:
         collum = list(filter(None, row.split(" ")))
-        if len(collum) >= 5 and ( "udp" in collum[0].lstrip() or "tcp" in collum[0].lstrip()): #udp or tcp listner
+        if len(collum) >= 5 and ( "udp" in collum[0].lstrip() or "tcp" in cDEF_WHITELISTED_PORTS = [ollum[0].lstrip()): #udp or tcp listner
             output[i] = dict()
             output[i]['port'] = collum[0].lstrip()
             output[i]['recv-q'] = collum[1].lstrip()
@@ -233,10 +314,21 @@ def check_listners():
                 output[i]['extra'] = collum[8+state].lstrip()
             except:
                 pass
+
+            if len(DEF_WHITELISTED_PORTS) > 0: #Is the ports whitelist enabled?
+                if (not int(str(collum[3]).split(":")[-1]) in DEF_WHITELISTED_PORTS) and len(DEF_WHITELISTED_PORTS) > 0:
+                    alerts['listner'] = True
+                    output[i]['rogue'] = True
+                else:
+                    output[i]['rogue'] = False
+            else:
+                    alerts['listner'] = None
+                    output[i]['rogue'] = None
             i += 1
             continue
         try:
             output["UNRECOGNIZED ENTRY " + collum[0]] = str(collum)
+            alerts['uknownentry'] = True
         except: # ignore trailing empty entry
             continue
         i += 1
@@ -269,28 +361,34 @@ def main(argv):
     eprint("MADCAT: " )
     eprint("\tMADCAT binaries version: \t" + str(DEF_CHECK_MCVERSIONS))
     eprint("\t\tMADCAT binary list: " + str(DEF_MCVERSION_LIST))
+    eprint("\t\tMADCAT binary list: " + str(DEF_MCVERSION_LIST))
     eprint("==============================================================")
     logtime = time.strftime("%Y-%m-%dT%H:%M:%S",time.localtime(time.time())) + str(time.time()-int(time.time()))[1:8]
     eprint("\n" + logtime + " [PID " + str(os.getpid()) + "]" + " Starting up...")
     stdout_lock.release()
 
+    global alerts
+
     while True:
         logtime = time.strftime("%Y-%m-%dT%H:%M:%S",time.localtime(time.time())) + str(time.time()-int(time.time()))[1:8]
         eprint(logtime + " [PID " + str(os.getpid()) + "]" + " Checking...")
-        json_dict = {}
+        json_dict = {'time' : logtime, 'unixtime': time.time()} #reset json output
+        alerts = {} #reset alerts
         # CPU usage, memory, diskspace, avaible updates, last logins
-        json_dict['cpu'] = check_cpu()
-        json_dict['memory'] = check_mem()
-        json_dict['diskspace'] = check_disk()
-        json_dict['updates'] = check_updates()
-        json_dict['lastlogin'] = check_lastlogin()
+        #json_dict['cpu'] = check_cpu()
+        #json_dict['memory'] = check_mem()
+        #json_dict['diskspace'] = check_disk()
+        #json_dict['updates'] = check_updates()
+        #json_dict['lastlogin'] = check_lastlogin()
         # MADCAT-log last modified, versions
-        json_dict['lastlog'] = check_lastlog()
-        json_dict['madcat versions'] = check_mcversions()
+        #json_dict['lastlog'] = check_lastlog()
+        #json_dict['madcat versions'] = check_mcversions()
         # Process running and PID(s), network usage
-        json_dict['processes'] = check_processes()
-        json_dict['network usage'] = check_netusage()
+        #json_dict['processes'] = check_processes()
+        #json_dict['network usage'] = check_netusage()
         json_dict['network listners'] = check_listners()
+        # Alerts
+        json_dict['alerts'] = alerts
         
         stdout_lock.acquire()
         print(json.dumps(json_dict))
