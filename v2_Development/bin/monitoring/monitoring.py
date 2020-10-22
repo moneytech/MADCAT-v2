@@ -46,17 +46,17 @@ import multiprocessing
 # Timing
 DEF_TIME_HEARTBEAT = 20
 # System
-DEF_CHECK_CPU = True
-DEF_CHECK_MEM = True
-DEF_CHECK_DISK = True
+DEF_CHECK_CPU = False
+DEF_CHECK_MEM = False
+DEF_CHECK_DISK = False
 DEF_DISK_LIST = ["/", "/home"]
-DEF_CHECK_UPDATES = True #Reads the local database, thus configure a regular cron-job for "apt-get update"!
+DEF_CHECK_UPDATES = False #Reads the local database, thus configure a regular cron-job for "apt-get update"!
 DEF_CHECK_LASTLOGIN = True
 # MADCAT
-DEF_CHECK_LASTLOG = True
+DEF_CHECK_LASTLOG = False
 DEF_LOG_LIST = ["/data/portmonitor.log",
                 "/var/log/syslog"]
-DEF_CHECK_MCVERSIONS = True
+DEF_CHECK_MCVERSIONS = False
 DEF_MCVERSION_LIST = ["/opt/portmonitor/tcp_ip_port_mon",
                     "/opt/portmonitor/udp_ip_port_mon",
                     "/opt/portmonitor/icmp_mon",
@@ -64,16 +64,16 @@ DEF_MCVERSION_LIST = ["/opt/portmonitor/tcp_ip_port_mon",
                     "/opt/portmonitor/tcp_ip_port_mon_postprocessor.py"]
 
 # General
-DEF_CHECK_PROCESSES = True
+DEF_CHECK_PROCESSES = False
 DEF_PROCESS_LIST = ["sshd", 
                     "tcp_ip_port_mon", 
                     "udp_ip_port_mon", 
                     "icmp_port_mon", 
                     "wachtdog.sh"]
-DEF_CHECK_NETWORKUSAGE = True
+DEF_CHECK_NETWORKUSAGE = False
 DEF_NETWORK_LIST = ["wlp8s0",
                     "enp9s0"]
-DEF_CHECK_LISTNERS = True
+DEF_CHECK_LISTNERS = False
 
 ########################## Version and Mascott strings ##########################
 GLOBAL_VERSION = "MADCAT - Mass Attack Detecion Connection Acceptance Tools\n Monitoring Module\n v2.0 for MADCAT v2.0.x\nHeiko Folkerts, BSI 2020\n"
@@ -127,7 +127,7 @@ def check_updates():
 def check_lastlogin():
     if not DEF_CHECK_LASTLOGIN: return {"INFO" : "check disabled"}
     output = dict()
-    lastlog = list(str(subprocess.check_output(['lastlog']).decode('ascii')).split("\\n"))[1::] #Put output in list conaining rows and discard header
+    lastlog = list(str(subprocess.check_output(['lastlog'])).split("\\n"))[1::] #Put output in list conaining rows and discard header
     for row in lastlog:
         collum = list(filter(None, row.split("  ")))
         #if "**Noch nie angemeldet**" in str(collum):
