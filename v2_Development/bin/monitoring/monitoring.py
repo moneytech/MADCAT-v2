@@ -44,7 +44,7 @@ import multiprocessing
 ########################## CONFIGURATION ##########################
 ## Only in this section changes are allowed (global configuration variables beginning with "DEF_"), thus for configuration purposes ;-)
 # Timing
-DEF_TIME_HEARTBEAT = 2
+DEF_TIME_HEARTBEAT = 20
 # System
 DEF_CHECK_CPU = True
 CPU_LOAD_ALERT = 80
@@ -198,7 +198,7 @@ def check_lastlogin():
     who = list(str(subprocess.check_output(['who'])).split("\\n"))
     if  len(who) > 0:
         alerts['activelogin'] = True
-    else:eprint("\t\tMADCAT binary list: " + str(DEF_MCVERSION_LIST))
+    else:
         alerts['activelogin'] = False
     return output
 
@@ -295,7 +295,7 @@ def check_listners():
     i = 0
     for row in netstat:
         collum = list(filter(None, row.split(" ")))
-        if len(collum) >= 5 and ( "udp" in collum[0].lstrip() or "tcp" in cDEF_WHITELISTED_PORTS = [ollum[0].lstrip()): #udp or tcp listner
+        if len(collum) >= 5 and ( "udp" in collum[0].lstrip() or "tcp" in collum[0].lstrip()): #udp or tcp listner
             output[i] = dict()
             output[i]['port'] = collum[0].lstrip()
             output[i]['recv-q'] = collum[1].lstrip()
@@ -342,7 +342,8 @@ def main(argv):
     eprint(GLOBAL_MASCOTT) #print mascott
     eprint(GLOBAL_VERSION) #print version string
     eprint("================= Configuration [PID " + str(os.getpid()) + "]: =================")
-    eprint("Heartbeat time in seconds: " + str(DEF_TIME_HEARTBEAT))
+    eprint("For alert configuration see head of " + argv[0])
+    eprint("\nHeartbeat time in seconds: " + str(DEF_TIME_HEARTBEAT))
     eprint("Checks enabled (True/False): ")
     eprint("System:")
     eprint("\tCPU: \t\t\t\t" + str(DEF_CHECK_CPU))
