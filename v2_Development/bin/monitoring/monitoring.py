@@ -70,6 +70,10 @@ DEF_PROCESS_LIST = ["sshd",
                     "udp_ip_port_mon", 
                     "icmp_port_mon", 
                     "wachtdog.sh"]
+DEF_CHECK_NETWORKUSAGE = True
+DEF_NETWORK_LIST = ["wlp8s0",
+                    "enp9s0"]
+DEF_CHECK_LISTNERS = True
 
 ########################## Version and Mascott strings ##########################
 GLOBAL_VERSION = "MADCAT - Mass Attack Detecion Connection Acceptance Tools\n Monitoring Module\n v2.0 for MADCAT v2.0.x\nHeiko Folkerts, BSI 2020\n"
@@ -123,7 +127,7 @@ def check_updates():
 def check_lastlogin():
     if not DEF_CHECK_LASTLOGIN: return {"INFO" : "check disabled"}
     output = dict()
-    lastlog = list(str(subprocess.check_output(['lastlog'])).split("\\n"))[1::] #Put output in list conaining rows and discard header
+    lastlog = list(str(subprocess.check_output(['lastlog']).decode('ascii')).split("\\n"))[1::] #Put output in list conaining rows and discard header
     for row in lastlog:
         collum = list(filter(None, row.split("  ")))
         #if "**Noch nie angemeldet**" in str(collum):
@@ -179,7 +183,7 @@ def check_processes():
             try:
                 if processName.lower() in proc.name().lower(): # Check if process name contains the given name string.
                     output[processName]['running'] = "True"
-                    pidof = str(list(str(subprocess.check_output(["pidof",processName]).decode('ascii')).split("\\n"))[0]).split()
+                    pidof = str(list(str(subprocess.check_output(["pidof",processName]).decode('ascii')).split("\n"))[0]).split()
                     pidof = dict(zip(range(0, len(pidof)), pidof))
                     for pid in pidof:
                         pidof[pid] = int(pidof[pid])
@@ -190,7 +194,53 @@ def check_processes():
                 pass
     return output
 
+def check_netusage():
+    if not DEF_CHECK_NETWORKUSAGE: return {"INFO" : "check disabled"}
+    output = dict()
+    for nic in DEF_NETWORK_LIST:
+        net_io = psutil.net_io_counters(pernic=True, nowrap=True)[nic]
+        net_tx = net_io.bytes_sent
+        net_rx = net_io.bytes_recv
+        output[nic] = dict()
+        output[nic]["tx_bytes"] = net_tx
+        output[nic]["rx_bytes"] = net_rx
+    return output
 
+def check_listners():
+    if not DEF_CHECK_LISTNERS: return {"INFO" : "check disabled"}
+    output = dict()
+    #netstat = list(str(subprocess.check_output(['netstat', '-tulpne']).decode('ascii')).split("\\n"))[1::] #Put output in list conaining rows and discard header
+    netstat = list(str(subprocess.check_output(['netstat', '-tulpne']).decode('ascii')).split("\n"))[2::]  #Put output in list conaining rows and discard header
+    i = 0
+    for row in netstat:
+        collum = list(filter(None, row.split(" ")))
+        if len(collum) >= 5 and ( "udp" in collum[0].lstrip() or "tcp" in collum[0].lstrip()): #udp or tcp listner
+            output[i] = dict()
+            output[i]['port'] = collum[0].lstrip()
+            output[i]['recv-q'] = collum[1].lstrip()
+            output[i]['send-q'] = collum[2].lstrip()
+            output[i]['local address'] = collum[3].lstrip()
+            output[i]['foreign address'] = collum[4].lstrip()
+            if "tcp" in collum[0].lstrip(): #tcp state collum present
+                output[i]['state'] = collum[5].lstrip()
+                state = 1
+            else: #no state collum present
+                state = 0
+            output[i]['user'] = collum[5+state].lstrip()
+            output[i]['inode'] = collum[6+state].lstrip()
+            output[i]['pid/program name'] = collum[7+state].lstrip()
+            try: #optional: extra parameters
+                output[i]['extra'] = collum[8+state].lstrip()
+            except:
+                pass
+            i += 1
+            continue
+        try:
+            output["UNRECOGNIZED ENTRY " + collum[0]] = str(collum)
+        except: # ignore trailing empty entry
+            continue
+        i += 1
+    return output
 
 
 ########################## Main ##########################
@@ -219,8 +269,10 @@ def main(argv):
         # MADCAT-log last modified, versions
         json_dict['lastlog'] = check_lastlog()
         json_dict['madcat versions'] = check_mcversions()
-        # Process running and PID(s)
+        # Process running and PID(s), network usage
         json_dict['processes'] = check_processes()
+        json_dict['network usage'] = check_netusage()
+        json_dict['network listners'] = check_listners()
         
         stdout_lock.acquire()
         print(json.dumps(json_dict))
