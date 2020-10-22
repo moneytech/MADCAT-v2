@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 #coding=utf8
 #*******************************************************************************
 # This file is part of MADCAT, the Mass Attack Detection Acceptance Tool.
@@ -32,7 +32,7 @@
  # Heiko Folkerts, BSI 2018-2020
 ##
 
-#from __future__ import print_function #Python 2 backward compatibility
+from __future__ import print_function #Python 2 backward compatibility
 import sys, os, signal
 import pwd, grp
 import time
@@ -55,7 +55,7 @@ DEF_USER = "hf"
 DEF_GROUP = "hf"
 
 ########################## Version and Mascott strings ##########################
-GLOBAL_VERSION = "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nTCP Connection and SYN JSON-data postprocessor v2.0\n  for TCP/IP Portmonitor v2.0.x\nHeiko Folkerts, BSI 2018-2020\n"
+GLOBAL_VERSION = "MADCAT - Mass Attack Detecion Connection Acceptance Tool\nTCP Connection and SYN JSON-data postprocessor v2.0.1\n  for TCP/IP Portmonitor v2.0.x\nHeiko Folkerts, BSI 2018-2020\n"
 GLOBAL_MASCOTT = "                             ▄▄▄               ▄▄▄▄▄▄\n                 ▀▄▄      ▄▓▓█▓▓▓█▌           ██▓██▓▓██▄     ▄▀\n                    ▀▄▄▄▓█▓██   █▓█▌         █▓   ▓████████▀\n                       ▀███▓▓(o)██▓▌       ▐█▓█(o)█▓█████▀\n                         ▀▀██▓█▓▓█         ████▓███▀▀\n                  ▄            ▀▀▀▀                          ▄\n                ▀▀█                                         ▐██▌\n                  ██▄     ____------▐██████▌------___     ▄▄██\n                 __█ █▄▄--   ___------▀▓▓▀-----___   --▄▄█ █▀__\n             __--   ▀█  ██▄▄▄▄    __--▄▓▓▄--__   ▄▄▄▄██  ██▀   --__\n         __--     __--▀█ ██  █▀▀█████▄▄▄▄▄▄███████  ██ █▀--__      --__\n     __--     __--    __▀▀█  █  ██  ██▀▀██▀▀██  ██  █▀▀__    --__      --__\n         __--     __--     ▀███ ██  ██  ██  ██ ████▀     --__    --__\n hfo   --     __--             ▀▀▀▀▀██▄▄██▄▄██▀▀▀▀           --__    --\n         __ --                                                   --__"
 
 ########################## Semaphore ##########################

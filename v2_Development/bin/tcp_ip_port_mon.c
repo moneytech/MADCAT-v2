@@ -220,14 +220,14 @@ int main(int argc, char *argv[])
             #endif
             CHECK(init_pcap(interface, hostaddr, &handle), == 0); //Init libpcap
 
-            fprintf(stderr, "%s [PID %d] ", log_time, getpid());
-            drop_root_privs(user, "Sniffer"); //drop priviliges
-
             //Make FIFO for header discribing JSON Output
             unlink(HEADER_FIFO);
             CHECK(mkfifo(HEADER_FIFO, 0660), == 0);
             hdrfifo = fopen(HEADER_FIFO, "r+");
             fprintf(stderr, "%s [PID %d] FIFO for header JSON: %s\n", log_time, getpid(), HEADER_FIFO);
+
+            fprintf(stderr, "%s [PID %d] ", log_time, getpid());
+            drop_root_privs(user, "Sniffer"); //drop priviliges
 
             int data_bytes = 0; //eventually exisiting data bytes in SYN (yes, this would be akward)
             while (1)

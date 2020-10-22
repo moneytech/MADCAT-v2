@@ -77,8 +77,7 @@ DEF_CHECK_PROCESSES = True #Alerts, when process is not running
 DEF_PROCESS_LIST = ["sshd", 
                     "tcp_ip_port_mon", 
                     "udp_ip_port_mon", 
-                    "icmp_port_mon", 
-                    "wachtdog.sh"]
+                    "icmp_mon"]
 
 DEF_CHECK_NETWORKUSAGE = True #Alerts, when network usage exceeds the avarage of DEF_NETUSAGE_ALERT Bytes per second, measured in DEF_TIME_HEARTBEAT seconds
 DEF_NETUSAGE_ALERT = 1000000
@@ -88,7 +87,7 @@ DEF_NETWORK_LIST = ["wlp8s0",
 DEF_CHECK_LISTNERS = True
 #Whitelist of ports on which listners are allowed, empty to prevent alerts and set it to informational ("None")
 DEF_WHITELISTED_PORTS = [22,
-                         65353,
+                         65535,
                          53]
 
 ########################## Version and Mascott strings ##########################
@@ -139,9 +138,7 @@ def check_cpu():
 def check_mem():
     if not DEF_CHECK_MEM: return {"INFO" : "check disabled"}
     output = psutil.virtual_memory()._asdict()
-    used_percent = output['used'] / output['total'] * 100
-    output['used_percent'] = used_percent
-    if  used_percent > MEM_USED_ALERT:
+    if  output['percent'] > MEM_USED_ALERT:
         alerts['memused'] = True
     else:
         alerts['memused'] = False
