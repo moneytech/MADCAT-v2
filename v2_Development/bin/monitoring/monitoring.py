@@ -40,6 +40,7 @@ import threading
 import json
 import psutil
 import multiprocessing
+import socket
 
 ########################## CONFIGURATION ##########################
 ## Only in this section changes are allowed (global configuration variables beginning with "DEF_"), thus for configuration purposes ;-)
@@ -373,20 +374,20 @@ def main(argv):
     while True:
         logtime = time.strftime("%Y-%m-%dT%H:%M:%S",time.localtime(time.time())) + str(time.time()-int(time.time()))[1:8]
         eprint(logtime + " [PID " + str(os.getpid()) + "]" + " Checking...")
-        json_dict = {'time' : logtime, 'unixtime': time.time()} #reset json output
+        json_dict = {'time' : logtime, 'unixtime': time.time(), 'origin': 'MADCAT Monitoring', 'hostname': socket.gethostname()} #reset json output
         alerts = {} #reset alerts
         # CPU usage, memory, diskspace, avaible updates, last logins
-        #json_dict['cpu'] = check_cpu()
-        #json_dict['memory'] = check_mem()
-        #json_dict['diskspace'] = check_disk()
-        #json_dict['updates'] = check_updates()
-        #json_dict['lastlogin'] = check_lastlogin()
+        json_dict['cpu'] = check_cpu()
+        json_dict['memory'] = check_mem()
+        json_dict['diskspace'] = check_disk()
+        json_dict['updates'] = check_updates()
+        json_dict['lastlogin'] = check_lastlogin()
         # MADCAT-log last modified, versions
-        #json_dict['lastlog'] = check_lastlog()
-        #json_dict['madcat versions'] = check_mcversions()
+        json_dict['lastlog'] = check_lastlog()
+        json_dict['madcat versions'] = check_mcversions()
         # Process running and PID(s), network usage
-        #json_dict['processes'] = check_processes()
-        #json_dict['network usage'] = check_netusage()
+        json_dict['processes'] = check_processes()
+        json_dict['network usage'] = check_netusage()
         json_dict['network listners'] = check_listners()
         # Alerts
         json_dict['alerts'] = alerts
