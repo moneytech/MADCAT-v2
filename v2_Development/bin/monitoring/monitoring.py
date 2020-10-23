@@ -252,37 +252,48 @@ def check_processes():
 
 net_tx_prev = {}
 net_rx_prev = {}
+net_firstrun = True
 def check_netusage():
     if not DEF_CHECK_NETWORKUSAGE: return {"INFO" : "check disabled"}
     output = dict()
     global net_tx_prev
     global net_rx_prev
+    global net_firstrun
+    net_tx_total = 0
+    net_rx_total = 0
     alerts['netusage'] = False
+    i = 0
     for nic in DEF_NETWORK_LIST:
         net_io = psutil.net_io_counters(pernic=True, nowrap=True)[nic]
         net_tx = net_io.bytes_sent
         net_rx = net_io.bytes_recv
-        output[nic] = dict()
-        output[nic]["tx_bytes"] = net_tx
-        output[nic]["rx_bytes"] = net_rx
+        output[i] = dict()
+        output[i]["nic"] = nic
+        output[i]["tx_bytes"] = net_tx
+        output[i]["rx_bytes"] = net_rx
 
-        if not bool(net_tx_prev) or not bool(net_rx_prev): ##First run?: Empty dictonarys evaluate to "False"...
-            for newnic in DEF_NETWORK_LIST: #Fill them with sub-dicts named "newnic"
-                #initialiaze with actuall values
-                net_tx_prev[newnic] = net_tx
-                net_rx_prev[newnic] = net_rx
+        if net_firstrun: #First run?
+            #initialiaze with actuall values
+            net_tx_prev[nic] = net_tx
+            net_rx_prev[nic] = net_rx
 
-        output[nic]["tx_bytes_sec"] = (net_tx - net_tx_prev[nic]) / DEF_TIME_HEARTBEAT
-        output[nic]["rx_bytes_sec"] = (net_rx - net_rx_prev[nic]) / DEF_TIME_HEARTBEAT
+        output[i]["tx_bytes_sec"] = (net_tx - net_tx_prev[nic]) / DEF_TIME_HEARTBEAT
+        output[i]["rx_bytes_sec"] = (net_rx - net_rx_prev[nic]) / DEF_TIME_HEARTBEAT
+        net_tx_total += (net_tx - net_tx_prev[nic]) / DEF_TIME_HEARTBEAT
+        net_rx_total += (net_rx - net_rx_prev[nic]) / DEF_TIME_HEARTBEAT
        
-        if output[nic]["tx_bytes_sec"] > DEF_NETUSAGE_ALERT:
+        if output[i]["tx_bytes_sec"] > DEF_NETUSAGE_ALERT:
             alerts['netusage'] = True
-        if output[nic]["rx_bytes_sec"] > DEF_NETUSAGE_ALERT:
+        if output[i]["rx_bytes_sec"] > DEF_NETUSAGE_ALERT:
             alerts['netusage'] = True
 
         #Save values
         net_tx_prev[nic] = net_tx
         net_rx_prev[nic] = net_rx
+        i += 1
+    output['tx_bytes_sec_total'] = net_tx_total
+    output['rx_bytes_sec_total'] = net_rx_total
+    net_firstrun = False
     return output
 
 def check_listners():
@@ -388,6 +399,10 @@ def main(argv):
         json_dict['network listners'] = check_listners()
         # Alerts
         json_dict['alerts'] = alerts
+        if True in alerts.values():
+            json_dict['alerts']['alert_raised'] = True
+        else:
+            json_dict['alerts']['alert_raised'] = False
         
         stdout_lock.acquire()
         print(json.dumps(json_dict))
