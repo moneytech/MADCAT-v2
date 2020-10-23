@@ -94,6 +94,7 @@ def signal_handler(signum, frame):
 def eprint(*args, **kwargs):
     stderr_lock.acquire()
     print(*args, file=sys.stderr, **kwargs)
+    sys.stderr.flush()
     stderr_lock.release()
     return
 
